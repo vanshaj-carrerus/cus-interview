@@ -200,7 +200,11 @@ export default function TopicTutorPage({ topic }: Props) {
                         </div>
                         {isSubmitted && (
                           <p className="mt-2 text-xs text-slate-500">
-                            Answer: {question.options[question.answerIndex]} — {question.explanation}
+                            Answer:{" "}
+                            {question.answerIndex !== undefined
+                              ? (question.options[question.answerIndex] ?? "Not available")
+                              : "Not available"}{" "}
+                            — {question.explanation}
                           </p>
                         )}
                       </div>

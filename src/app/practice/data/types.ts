@@ -7,7 +7,7 @@ export type QuestionItem = {
 };
 
 export type LevelItem = {
-  id: string;
+  id?: string;
   level: number;
   title: string;
   description: string;
