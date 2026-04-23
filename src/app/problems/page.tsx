@@ -10,8 +10,8 @@ export default async function ProblemsHomePage() {
       <div className="max-w-5xl mx-auto">
         <div className="flex items-center justify-between gap-3">
           <h1 className="text-3xl font-bold text-slate-900">Problem Roadmaps</h1>
-          <Link href="/learning-admin" className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-bold uppercase tracking-wide text-white">
-            Add Data
+          <Link href="/admin-panel" className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-bold uppercase tracking-wide text-white">
+            Open Admin
           </Link>
         </div>
         <p className="text-slate-600 mt-2">

@@ -42,17 +42,14 @@ export default async function Dashboard() {
     name: item.title,
     href: `/problems/courses/${item.slug}`,
   }));
+  const totalPracticeProblems =
+    tracks.reduce((sum, item) => sum + item.levels, 0) + courses.reduce((sum, item) => sum + item.levels, 0);
   return (
     <div className="min-h-screen bg-[#fcfcfd] p-6 md:p-12 font-sans text-slate-900 selection:bg-indigo-100 selection:text-primary">
       <div className="max-w-7xl mx-auto">
         {/* --- Hero / Header Section --- */}
         <header className="relative mb-20">
-          <div className="mb-4 flex justify-end">
-            <Link href="/learning-admin" className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold uppercase tracking-wide text-white hover:bg-primary">
-              Add Learning Data
-            </Link>
-          </div>
-          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-10">
+          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-10"> 
             <div className="space-y-6">
               <div className="flex items-center gap-3">
                 <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-primary bg-indigo-50 px-3 py-1 rounded-full">
@@ -80,12 +77,12 @@ export default async function Dashboard() {
               />
               <HeaderStat
                 label="Total Content"
-                value={`${tracks.reduce((sum, item) => sum + item.levels, 0) + courses.reduce((sum, item) => sum + item.levels, 0)}+ Steps`}
+                value={`${totalPracticeProblems}+ Steps`}
                 icon={<BookOpen className="w-4 h-4" />}
               />
               <HeaderStat
-                label="Community"
-                value="Global"
+                label="Problems Available"
+                value={`${totalPracticeProblems} total`}
                 icon={<BarChart3 className="w-4 h-4" />}
               />
             </div>

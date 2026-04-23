@@ -225,7 +225,7 @@ export default function TopicStepPage({
 
           <div className="flex gap-4">
             <Link
-              href={`/learning-admin?track=${topic.slug}&level=${level.level}`}
+              href={`/admin-panel?track=${topic.slug}&level=${level.level}`}
               className="inline-flex items-center rounded-2xl bg-slate-900 px-4 py-2 text-xs font-bold uppercase tracking-wide text-white"
             >
               Add Question

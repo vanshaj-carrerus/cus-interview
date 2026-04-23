@@ -119,8 +119,9 @@ export default function Sidebar() {
           )
           .sort((a, b) => a.title.localeCompare(b.title));
 
-        const nextLanguageRows: LanguageProgress[] = tracksPayload.map(({ language, tracks }) => {
-          const progress = progressByLanguageSlug.get(language.slug);
+        const nextLanguageRows: LanguageProgress[] = tracksPayload
+          .map(({ language, tracks }) => {
+            const progress = progressByLanguageSlug.get(language.slug);
           const completedTracks = tracks.filter((track) => {
             const trackProgress = progress?.tracks.find((item) => item.trackSlug === track.slug);
             const completedLevels = trackProgress?.completedLevels ?? 0;
@@ -134,9 +135,10 @@ export default function Sidebar() {
             completedTracks,
             totalTracks: tracks.length,
           };
-        });
+          })
+          .filter((language) => language.attempts > 0);
 
-        setProgressRows(rows);
+        setProgressRows(rows.filter((row) => row.attemptedProblems > 0));
         setLanguageRows(nextLanguageRows);
       } catch {
         setProgressRows([]);
@@ -265,7 +267,10 @@ export default function Sidebar() {
           <p className="text-xs text-slate-500">{languageRows.length} total</p>
         </div>
         <div className="flex flex-col gap-2">
-          {languageRows.map((language) => {
+          {languageRows.length === 0 ? (
+            <p className="text-sm text-slate-500">No attempted languages yet.</p>
+          ) : (
+            languageRows.map((language) => {
             const percent =
               language.attempts > 0 ? Math.round((language.cleared / language.attempts) * 100) : 0;
             return (
@@ -281,7 +286,8 @@ export default function Sidebar() {
                 </p>
               </div>
             );
-          })}
+            })
+          )}
         </div>
       </div>
 
@@ -294,7 +300,10 @@ export default function Sidebar() {
         </div>
 
         <div className="flex flex-col gap-2">
-          {progressRows.map((row) => {
+          {progressRows.length === 0 ? (
+            <p className="text-sm text-slate-500">No attempted tracks yet.</p>
+          ) : (
+            progressRows.map((row) => {
             const isActive = pathname?.startsWith(row.href);
             const percent =
               row.totalLevels > 0 ? Math.round((row.completedLevels / row.totalLevels) * 100) : 0;
@@ -324,7 +333,8 @@ export default function Sidebar() {
                 </div>
               </Link>
             );
-          })}
+            })
+          )}
         </div>
       </div>
 

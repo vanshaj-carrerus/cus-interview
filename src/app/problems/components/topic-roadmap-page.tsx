@@ -89,7 +89,7 @@ export default function TopicRoadmapPage({
         {/* Header Hero Section */}
         <header className="relative mb-16 pt-8">
           <div className="mb-4 flex justify-end">
-            <Link href={`/learning-admin?track=${topic.slug}`} className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-bold uppercase tracking-wide text-white">
+            <Link href={`/admin-panel?track=${topic.slug}`} className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-bold uppercase tracking-wide text-white">
               Add Level
             </Link>
           </div>
