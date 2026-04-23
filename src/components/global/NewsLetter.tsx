@@ -2,7 +2,7 @@ export default function NewsLetter() {
   return (
     <section className="pt-10 pb-20 px-6 relative overflow-hidden bg-white">
       <div className=" max-w-7xl md:container! mx-auto">
-        <div className="bg-slate-50 rounded-[3rem] p-12 md:p-24 relative overflow-hidden text-center shadow-[0_40px_80px_rgba(0,0,0,0.03)] border border-slate-100">
+        <div className="bg-slate-50 rounded-[3rem] p-6 py-10 md:p-24 relative overflow-hidden text-center shadow-[0_40px_80px_rgba(0,0,0,0.03)] border border-slate-100">
           {/* Animated Background Elements */}
           <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_top_right,rgba(14,165,164,0.1),transparent)] pointer-events-none" />
           <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-primary/10 rounded-full blur-[100px]" />

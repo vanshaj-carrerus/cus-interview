@@ -57,7 +57,7 @@ export default function MockInterviewBanner() {
                   <div className="w-2 h-2 rounded-full bg-yellow-400/50" />
                   <div className="w-2 h-2 rounded-full bg-green-400/50" />
                 </div>
-                <div className="p-6 pt-12 min-h-[8.5rem]">
+                <div className="p-6 pt-12 min-h-34">
                   <TypewriterHeadingParagraph
                     heading="Live technical mock interview"
                     paragraph="Timed prompts, realistic constraints, and gap feedback—built for IT professionals leveling up fast."
@@ -68,7 +68,7 @@ export default function MockInterviewBanner() {
                   />
                 </div>
                 {/* Floating badge */}
-                <div className="absolute bottom-6 right-6 bg-primary text-white text-[10px] font-black px-3 py-1.5 rounded-full shadow-xl animate-bounce">
+                <div className="absolute bottom-6 right-6 bg-primary text-white text-[10px] font-black px-3 py-1.5 rounded-full shadow-xl">
                   LIVE MOCK
                 </div>
               </div>

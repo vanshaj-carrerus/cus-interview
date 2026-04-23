@@ -64,7 +64,7 @@ export default function CodingEnvironment() {
                      </div>
 
                      {/* Floating Output Card */}
-                     <div className="absolute -bottom-10 -right-10 pro-card p-6 bg-white shadow-2xl animate-float">
+                     <div className="absolute -bottom-10 right-0 sm:-right-10 pro-card p-6 bg-white shadow-2xl animate-float max-w-[60vw]">
                         <div className="flex items-center gap-3 mb-4">
                            <div className="w-2 h-2 rounded-full bg-green-500" />
                            <span className="text-[10px] font-black uppercase tracking-widest text-secondary/40">Execution Result</span>

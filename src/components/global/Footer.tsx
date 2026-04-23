@@ -90,7 +90,7 @@ function PipeSeparated({
   return (
     <p className="text-gray-400 text-xs leading-6">
       {items.map((item, i) => (
-        <span key={item}>
+        <span key={i}>
           <a href="#" className="hover:text-white transition-colors">
             {item}
           </a>

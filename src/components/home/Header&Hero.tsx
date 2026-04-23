@@ -6,7 +6,7 @@ export default function CusInterviewHero() {
   return (
     <div className="relative min-h-screen bg-white overflow-hidden">
       {/* ── HERO CONTENT ── */}
-      <main className="relative pt-40 pb-24 overflow-hidden">
+      <main className="relative pt-10 sm:pt-40 pb-24 overflow-hidden">
         {/* Background Elements - Bright & Professional */}
         <div className="absolute top-0 right-0 w-2/3 h-full bg-linear-to-l from-primary/5 to-transparent -z-10" />
         <div className="absolute -top-24 -left-24 w-96 h-96 bg-secondary/5 rounded-full blur-[100px] -z-10" />
