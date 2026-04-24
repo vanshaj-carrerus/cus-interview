@@ -4,6 +4,8 @@ import { connectDB } from "@/lib/mongodb";
 import { LearningTrack } from "@/models/learning";
 import SidebarLink from "./components/sidebar-link";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminPanelLayout({ children }: { children: ReactNode }) {
   await connectDB();
   const [tracks, courses] = await Promise.all([

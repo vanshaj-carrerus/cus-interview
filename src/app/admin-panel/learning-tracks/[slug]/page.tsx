@@ -4,6 +4,8 @@ import { connectDB } from "@/lib/mongodb";
 import { LearningLevel, LearningQuestion, LearningTask, LearningTrack } from "@/models/learning";
 import QuestionTableManager from "../../components/question-table-manager";
 
+export const dynamic = "force-dynamic";
+
 async function updateTrackAction(formData: FormData) {
   "use server";
   const id = String(formData.get("id") ?? "");

@@ -80,7 +80,7 @@ const aiHighlights = [
 export default function MockInterviewPage() {
   return (
     <div className="min-h-screen bg-[#fcfcfd] p-6 md:p-12 font-sans text-slate-900 selection:bg-indigo-100 selection:text-primary">
-      <div className="max-w-7xl mx-auto">
+      <div className="lg:container mx-auto">
         <header className="relative mb-16 md:mb-20">
           <div className="flex flex-col lg:flex-row lg:items-stretch justify-between gap-10">
             <div className="space-y-6 max-w-3xl">

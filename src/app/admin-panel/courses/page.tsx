@@ -4,6 +4,8 @@ import { connectDB } from "@/lib/mongodb";
 import { LearningLanguage, LearningLevel, LearningQuestion, LearningTrack } from "@/models/learning";
 import { parseTopicDataFromUploadedTsFile } from "../lib/topic-import";
 
+export const dynamic = "force-dynamic";
+
 async function addCourseAction(formData: FormData) {
   "use server";
   const title = String(formData.get("title") ?? "").trim();
