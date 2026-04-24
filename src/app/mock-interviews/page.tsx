@@ -220,7 +220,7 @@ export default function MockInterviewPage() {
 
               <div className="relative group">
                 <div className="relative bg-white rounded-3xl p-4 border border-slate-200 shadow-2xl rotate-2 md:rotate-3 transition-transform duration-500 group-hover:rotate-0">
-                  <div className="aspect-[4/3] md:aspect-video bg-slate-900 rounded-2xl overflow-hidden border border-white/10 shadow-inner flex flex-col">
+                  <div className="aspect-4/3 md:aspect-video bg-slate-900 rounded-2xl overflow-hidden border border-white/10 shadow-inner flex flex-col">
                     <div className="h-9 shrink-0 bg-white/5 border-b border-white/10 flex items-center px-4 gap-2">
                       <span className="w-2 h-2 rounded-full bg-red-400/60" />
                       <span className="w-2 h-2 rounded-full bg-amber-400/60" />
@@ -277,7 +277,7 @@ export default function MockInterviewPage() {
               return (
                 <div
                   key={step.number}
-                  className="group relative h-full bg-white border border-slate-100 rounded-[2rem] p-8 transition-all duration-500 hover:shadow-[0_32px_64px_-16px_rgba(0,0,0,0.08)] hover:border-indigo-100 hover:-translate-y-1 flex flex-col"
+                  className="group relative h-full bg-white border border-slate-100 rounded-4xl p-8 transition-all duration-500 hover:shadow-[0_32px_64px_-16px_rgba(0,0,0,0.08)] hover:border-indigo-100 hover:-translate-y-1 flex flex-col"
                 >
                   <span className="absolute top-6 right-6 text-[10px] font-black tracking-[0.2em] text-slate-300 select-none">
                     {step.number}
@@ -315,7 +315,7 @@ export default function MockInterviewPage() {
               return (
                 <div
                   key={item.title}
-                  className="pro-card p-8 md:p-10 rounded-[2rem] flex flex-col gap-4"
+                  className="pro-card p-8 md:p-10 rounded-4xl flex flex-col gap-4"
                 >
                   <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
                     <Icon className="w-6 h-6" />
@@ -333,7 +333,7 @@ export default function MockInterviewPage() {
         </section>
 
         <section className="pt-8 pb-4">
-          <div className="relative overflow-hidden rounded-[2rem] md:rounded-[2.5rem] premium-gradient px-8 py-12 md:px-12 md:py-14 flex flex-col lg:flex-row items-center justify-between gap-8 text-center lg:text-left">
+          <div className="relative overflow-hidden rounded-4xl md:rounded-[2.5rem] premium-gradient px-8 py-12 md:px-12 md:py-14 flex flex-col lg:flex-row items-center justify-between gap-8 text-center lg:text-left">
             <div className="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-white/10 pointer-events-none" />
             <div className="absolute -bottom-12 left-1/4 w-40 h-40 rounded-full bg-white/5 pointer-events-none" />
             <div className="relative z-10 max-w-xl">

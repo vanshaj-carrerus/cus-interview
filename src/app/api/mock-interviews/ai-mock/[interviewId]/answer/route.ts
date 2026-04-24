@@ -104,7 +104,7 @@ export async function POST(request: Request, context: Context) {
 
     const existingIndex = (interview.responses ?? []).findIndex((item) => item.questionId === questionId);
     if (existingIndex >= 0) {
-      interview.responses[existingIndex] = responseItem;
+      interview.responses[existingIndex]?.set(responseItem);
     } else {
       interview.responses.push(responseItem);
     }

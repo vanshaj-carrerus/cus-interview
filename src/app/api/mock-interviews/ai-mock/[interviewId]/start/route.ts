@@ -85,7 +85,7 @@ export async function POST(_: Request, context: Context) {
       return NextResponse.json({ error: "Failed to generate interview questions." }, { status: 422 });
     }
 
-    interview.questions = normalized;
+    interview.set("questions", normalized);
     interview.status = "in_progress";
     if (!interview.startedAt) interview.startedAt = new Date();
     await interview.save();
