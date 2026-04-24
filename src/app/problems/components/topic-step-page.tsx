@@ -224,12 +224,6 @@ export default function TopicStepPage({
           </div>
 
           <div className="flex gap-4">
-            <Link
-              href={`/admin-panel?track=${topic.slug}&level=${level.level}`}
-              className="inline-flex items-center rounded-2xl bg-slate-900 px-4 py-2 text-xs font-bold uppercase tracking-wide text-white"
-            >
-              Add Question
-            </Link>
             <StatBox
               label="Live Score"
               value={`${correctCount}/${level.questions.length}`}

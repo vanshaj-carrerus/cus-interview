@@ -1,5 +1,8 @@
 import mongoose, { Schema, type Model, type InferSchemaType } from "mongoose";
 
+export const USER_ROLES = ["User", "SuperAdmin"] as const;
+export type UserRole = (typeof USER_ROLES)[number];
+
 const userSchema = new Schema(
   {
     email: {
@@ -11,6 +14,7 @@ const userSchema = new Schema(
     },
     passwordHash: { type: String, required: true, select: false },
     name: { type: String, default: "", trim: true },
+    role: { type: String, enum: USER_ROLES, default: "User" },
   },
   { timestamps: true }
 );

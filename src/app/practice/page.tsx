@@ -24,6 +24,7 @@ type TrackCardData = {
   title: string;
   intro: string;
   levels: number;
+  questionCount: number;
 };
 
 const icons = [Code2, Cpu, Layout, Database, PuzzleIcon, Terminal];
@@ -42,8 +43,11 @@ export default async function Dashboard() {
     name: item.title,
     href: `/problems/courses/${item.slug}`,
   }));
-  const totalPracticeProblems =
+  const combinedSteps =
     tracks.reduce((sum, item) => sum + item.levels, 0) + courses.reduce((sum, item) => sum + item.levels, 0);
+  const combinedQuestions =
+    tracks.reduce((sum, item) => sum + item.questionCount, 0) +
+    courses.reduce((sum, item) => sum + item.questionCount, 0);
   return (
     <div className="min-h-screen bg-[#fcfcfd] p-6 md:p-12 font-sans text-slate-900 selection:bg-indigo-100 selection:text-primary">
       <div className="max-w-7xl mx-auto">
@@ -77,12 +81,12 @@ export default async function Dashboard() {
               />
               <HeaderStat
                 label="Total Content"
-                value={`${totalPracticeProblems}+ Steps`}
+                value={`${combinedSteps}+ Steps`}
                 icon={<BookOpen className="w-4 h-4" />}
               />
               <HeaderStat
-                label="Problems Available"
-                value={`${totalPracticeProblems} total`}
+                label="Interview Challenges"
+                value={combinedQuestions.toString()}
                 icon={<BarChart3 className="w-4 h-4" />}
               />
             </div>

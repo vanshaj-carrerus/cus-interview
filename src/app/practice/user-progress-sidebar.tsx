@@ -60,10 +60,23 @@ type ApiProgressResponse = {
   };
 };
 
+type AiMockInterviewHistoryItem = {
+  id: string;
+  status: "created" | "in_progress" | "completed" | "cancelled";
+  role: string;
+  framework: string;
+  seniority: string;
+  createdAt: string;
+  questionsCount: number;
+  answeredCount: number;
+  averageScoreOutOf10: number;
+};
+
 export default function Sidebar() {
   const pathname = usePathname();
   const [progressRows, setProgressRows] = useState<TopicProgress[]>([]);
   const [languageRows, setLanguageRows] = useState<LanguageProgress[]>([]);
+  const [mockInterviews, setMockInterviews] = useState<AiMockInterviewHistoryItem[]>([]);
 
   useEffect(() => {
     const loadProgress = async () => {
@@ -90,6 +103,12 @@ export default function Sidebar() {
         const progressRes = await fetch("/api/learning/me/progress", { cache: "no-store" });
         const progressPayload: ApiProgressResponse = progressRes.ok
           ? ((await progressRes.json()) as ApiProgressResponse)
+          : {};
+        const mockInterviewsRes = await fetch("/api/mock-interviews/ai-mock/history", {
+          cache: "no-store",
+        });
+        const mockInterviewsPayload = mockInterviewsRes.ok
+          ? ((await mockInterviewsRes.json()) as { interviews?: AiMockInterviewHistoryItem[] })
           : {};
 
         const progressByTrackSlug = new Map<string, ApiProgressTrack>();
@@ -140,9 +159,11 @@ export default function Sidebar() {
 
         setProgressRows(rows.filter((row) => row.attemptedProblems > 0));
         setLanguageRows(nextLanguageRows);
+        setMockInterviews(mockInterviewsPayload.interviews ?? []);
       } catch {
         setProgressRows([]);
         setLanguageRows([]);
+        setMockInterviews([]);
       }
     };
 
@@ -287,6 +308,48 @@ export default function Sidebar() {
               </div>
             );
             })
+          )}
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-xs font-bold tracking-widest text-slate-400 uppercase">
+            AI Mock Interviews
+          </p>
+          <p className="text-xs text-slate-500">{mockInterviews.length} total</p>
+        </div>
+        <Link
+          href="/mock-interviews/ai-mock"
+          className="mb-3 inline-flex w-full items-center justify-center rounded-xl bg-secondary px-3 py-2 text-xs font-black uppercase tracking-widest text-white"
+        >
+          Start new AI mock
+        </Link>
+        <div className="flex flex-col gap-2">
+          {mockInterviews.length === 0 ? (
+            <p className="text-sm text-slate-500">No AI mock interviews yet.</p>
+          ) : (
+            mockInterviews.map((item) => (
+              <Link
+                key={item.id}
+                href={`/mock-interviews/ai-mock/${item.id}`}
+                className={`rounded-xl border px-3 py-2 transition-colors ${
+                  pathname?.includes(`/mock-interviews/ai-mock/${item.id}`)
+                    ? "border-primary bg-primary/5"
+                    : "border-slate-200 hover:bg-slate-50"
+                }`}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-semibold text-slate-800 truncate">
+                    {item.role || item.framework || "General mock"}
+                  </p>
+                  <p className="text-xs text-slate-500 shrink-0">{item.status.replaceAll("_", " ")}</p>
+                </div>
+                <p className="mt-1 text-[11px] text-slate-500">
+                  {item.answeredCount}/{item.questionsCount} answered | Avg: {item.averageScoreOutOf10}/10
+                </p>
+              </Link>
+            ))
           )}
         </div>
       </div>

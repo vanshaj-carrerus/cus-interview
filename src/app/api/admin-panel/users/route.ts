@@ -5,7 +5,7 @@ import { User } from "@/models/User";
 
 async function assertAuthorized() {
   const user = await getSessionPublicUser();
-  return Boolean(user);
+  return user?.role === "SuperAdmin";
 }
 
 export async function GET() {

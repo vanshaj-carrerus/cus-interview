@@ -8,7 +8,7 @@ import type { TopicData } from "@/app/practice/data/types";
 
 async function assertAuthorized() {
   const user = await getSessionPublicUser();
-  return Boolean(user);
+  return user?.role === "SuperAdmin";
 }
 
 function parseTopicDataFromUploadedTsFile(source: string): TopicData {

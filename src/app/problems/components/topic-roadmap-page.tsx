@@ -88,11 +88,6 @@ export default function TopicRoadmapPage({
 
         {/* Header Hero Section */}
         <header className="relative mb-16 pt-8">
-          <div className="mb-4 flex justify-end">
-            <Link href={`/admin-panel?track=${topic.slug}`} className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-bold uppercase tracking-wide text-white">
-              Add Level
-            </Link>
-          </div>
           <div className="flex flex-col md:flex-row md:items-start justify-between gap-10">
             <div className="flex-1 space-y-4">
               {/* Breadcrumb / Category */}

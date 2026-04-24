@@ -15,10 +15,11 @@ function getSecret(): Uint8Array {
 export type SessionPayload = {
   sub: string;
   email: string;
+  role: "User" | "SuperAdmin";
 };
 
 export async function createSessionToken(payload: SessionPayload): Promise<string> {
-  return new SignJWT({ email: payload.email })
+  return new SignJWT({ email: payload.email, role: payload.role })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(payload.sub)
     .setIssuedAt()
@@ -34,10 +35,11 @@ export async function verifySessionToken(
   });
   const sub = payload.sub;
   const email = typeof payload.email === "string" ? payload.email : "";
+  const role = payload.role === "SuperAdmin" ? "SuperAdmin" : "User";
   if (!sub) {
     throw new Error("Invalid token");
   }
-  return { sub, email };
+  return { sub, email, role };
 }
 
 export const SESSION_MAX_AGE_SECONDS = COOKIE_MAX_SECONDS;

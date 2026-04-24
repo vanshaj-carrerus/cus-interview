@@ -4,6 +4,7 @@ type UserLike = {
   _id: { toString(): string };
   email: string;
   name?: string;
+  role?: "User" | "SuperAdmin";
   createdAt?: Date | string;
 };
 
@@ -19,6 +20,7 @@ export function toPublicUser(user: UserLike): PublicUser {
     id: user._id.toString(),
     email: user.email,
     name: user.name ?? "",
+    role: user.role === "SuperAdmin" ? "SuperAdmin" : "User",
     createdAt,
   };
 }

@@ -1,17 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/components/providers/auth-provider";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const isAuthRequiredNotice = searchParams.get("reason") === "auth-required";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -37,6 +39,15 @@ export default function LoginPage() {
           <p className="text-sm text-secondary/70 mb-8">
             Welcome back. Use the email and password for your CareerUs account.
           </p>
+
+          {isAuthRequiredNotice ? (
+            <p
+              className="mb-5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900"
+              role="status"
+            >
+              Please log in to access this page.
+            </p>
+          ) : null}
 
           <form onSubmit={handleSubmit} className="space-y-5">
             {error ? (

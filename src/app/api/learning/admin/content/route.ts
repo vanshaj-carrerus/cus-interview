@@ -24,7 +24,7 @@ type CrudModel = Model<Record<string, unknown>>;
 
 async function assertAuthorized() {
   const user = await getSessionPublicUser();
-  return Boolean(user);
+  return user?.role === "SuperAdmin";
 }
 
 export async function POST(request: Request) {

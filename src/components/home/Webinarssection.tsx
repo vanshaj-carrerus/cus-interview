@@ -109,12 +109,12 @@ export default function WebinarsSection() {
             </p>
           </div>
 
-          <div className="flex p-1.5 bg-slate-100 rounded-2xl overflow-hidden self-start md:self-auto">
+          <div className="flex p-1.5 bg-slate-100 rounded-2xl max-w-full overflow-x-auto self-start md:self-auto">
             {TABS.map((tab, i) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(i)}
-                className={`px-6 py-2.5 text-xs font-black uppercase tracking-widest rounded-xl transition-all ${activeTab === i ? "bg-white text-slate-900 shadow-md" : "text-slate-400 hover:text-slate-600"
+                className={`px-6 py-2.5 text-xs font-black uppercase tracking-widest min-w-max rounded-xl transition-all ${activeTab === i ? "bg-white text-slate-900 shadow-md" : "text-slate-400 hover:text-slate-600"
                   }`}
               >
                 {tab}

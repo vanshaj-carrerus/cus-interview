@@ -133,9 +133,8 @@ export default function CompaniesAndTestimonials() {
       <section className=" max-w-7xl md:container! mx-auto px-6 mb-24">
         <div className="text-center mb-16">
           <h2 className="text-sm font-black text-primary uppercase tracking-[0.3em] mb-4">Our Track Record</h2>
-          <h3 className="text-3xl md:text-5xl font-black text-secondary tracking-tight">
-            Elevating career journeys at <br />
-            <span className="premium-text-gradient">Top Global Enterprises</span>
+          <h3 className="text-3xl md:text-5xl font-black text-secondary tracking-tight premium-text-gradient">
+            Elevating career journeys at Top Global Enterprises
           </h3>
         </div>
 

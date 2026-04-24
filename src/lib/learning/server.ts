@@ -1,6 +1,6 @@
 import { unstable_cache } from "next/cache";
 import { connectDB } from "@/lib/mongodb";
-import { LearningLanguage, LearningLevel, LearningTrack } from "@/models/learning";
+import { LearningLanguage, LearningLevel, LearningQuestion, LearningTrack } from "@/models/learning";
 import { getTrackBySlug, getTrackLevelContent } from "./service";
 
 export type TopicQuestionView = {
@@ -45,10 +45,27 @@ const getCachedTrackCards = unstable_cache(
     })
       .select({ _id: 1, trackId: 1 })
       .lean();
+    const levelIds = levels.map((level) => level._id);
+    const questions = await LearningQuestion.find({
+      levelId: { $in: levelIds },
+      status: "published",
+    })
+      .select({ _id: 1, levelId: 1 })
+      .lean();
     const countByTrack = new Map<string, number>();
     levels.forEach((level) => {
       const key = String(level.trackId);
       countByTrack.set(key, (countByTrack.get(key) ?? 0) + 1);
+    });
+    const trackIdByLevelId = new Map<string, string>();
+    levels.forEach((level) => {
+      trackIdByLevelId.set(String(level._id), String(level.trackId));
+    });
+    const questionCountByTrack = new Map<string, number>();
+    questions.forEach((question) => {
+      const trackId = trackIdByLevelId.get(String(question.levelId));
+      if (!trackId) return;
+      questionCountByTrack.set(trackId, (questionCountByTrack.get(trackId) ?? 0) + 1);
     });
     return tracks.map((track) => ({
       id: String(track._id),
@@ -57,6 +74,7 @@ const getCachedTrackCards = unstable_cache(
       intro: String(track.intro ?? ""),
       kind: track.kind,
       levels: countByTrack.get(String(track._id)) ?? 0,
+      questionCount: questionCountByTrack.get(String(track._id)) ?? 0,
     }));
   },
   ["learning-track-cards"],

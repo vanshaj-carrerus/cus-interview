@@ -35,6 +35,7 @@ export async function setAuthCookieFromUser(
   const token = await createSessionToken({
     sub: user._id.toString(),
     email: user.email,
+    role: user.role === "SuperAdmin" ? "SuperAdmin" : "User",
   });
   setAuthCookieOnResponse(response, token);
 }
