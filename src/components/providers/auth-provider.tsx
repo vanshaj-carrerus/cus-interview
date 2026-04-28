@@ -78,22 +78,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [fetchCurrentUser]);
 
-  const login = useCallback(async (email: string, password: string) => {
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "same-origin",
-      body: JSON.stringify({ email, password }),
-    });
-    const data = (await res.json()) as { error?: string; user?: PublicUser };
-    if (!res.ok) {
-      return { error: data.error ?? "Login failed." };
-    }
-    if (data.user) {
-      setUser(data.user);
-    }
-    return {};
-  }, []);
+  const login = useCallback(
+    async (email: string, password: string) => {
+      setLoading(true);
+      try {
+        const res = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify({ email, password }),
+        });
+        const data = (await res.json()) as { error?: string; user?: PublicUser };
+        if (!res.ok) {
+          return { error: data.error ?? "Login failed." };
+        }
+        if (data.user) {
+          setUser(data.user);
+          return {};
+        }
+        const nextUser = await fetchCurrentUser();
+        setUser(nextUser);
+        return {};
+      } catch {
+        return { error: "Login failed." };
+      } finally {
+        setLoading(false);
+      }
+    },
+    [fetchCurrentUser]
+  );
 
   const sendSignupCode = useCallback(async (email: string) => {
     const res = await fetch("/api/auth/signup/send-code", {

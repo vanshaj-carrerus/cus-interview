@@ -11,7 +11,7 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navItems = [
     { label: "Practice", href: "/practice" },
-    { label: "Resources", href: "#" },
+    // { label: "Resources", href: "#" },
     { label: "Mock Interviews", href: "/mock-interviews" },
   ];
 

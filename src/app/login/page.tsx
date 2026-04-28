@@ -34,28 +34,40 @@ function LoginPageLoading() {
   );
 }
 
+function getSafeNextPath(nextParam: string | null): string {
+  if (!nextParam) return "/";
+  if (!nextParam.startsWith("/") || nextParam.startsWith("//")) return "/";
+  return nextParam;
+}
+
 function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { login } = useAuth();
+  const { login, refreshUser } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const isAuthRequiredNotice = searchParams.get("reason") === "auth-required";
+  const nextPath = getSafeNextPath(searchParams.get("next"));
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setSubmitting(true);
     const result = await login(email, password);
-    setSubmitting(false);
     if (result.error) {
+      setSubmitting(false);
       setError(result.error);
       return;
     }
-    router.push("/");
+    await refreshUser();
+    router.replace(nextPath);
     router.refresh();
+  }
+
+  if (submitting) {
+    return <LoginPageLoading />;
   }
 
   return (

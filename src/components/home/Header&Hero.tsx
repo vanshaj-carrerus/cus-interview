@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { TypewriterHeadingParagraph } from "./TypewriterHeadingParagraph";
 
 export default function CusInterviewHero() {
@@ -34,12 +35,16 @@ export default function CusInterviewHero() {
             </p>
 
             <div className="flex flex-col sm:flex-row items-center gap-5 justify-center lg:justify-start">
-              <button className="w-full sm:w-auto px-10 py-5 bg-primary text-white font-black text-sm uppercase tracking-[0.2em] rounded-2xl shadow-2xl hover:shadow-primary/30 hover:-translate-y-1 transition-all">
-                Apply for Jobs
-              </button>
-              <button className="w-full sm:w-auto px-10 py-5 bg-white border border-slate-200 text-secondary font-black text-sm uppercase tracking-[0.2em] rounded-2xl hover:bg-slate-50 transition-all">
-                Hire Talent
-              </button>
+              <Link target="_blank" href={"http://custech.co/"}>
+                <button className="w-full cursor-pointer sm:w-auto px-10 py-5 bg-primary text-white font-black text-sm uppercase tracking-[0.2em] rounded-2xl shadow-2xl hover:shadow-primary/30 hover:-translate-y-1 transition-all">
+                  Apply for Jobs
+                </button>
+              </Link>
+              <Link href={"/practice"}>
+                <button className="w-full cursor-pointer sm:w-auto px-10 py-5 bg-white border border-slate-200 text-secondary font-black text-sm uppercase tracking-[0.2em] rounded-2xl hover:bg-slate-50 transition-all">
+                  Practice Now
+                </button>
+              </Link>
             </div>
 
             {/* Social Proof */}
