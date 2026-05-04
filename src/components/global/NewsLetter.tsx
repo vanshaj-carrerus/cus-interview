@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function NewsLetter() {
   return (
     <section className="pt-10 pb-20 px-6 relative overflow-hidden bg-white">
@@ -18,18 +20,12 @@ export default function NewsLetter() {
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-               <a
-                href="#"
+               <Link
+                href={"/signup"}
                 className="w-full sm:w-auto px-12 py-5 bg-primary text-white font-black text-xs uppercase tracking-[0.2em] rounded-2xl shadow-2xl hover:shadow-primary/30 hover:-translate-y-1 transition-all"
                >
                  Get Started Free
-               </a>
-               <a
-                href="#"
-                className="w-full sm:w-auto px-12 py-5 bg-white border border-slate-200 text-secondary font-black text-xs uppercase tracking-[0.2em] rounded-2xl hover:bg-slate-50 transition-all"
-               >
-                 View Pricing
-               </a>
+               </Link>
             </div>
 
             <div className="mt-16 flex flex-wrap justify-center items-center gap-10 opacity-30">

@@ -74,6 +74,12 @@ export default function Header() {
               </span>
             ) : user ? (
               <>
+                <Link
+                  href="/profile"
+                  className="hidden sm:inline text-secondary font-black text-[12px] uppercase tracking-widest hover:text-primary transition-colors"
+                >
+                  Profile
+                </Link>
                 <span className="hidden sm:block max-w-[140px] truncate text-secondary/80 text-[11px] font-bold">
                   {user.name ? user.name : user.email}
                 </span>
@@ -188,6 +194,13 @@ export default function Header() {
               </span>
             ) : user ? (
               <>
+                <Link
+                  href="/profile"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="px-3 py-3 rounded-lg text-secondary font-extrabold text-xs uppercase tracking-widest hover:bg-secondary/5 hover:text-primary transition-colors"
+                >
+                  Profile
+                </Link>
                 <span className="text-secondary/80 text-sm font-bold truncate">
                   {user.name ? user.name : user.email}
                 </span>

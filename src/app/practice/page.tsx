@@ -110,7 +110,7 @@ export default async function Dashboard() {
         </section>
 
         {/* --- Language Specializations --- */}
-        <section className="pb-20">
+        <section id="language-syntax" className="pb-20">
           <SectionHeading
             title="Language & Syntax"
             subtitle="Hone your skills in specific programming environments with fast-track modules."

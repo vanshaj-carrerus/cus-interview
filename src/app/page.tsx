@@ -8,8 +8,24 @@ import MockInterviews from "@/components/home/Mockinterviews"
 import PracticeProblems from "@/components/home/Practiceproblems"
 import VideoExplanations from "@/components/home/Videoexplanations"
 import WebinarsSection from "@/components/home/Webinarssection"
+import { getSessionPublicUser } from "@/lib/get-session-user"
+import { mergeProfileProgressByTrackSlug } from "@/lib/learning/home-cards"
+import { getUserLearningProfile } from "@/lib/learning/service"
+import { getTrackCards } from "@/lib/learning/server"
 
-const Home = () => {
+export const revalidate = 60
+
+const Home = async () => {
+  const [tracks, courses, sessionUser] = await Promise.all([
+    getTrackCards("track"),
+    getTrackCards("course"),
+    getSessionPublicUser(),
+  ])
+  const profile = sessionUser
+    ? await getUserLearningProfile(sessionUser.id, sessionUser.name || sessionUser.email)
+    : null
+  const courseProgressBySlug = mergeProfileProgressByTrackSlug(profile)
+
   return (
     <>
       <CusInterviewHero />
@@ -24,8 +40,8 @@ const Home = () => {
       </div>
 
       <div className="section-surface">
-        <PracticeProblems />
-        <FastTrackCourses />
+        <PracticeProblems tracks={tracks} />
+        <FastTrackCourses courses={courses} progressBySlug={courseProgressBySlug} />
       </div>
 
       <div className="section-soft">

@@ -774,3 +774,83 @@ export async function getUserAttempts(userId: string, limit = 100) {
     attemptedAt: new Date(item.attemptedAt).toISOString(),
   }));
 }
+
+export type UserLearningActivityRollup = {
+  totalScoreAwarded: number;
+  /** UTC calendar day → attempt count (all time). */
+  dayCounts: { dateKey: string; count: number }[];
+  questionAttempts: number;
+  taskAttempts: number;
+  correctAttempts: number;
+  incorrectAttempts: number;
+};
+
+const emptyRollup: UserLearningActivityRollup = {
+  totalScoreAwarded: 0,
+  dayCounts: [],
+  questionAttempts: 0,
+  taskAttempts: 0,
+  correctAttempts: 0,
+  incorrectAttempts: 0,
+};
+
+/** Aggregates all attempts for charts / streaks (not limited to last N rows). */
+export async function getUserLearningActivityRollup(userId: string): Promise<UserLearningActivityRollup> {
+  const trackingModels = await getTrackingModelsSafe();
+  if (!trackingModels) return emptyRollup;
+  const { UserLearningAttempt } = trackingModels;
+  const uid = new Types.ObjectId(userId);
+
+  const [scoreAgg, dayAgg, typeAgg, correctAgg] = await Promise.all([
+    UserLearningAttempt.aggregate<{ _id: null; s: number }>([
+      { $match: { userId: uid } },
+      { $group: { _id: null, s: { $sum: "$scoreAwarded" } } },
+    ]),
+    UserLearningAttempt.aggregate<{ _id: string; c: number }>([
+      { $match: { userId: uid } },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: "%Y-%m-%d", date: "$attemptedAt", timezone: "UTC" },
+          },
+          c: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]),
+    UserLearningAttempt.aggregate<{ _id: string; c: number }>([
+      { $match: { userId: uid } },
+      { $group: { _id: "$entityType", c: { $sum: 1 } } },
+    ]),
+    UserLearningAttempt.aggregate<{ _id: boolean; c: number }>([
+      { $match: { userId: uid } },
+      { $group: { _id: "$isCorrect", c: { $sum: 1 } } },
+    ]),
+  ]);
+
+  const totalScoreAwarded = Number(scoreAgg[0]?.s ?? 0);
+  const dayCounts = dayAgg.map((row) => ({ dateKey: String(row._id), count: Number(row.c ?? 0) }));
+
+  let questionAttempts = 0;
+  let taskAttempts = 0;
+  for (const row of typeAgg) {
+    if (row._id === "question") questionAttempts = Number(row.c ?? 0);
+    if (row._id === "task") taskAttempts = Number(row.c ?? 0);
+  }
+
+  let correctAttempts = 0;
+  let incorrectAttempts = 0;
+  for (const row of correctAgg) {
+    if (row._id === true) correctAttempts = Number(row.c ?? 0);
+    if (row._id === false) incorrectAttempts = Number(row.c ?? 0);
+  }
+
+  return {
+    totalScoreAwarded,
+    dayCounts,
+    questionAttempts,
+    taskAttempts,
+    correctAttempts,
+    incorrectAttempts,
+  };
+}

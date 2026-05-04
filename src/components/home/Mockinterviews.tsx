@@ -42,7 +42,7 @@ export default function MockInterviews() {
           {TYPES.map((type) => (
             <div
               key={type.title}
-              className={`pro-card p-12 flex flex-col gap-8 ${type.bg} ${type.border} relative overflow-hidden group`}
+              className={`pro-card p-6 sm:p-12 flex flex-col gap-8 ${type.bg} ${type.border} relative overflow-hidden group`}
             >
               <div className="relative z-10">
                 <div className="flex justify-between items-start mb-6">

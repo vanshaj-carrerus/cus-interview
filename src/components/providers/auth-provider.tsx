@@ -32,51 +32,60 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
+async function fetchSessionUser(): Promise<
+  | { status: "ok"; user: PublicUser | null }
+  | { status: "unauthorized" }
+  | { status: "unknown" }
+> {
+  try {
+    const res = await fetch("/api/auth/me", {
+      credentials: "same-origin",
+      cache: "no-store",
+    });
+    const data = (await res.json()) as { user?: PublicUser | null };
+    if (res.status === 401) {
+      return { status: "unauthorized" };
+    }
+    if (!res.ok) {
+      return { status: "unknown" };
+    }
+    return { status: "ok", user: data.user ?? null };
+  } catch {
+    return { status: "unknown" };
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<PublicUser | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchCurrentUser = useCallback(async () => {
-    const res = await fetch("/api/auth/me", { credentials: "same-origin" });
-    const data = (await res.json()) as { user?: PublicUser | null };
-    return data.user ?? null;
-  }, []);
-
   const refreshUser = useCallback(async () => {
-    try {
-      const nextUser = await fetchCurrentUser();
-      setUser(nextUser);
-    } catch {
+    const result = await fetchSessionUser();
+    if (result.status === "ok") {
+      setUser(result.user);
+    } else if (result.status === "unauthorized") {
       setUser(null);
-    } finally {
-      setLoading(false);
     }
-  }, [fetchCurrentUser]);
+    setLoading(false);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
 
-    void fetchCurrentUser()
-      .then((nextUser) => {
-        if (!cancelled) {
-          setUser(nextUser);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setUser(null);
-        }
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      });
+    void fetchSessionUser().then((result) => {
+      if (cancelled) return;
+      if (result.status === "ok") {
+        setUser(result.user);
+      } else if (result.status === "unauthorized") {
+        setUser(null);
+      }
+      setLoading(false);
+    });
 
     return () => {
       cancelled = true;
     };
-  }, [fetchCurrentUser]);
+  }, []);
 
   const login = useCallback(
     async (email: string, password: string) => {
@@ -86,6 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "same-origin",
+          cache: "no-store",
           body: JSON.stringify({ email, password }),
         });
         const data = (await res.json()) as { error?: string; user?: PublicUser };
@@ -96,8 +106,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(data.user);
           return {};
         }
-        const nextUser = await fetchCurrentUser();
-        setUser(nextUser);
+        const me = await fetchSessionUser();
+        if (me.status === "ok") {
+          setUser(me.user);
+        }
         return {};
       } catch {
         return { error: "Login failed." };
@@ -105,7 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setLoading(false);
       }
     },
-    [fetchCurrentUser]
+    []
   );
 
   const sendSignupCode = useCallback(async (email: string) => {
@@ -113,6 +125,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "same-origin",
+      cache: "no-store",
       body: JSON.stringify({ email }),
     });
     const data = (await res.json()) as {
@@ -133,6 +146,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "same-origin",
+      cache: "no-store",
       body: JSON.stringify(fields),
     });
     const data = (await res.json()) as { error?: string; user?: PublicUser };
@@ -149,6 +163,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await fetch("/api/auth/logout", {
       method: "POST",
       credentials: "same-origin",
+      cache: "no-store",
     });
     setUser(null);
   }, []);

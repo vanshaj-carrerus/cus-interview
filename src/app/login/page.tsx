@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { useAuth } from "@/components/providers/auth-provider";
 import Link from "next/link";
@@ -41,9 +41,8 @@ function getSafeNextPath(nextParam: string | null): string {
 }
 
 function LoginPageContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const { login, refreshUser } = useAuth();
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -61,9 +60,9 @@ function LoginPageContent() {
       setError(result.error);
       return;
     }
-    await refreshUser();
-    router.replace(nextPath);
-    router.refresh();
+    // Full navigation so the new session cookie is always sent to middleware on
+    // the first request (avoids client transition races with protected `next` URLs).
+    window.location.assign(nextPath);
   }
 
   if (submitting) {

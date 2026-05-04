@@ -1,10 +1,11 @@
+import Link from "next/link";
 import { TypewriterHeadingParagraph } from "./TypewriterHeadingParagraph";
 
 export default function MockInterviewBanner() {
   return (
-    <section className="bg-white px-6 pb-20 relative overflow-hidden">
+    <section className="bg-white px-4 pb-20 relative overflow-hidden">
       <div className=" max-w-7xl md:container! mx-auto">
-        <div className="bg-slate-50 rounded-[3rem] p-8 md:p-16 flex flex-col lg:flex-row items-center gap-12 overflow-hidden relative shadow-[0_40px_80px_rgba(0,0,0,0.05)] border border-slate-100">
+        <div className="bg-slate-50 rounded-[3rem] p-4 md:p-16 flex flex-col lg:flex-row items-center gap-12 overflow-hidden relative shadow-[0_40px_80px_rgba(0,0,0,0.05)] border border-slate-100">
           {/* Decorative background element */}
           <div className="absolute top-0 right-0 w-1/2 h-full bg-primary/5 -skew-x-12 translate-x-20 pointer-events-none" />
 
@@ -20,12 +21,12 @@ export default function MockInterviewBanner() {
             </p>
 
             <div className="flex flex-col sm:flex-row items-center gap-4">
-              <a
-                href="#"
+              <Link
+                href="/mock-interviews"
                 className="w-full sm:w-auto px-8 py-4 bg-primary text-white font-black text-base rounded-2xl shadow-lg hover:-translate-y-1 transition-all"
               >
                 Attempt Now
-              </a>
+              </Link>
               <div className="flex -space-x-3">
                 {[1, 2, 3].map((i) => (
                   <div key={i} className="w-10 h-10 rounded-full border-2 border-white bg-slate-200" />
