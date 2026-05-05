@@ -64,7 +64,7 @@ export default function Header() {
           {/* LOGO */}
           <Link href={"/"}>
             <div className="flex items-center gap-2 group cursor-pointer">
-              <Image src={"/favicon.png"} alt="CUS" width={35} height={35} />
+              <Image src={"/favicon.png"} alt="CUS" width={35} height={35} loading="lazy" />
               <div className="flex flex-col leading-none">
                 <span className="text-secondary font-black text-xl tracking-tighter uppercase">
                   CareerUs

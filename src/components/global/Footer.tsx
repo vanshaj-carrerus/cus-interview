@@ -19,6 +19,7 @@ export default function Footer() {
               width={40}
               height={40}
               className="rounded-xl shadow-md group-hover:opacity-90 transition-opacity"
+              loading="lazy"
             />
             <div className="flex flex-col leading-none">
               <span className="font-black text-white text-lg tracking-tighter uppercase">

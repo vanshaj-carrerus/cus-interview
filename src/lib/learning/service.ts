@@ -262,23 +262,32 @@ type AttemptContext = {
   passScore: number;
 };
 
-async function getAttemptContextFromLevel(levelId: Types.ObjectId): Promise<AttemptContext | null> {
-  const level = await LearningLevel.findById(levelId).lean();
-  if (!level) return null;
-  const track = await LearningTrack.findById(level.trackId).lean();
-  if (!track) return null;
-  const language = await LearningLanguage.findById(track.languageId).lean();
-  if (!language) return null;
+const getCachedAttemptContextFromLevel = unstable_cache(
+  async (levelId: string): Promise<AttemptContext | null> => {
+    const objectLevelId = new Types.ObjectId(levelId);
+    const level = await LearningLevel.findById(objectLevelId).lean();
+    if (!level) return null;
+    const track = await LearningTrack.findById(level.trackId).lean();
+    if (!track) return null;
+    const language = await LearningLanguage.findById(track.languageId).lean();
+    if (!language) return null;
 
-  return {
-    languageId: language._id,
-    languageSlug: String(language.slug),
-    trackId: track._id,
-    trackSlug: String(track.slug),
-    levelId: level._id,
-    levelNumber: Number(level.levelNumber),
-    passScore: Number(level.passScore),
-  };
+    return {
+      languageId: language._id,
+      languageSlug: String(language.slug),
+      trackId: track._id,
+      trackSlug: String(track.slug),
+      levelId: level._id,
+      levelNumber: Number(level.levelNumber),
+      passScore: Number(level.passScore),
+    };
+  },
+  ["learning-attempt-context-from-level-id"],
+  { revalidate: 60 }
+);
+
+async function getAttemptContextFromLevel(levelId: Types.ObjectId): Promise<AttemptContext | null> {
+  return getCachedAttemptContextFromLevel(String(levelId));
 }
 
 async function refreshUserProfile(userId: string) {
@@ -655,19 +664,31 @@ export async function attemptQuestion(params: {
     attemptedAt: new Date(),
   });
 
-  const [levelAttempts, levelCleared] = await Promise.all([
-    UserLearningAttempt.countDocuments({
-      userId: new Types.ObjectId(params.userId),
-      levelId: context.levelId,
-    }),
-    UserLearningAttempt.countDocuments({
-      userId: new Types.ObjectId(params.userId),
-      levelId: context.levelId,
-      isCorrect: true,
-    }),
+  const levelProgress = await UserLearningAttempt.aggregate<{
+    _id: null;
+    attempted: number;
+    cleared: number;
+  }>([
+    {
+      $match: {
+        userId: new Types.ObjectId(params.userId),
+        levelId: context.levelId,
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        attempted: { $sum: 1 },
+        cleared: { $sum: { $cond: ["$isCorrect", 1, 0] } },
+      },
+    },
   ]);
+  const levelAttempts = Number(levelProgress[0]?.attempted ?? 0);
+  const levelCleared = Number(levelProgress[0]?.cleared ?? 0);
 
-  await refreshUserProfile(params.userId);
+  void refreshUserProfile(params.userId).catch((error) => {
+    console.error("refresh-user-profile-after-question-attempt", error);
+  });
   return {
     attemptId: toId(attempt._id),
     entityType: "question" as const,
@@ -793,19 +814,31 @@ export async function attemptTask(params: {
     attemptedAt: new Date(),
   });
 
-  const [levelAttempts, levelCleared] = await Promise.all([
-    UserLearningAttempt.countDocuments({
-      userId: new Types.ObjectId(params.userId),
-      levelId: context.levelId,
-    }),
-    UserLearningAttempt.countDocuments({
-      userId: new Types.ObjectId(params.userId),
-      levelId: context.levelId,
-      isCorrect: true,
-    }),
+  const levelProgress = await UserLearningAttempt.aggregate<{
+    _id: null;
+    attempted: number;
+    cleared: number;
+  }>([
+    {
+      $match: {
+        userId: new Types.ObjectId(params.userId),
+        levelId: context.levelId,
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        attempted: { $sum: 1 },
+        cleared: { $sum: { $cond: ["$isCorrect", 1, 0] } },
+      },
+    },
   ]);
+  const levelAttempts = Number(levelProgress[0]?.attempted ?? 0);
+  const levelCleared = Number(levelProgress[0]?.cleared ?? 0);
 
-  await refreshUserProfile(params.userId);
+  void refreshUserProfile(params.userId).catch((error) => {
+    console.error("refresh-user-profile-after-task-attempt", error);
+  });
   return {
     attemptId: toId(attempt._id),
     entityType: "task" as const,

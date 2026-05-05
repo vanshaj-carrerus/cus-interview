@@ -62,6 +62,7 @@ export default function ImageUploadField({ name, label, defaultValue = "" }: Ima
           width={200}
           height={200}
           alt="Uploaded preview"
+          loading="lazy"
           className="h-14 w-14 rounded-md border border-primary/20 object-cover"
         />
       ) : null}

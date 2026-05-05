@@ -73,7 +73,7 @@ export default function FastTrackCourses({ courses, progressBySlug = {} }: FastT
                   <div className="flex items-center justify-between mb-8">
                     <div className="w-10 h-10 rounded-lg flex items-center justify-center text-xs font-black text-secondary shadow-sm border border-slate-100 bg-slate-50 group-hover:border-primary/30 group-hover:bg-primary/5 transition-colors">
                       {course.iconImage ? (
-                        <Image src={course.iconImage} alt={`${course.title} icon`} className="h-8 w-8 rounded-md object-cover" width={200} height={200} />
+                        <Image src={course.iconImage} alt={`${course.title} icon`} loading="lazy" className="h-8 w-8 rounded-md object-cover" width={200} height={200} />
                       ) : (
                         initials
                       )}

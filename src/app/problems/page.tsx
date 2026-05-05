@@ -27,7 +27,7 @@ export default async function ProblemsHomePage() {
               className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow"
             >
               {topic.iconImage ? (
-                <Image src={topic.iconImage} alt={`${topic.title} icon`} className="mb-3 h-10 w-10 rounded-lg object-cover" width={200} height={200} />
+                <Image src={topic.iconImage} alt={`${topic.title} icon`} loading="lazy" className="mb-3 h-10 w-10 rounded-lg object-cover" width={200} height={200} />
               ) : null}
               <p className="text-xs uppercase tracking-wide text-slate-400">Topic</p>
               <h2 className="text-xl font-bold text-slate-800 mt-1">{topic.title}</h2>
@@ -50,7 +50,7 @@ export default async function ProblemsHomePage() {
               className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow"
             >
               {course.iconImage ? (
-                <Image src={course.iconImage} alt={`${course.title} icon`} className="mb-3 h-10 w-10 rounded-lg object-cover" width={200} height={200} />
+                <Image src={course.iconImage} alt={`${course.title} icon`} loading="lazy" className="mb-3 h-10 w-10 rounded-lg object-cover" width={200} height={200} />
               ) : null}
               <p className="text-xs uppercase tracking-wide text-slate-400">Course</p>
               <h2 className="text-xl font-bold text-slate-800 mt-1">{course.title}</h2>

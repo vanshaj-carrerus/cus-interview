@@ -207,6 +207,7 @@ function TrackCard({ track, index }: { track: TrackCardData; index: number }) {
                 className="h-16 w-auto object-cover rounded-lg"
                 width={400}
                 height={400}
+                loading="lazy"
               />
             ) : (
               <Icon className="w-7 h-7" />
@@ -257,6 +258,7 @@ function CourseLink({
                 className="h-10 w-10 object-cover rounded-lg"
                 width={200}
                 height={200}
+                loading="lazy"
               />
             ) : (
               course.title.slice(0, 2).toUpperCase()
