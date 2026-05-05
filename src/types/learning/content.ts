@@ -18,6 +18,7 @@ export type LearningTrackDto = {
   slug: string;
   title: string;
   intro: string;
+  iconImage: string;
   kind: LearningContentKind;
   status: LearningEntityStatus;
   order: number;

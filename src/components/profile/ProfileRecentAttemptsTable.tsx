@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import type { AttemptTableSortField, LearningAttemptTableRowDto } from "@/types/learning/progress";
 import { logLearningProgress } from "@/lib/learning-progress-debug";
 
@@ -40,13 +40,12 @@ export function ProfileRecentAttemptsTable() {
   const [q, setQ] = useState("");
 
   useEffect(() => {
-    const t = setTimeout(() => setQ(qInput.trim()), 350);
+    const t = setTimeout(() => {
+      setQ(qInput.trim());
+      setPage(1);
+    }, 350);
     return () => clearTimeout(t);
   }, [qInput]);
-
-  useLayoutEffect(() => {
-    setPage(1);
-  }, [q]);
 
   useEffect(() => {
     let cancelled = false;

@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { connectDB } from "@/lib/mongodb";
 import { LearningLanguage, LearningLevel, LearningQuestion, LearningTrack } from "@/models/learning";
 import { parseTopicDataFromUploadedTsFile } from "../lib/topic-import";
+import ImageUploadField from "../components/image-upload-field";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +12,7 @@ async function addTrackAction(formData: FormData) {
   const title = String(formData.get("title") ?? "").trim();
   const slug = String(formData.get("slug") ?? "").trim().toLowerCase();
   const intro = String(formData.get("intro") ?? "").trim();
+  const iconImage = String(formData.get("iconImage") ?? "").trim();
   if (!title || !slug) return;
 
   await connectDB();
@@ -24,6 +26,7 @@ async function addTrackAction(formData: FormData) {
     title,
     slug,
     intro,
+    iconImage,
     kind: "track",
     status: "published",
   });
@@ -153,6 +156,7 @@ export default async function LearningTracksPage() {
             <input name="title" required placeholder="Track title" className="w-full rounded-lg border border-primary/20 bg-white px-3 py-2 text-sm text-secondary" />
             <input name="slug" required placeholder="track-slug" className="w-full rounded-lg border border-primary/20 bg-white px-3 py-2 text-sm text-secondary" />
             <textarea name="intro" placeholder="Track intro" className="h-24 w-full rounded-lg border border-primary/20 bg-white px-3 py-2 text-sm text-secondary" />
+            <ImageUploadField name="iconImage" label="Icon Image" />
             <button className="rounded-lg bg-primary px-3 py-2 text-sm font-medium text-white">Add Track</button>
           </div>
         </form>

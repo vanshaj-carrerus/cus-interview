@@ -6,6 +6,7 @@ export type HomeLearningCard = {
   slug: string;
   title: string;
   intro: string;
+  iconImage: string;
   levels: number;
   questionCount: number;
 };

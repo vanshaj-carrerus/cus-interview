@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { connectDB } from "@/lib/mongodb";
 import { LearningLevel, LearningQuestion, LearningTask, LearningTrack } from "@/models/learning";
 import QuestionTableManager from "../../components/question-table-manager";
+import ImageUploadField from "../../components/image-upload-field";
 
 export const dynamic = "force-dynamic";
 
@@ -11,9 +12,10 @@ async function updateTrackAction(formData: FormData) {
   const id = String(formData.get("id") ?? "");
   const title = String(formData.get("title") ?? "").trim();
   const intro = String(formData.get("intro") ?? "").trim();
+  const iconImage = String(formData.get("iconImage") ?? "").trim();
   if (!id || !title) return;
   await connectDB();
-  await LearningTrack.findByIdAndUpdate(id, { $set: { title, intro } });
+  await LearningTrack.findByIdAndUpdate(id, { $set: { title, intro, iconImage } });
   revalidatePath("/admin-panel");
 }
 
@@ -118,6 +120,7 @@ export default async function LearningTrackDetailPage({ params }: { params: Prom
           <div className="space-y-2">
             <input name="title" defaultValue={String(track.title)} className="w-full rounded-lg border border-primary/20 bg-white px-3 py-2 text-sm text-secondary" />
             <textarea name="intro" defaultValue={String(track.intro ?? "")} className="h-24 w-full rounded-lg border border-primary/20 bg-white px-3 py-2 text-sm text-secondary" />
+            <ImageUploadField name="iconImage" label="Icon Image" defaultValue={String(track.iconImage ?? "")} />
             <button className="rounded-lg bg-primary px-3 py-2 text-sm font-medium text-white">Save Track</button>
           </div>
         </form>

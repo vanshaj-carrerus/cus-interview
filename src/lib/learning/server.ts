@@ -72,6 +72,7 @@ const getCachedTrackCards = unstable_cache(
       slug: String(track.slug),
       title: String(track.title),
       intro: String(track.intro ?? ""),
+      iconImage: String(track.iconImage ?? ""),
       kind: track.kind,
       levels: countByTrack.get(String(track._id)) ?? 0,
       questionCount: questionCountByTrack.get(String(track._id)) ?? 0,

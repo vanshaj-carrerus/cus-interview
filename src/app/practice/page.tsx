@@ -13,6 +13,7 @@ import {
   BookOpen,
 } from "lucide-react";
 import { getTrackCards } from "@/lib/learning/server";
+import Image from "next/image";
 
 export const revalidate = 60;
 
@@ -23,16 +24,34 @@ type TrackCardData = {
   slug: string;
   title: string;
   intro: string;
+  iconImage: string;
   levels: number;
   questionCount: number;
 };
 
 const icons = [Code2, Cpu, Layout, Database, PuzzleIcon, Terminal];
-const backgrounds = ["bg-blue-50", "bg-orange-50", "bg-purple-50", "bg-teal-50", "bg-amber-50", "bg-indigo-50"];
-const colors = ["text-blue-600", "text-orange-500", "text-purple-600", "text-teal-600", "text-amber-500", "text-primary"];
+const backgrounds = [
+  "bg-blue-50",
+  "bg-orange-50",
+  "bg-purple-50",
+  "bg-teal-50",
+  "bg-amber-50",
+  "bg-indigo-50",
+];
+const colors = [
+  "text-blue-600",
+  "text-orange-500",
+  "text-purple-600",
+  "text-teal-600",
+  "text-amber-500",
+  "text-primary",
+];
 
 export default async function Dashboard() {
-  const [trackRows, courseRows] = await Promise.all([getTrackCards("track"), getTrackCards("course")]);
+  const [trackRows, courseRows] = await Promise.all([
+    getTrackCards("track"),
+    getTrackCards("course"),
+  ]);
   const tracks: TrackCardData[] = trackRows.map((item) => ({
     ...item,
     name: item.title,
@@ -44,7 +63,8 @@ export default async function Dashboard() {
     href: `/problems/courses/${item.slug}`,
   }));
   const combinedSteps =
-    tracks.reduce((sum, item) => sum + item.levels, 0) + courses.reduce((sum, item) => sum + item.levels, 0);
+    tracks.reduce((sum, item) => sum + item.levels, 0) +
+    courses.reduce((sum, item) => sum + item.levels, 0);
   const combinedQuestions =
     tracks.reduce((sum, item) => sum + item.questionCount, 0) +
     courses.reduce((sum, item) => sum + item.questionCount, 0);
@@ -53,7 +73,7 @@ export default async function Dashboard() {
       <div className="max-w-7xl mx-auto">
         {/* --- Hero / Header Section --- */}
         <header className="relative mb-20">
-          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-10"> 
+          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-10">
             <div className="space-y-6">
               <div className="flex items-center gap-3">
                 <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-primary bg-indigo-50 px-3 py-1 rounded-full">
@@ -63,7 +83,7 @@ export default async function Dashboard() {
               </div>
 
               <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-secondary leading-[1.1] premium-text-gradient">
-                 Practice Hub
+                Practice Hub
               </h1>
 
               <p className="text-slate-500 text-xl max-w-2xl font-light leading-relaxed">
@@ -180,7 +200,17 @@ function TrackCard({ track, index }: { track: TrackCardData; index: number }) {
           <div
             className={`w-16 h-16 ${backgrounds[index % backgrounds.length]} ${colors[index % colors.length]} group-hover:text-white! group-hover:bg-primary! rounded-3xl flex items-center justify-center mb-8 transition-all duration-500 group-hover:scale-110 group-hover:rotate-6 group-hover:shadow-lg group-hover:shadow-current/10`}
           >
-            <Icon className="w-7 h-7" />
+            {track.iconImage ? (
+              <Image
+                src={track.iconImage}
+                alt={`${track.name} icon`}
+                className="h-8 w-8 object-cover rounded-lg"
+                width={200}
+                height={200}
+              />
+            ) : (
+              <Icon className="w-7 h-7" />
+            )}
           </div>
 
           <h3 className="text-2xl font-bold text-slate-800 mb-3 group-hover:text-primary transition-colors">
@@ -206,7 +236,13 @@ function TrackCard({ track, index }: { track: TrackCardData; index: number }) {
   );
 }
 
-function CourseLink({ course, index }: { course: TrackCardData; index: number }) {
+function CourseLink({
+  course,
+  index,
+}: {
+  course: TrackCardData;
+  index: number;
+}) {
   return (
     <div>
       <Link href={course.href} className="group block">
@@ -214,7 +250,17 @@ function CourseLink({ course, index }: { course: TrackCardData; index: number })
           <div
             className={`w-14 h-14 ${backgrounds[index % backgrounds.length]} rounded-2xl flex items-center justify-center text-lg font-bold mb-4 shadow-sm border border-white transition-transform group-hover:-translate-y-1`}
           >
-            {course.title.slice(0, 2).toUpperCase()}
+            {course.iconImage ? (
+              <Image
+                src={course.iconImage}
+                alt={`${course.title} icon`}
+                className="h-10 w-10 object-cover rounded-lg"
+                width={200}
+                height={200}
+              />
+            ) : (
+              course.title.slice(0, 2).toUpperCase()
+            )}
           </div>
           <div className="text-center">
             <p className="font-bold text-slate-800 group-hover:text-primary transition-colors">

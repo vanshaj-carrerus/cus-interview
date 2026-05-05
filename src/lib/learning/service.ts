@@ -20,7 +20,6 @@ import type {
 } from "@/types/learning/content";
 import type {
   AttemptTableSortField,
-  LearningAttemptDto,
   LearningAttemptTableRowDto,
 } from "@/types/learning/progress";
 import type { UserLearningProfile as UserLearningProfileType } from "@/types/profile";
@@ -68,6 +67,7 @@ function toTrackDto(track: Record<string, unknown>, summary?: { levels: number; 
     slug: String(track.slug),
     title: String(track.title),
     intro: String(track.intro ?? ""),
+    iconImage: String(track.iconImage ?? ""),
     kind: track.kind as LearningTrackDto["kind"],
     status: track.status as LearningTrackDto["status"],
     order: Number(track.order ?? 0),

@@ -3,11 +3,19 @@ import mongoose, { Connection } from "mongoose";
 import { connectDB } from "@/lib/mongodb";
 import { learningProgressDebugEnabled, logLearningProgress } from "@/lib/learning-progress-debug";
 
-/** Prefer dedicated tracking cluster/DB when set; otherwise reuse main app DB (typical for Vercel/single-cluster deploys). */
-const TRACKING_MONGODB_URI =
-  process.env.MONGODB_TRACKING_URI?.trim() || process.env.MONGODB_URI?.trim();
-
-const MAIN_MONGODB_URI = process.env.MONGODB_URI?.trim();
+/**
+ * Host (+ port) + DB name from connection string — ignores credentials.
+ * If MONGODB_TRACKING_URI matches this key for MONGODB_URI, we reuse the main pool so a bad
+ * duplicate secret on Vercel cannot break tracking while the rest of the app works.
+ */
+function mongoDeploymentKey(uri: string): string {
+  const s = uri.trim();
+  const m = /^mongodb(\+srv)?:\/\/(?:[^@]+@)?([^/?]+)(?:\/([^?]*))?/i.exec(s);
+  if (!m) return s;
+  const host = (m[2] ?? "").toLowerCase();
+  const db = (m[3] ?? "").trim();
+  return `${host}/${db}`;
+}
 
 interface TrackingCache {
   conn: Connection | null;
@@ -16,8 +24,6 @@ interface TrackingCache {
 
 const globalForTracking = globalThis as unknown as {
   trackingMongoose: TrackingCache | undefined;
-  /** After Atlas auth fails on MONGODB_TRACKING_URI, reuse main pool (same as fixing a bad duplicate env on Vercel). */
-  trackingUseMainConnectionFallback: boolean | undefined;
 };
 
 const cached: TrackingCache = globalForTracking.trackingMongoose ?? {
@@ -25,39 +31,26 @@ const cached: TrackingCache = globalForTracking.trackingMongoose ?? {
   promise: null,
 };
 
-function isMongoAuthError(err: unknown): boolean {
-  if (!err || typeof err !== "object") return false;
-  const o = err as {
-    code?: number;
-    codeName?: string;
-    message?: string;
-    errorResponse?: { code?: number; errmsg?: string };
-  };
-  const code = o.code ?? o.errorResponse?.code;
-  if (code === 8000 || code === 13) return true;
-  const msg = `${o.message ?? ""} ${o.errorResponse?.errmsg ?? ""}`.toLowerCase();
-  return msg.includes("authentication failed") || msg.includes("bad auth");
-}
-
 export async function connectTrackingDB(): Promise<Connection> {
-  if (!TRACKING_MONGODB_URI) {
-    throw new Error(
-      "Missing database URI for learning progress: set MONGODB_TRACKING_URI or MONGODB_URI.",
-    );
+  const primaryUri = process.env.MONGODB_URI?.trim();
+  if (!primaryUri) {
+    throw new Error("Missing MONGODB_URI environment variable.");
   }
 
-  const useMainConnection = Boolean(
-    MAIN_MONGODB_URI && TRACKING_MONGODB_URI === MAIN_MONGODB_URI,
-  );
+  const trackingUri = process.env.MONGODB_TRACKING_URI?.trim();
 
-  if (useMainConnection || globalForTracking.trackingUseMainConnectionFallback) {
+  const sameDeployment =
+    !trackingUri || mongoDeploymentKey(trackingUri) === mongoDeploymentKey(primaryUri);
+
+  if (sameDeployment) {
     await connectDB();
     if (learningProgressDebugEnabled()) {
       logLearningProgress(
         "mongodb-tracking",
-        globalForTracking.trackingUseMainConnectionFallback
-          ? "using default mongoose connection (fallback after MONGODB_TRACKING_URI auth failure)"
-          : "using default mongoose connection (tracking URI matches MONGODB_URI)",
+        trackingUri
+          ? "using shared mongoose connection (tracking URI same host/DB as MONGODB_URI; auth via MONGODB_URI only)"
+          : "using shared mongoose connection (MONGODB_URI only)",
+        { deploymentKey: mongoDeploymentKey(primaryUri) },
       );
     }
     return mongoose.connection;
@@ -66,36 +59,20 @@ export async function connectTrackingDB(): Promise<Connection> {
   if (cached.conn) {
     return cached.conn;
   }
-
-  try {
-    if (!cached.promise) {
-      if (learningProgressDebugEnabled()) {
-        logLearningProgress(
-          "mongodb-tracking",
-          "opening dedicated mongoose.createConnection for tracking",
-        );
-      }
-      cached.promise = mongoose.createConnection(TRACKING_MONGODB_URI).asPromise();
-    }
-    cached.conn = await cached.promise;
-    globalForTracking.trackingMongoose = cached;
-    return cached.conn;
-  } catch (err) {
-    cached.promise = null;
-    cached.conn = null;
-    globalForTracking.trackingMongoose = cached;
-
-    if (isMongoAuthError(err) && MAIN_MONGODB_URI) {
-      console.warn(
-        "[mongodb-tracking] MONGODB_TRACKING_URI authentication failed; using MONGODB_URI for learning progress collections. " +
-          "On Vercel, remove MONGODB_TRACKING_URI or set it exactly equal to MONGODB_URI (same user/password).",
-        err instanceof Error ? err.message : err,
+  if (!cached.promise) {
+    if (learningProgressDebugEnabled()) {
+      logLearningProgress(
+        "mongodb-tracking",
+        "opening mongoose.createConnection — MONGODB_TRACKING_URI targets a different host/DB than MONGODB_URI",
+        {
+          primaryKey: mongoDeploymentKey(primaryUri),
+          trackingKey: mongoDeploymentKey(trackingUri),
+        },
       );
-      globalForTracking.trackingUseMainConnectionFallback = true;
-      await connectDB();
-      return mongoose.connection;
     }
-
-    throw err;
+    cached.promise = mongoose.createConnection(trackingUri).asPromise();
   }
+  cached.conn = await cached.promise;
+  globalForTracking.trackingMongoose = cached;
+  return cached.conn;
 }

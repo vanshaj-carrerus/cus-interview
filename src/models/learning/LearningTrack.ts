@@ -6,6 +6,7 @@ const learningTrackSchema = new Schema(
     slug: { type: String, required: true, unique: true, trim: true, lowercase: true },
     title: { type: String, required: true, trim: true },
     intro: { type: String, default: "", trim: true },
+    iconImage: { type: String, default: "", trim: true },
     kind: { type: String, enum: ["track", "course"], default: "track", index: true },
     status: {
       type: String,
