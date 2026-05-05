@@ -144,7 +144,7 @@ export default function Sidebar() {
               return {
                 slug: track.slug,
                 title: track.title,
-                href: `/practice/${track.slug}`,
+                href: `/problems/${track.slug}`,
                 totalLevels: track.totalLevels,
                 completedLevels: progress?.completedLevels ?? 0,
                 attemptedProblems: progress?.attempts ?? 0,

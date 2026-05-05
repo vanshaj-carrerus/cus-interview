@@ -1,6 +1,8 @@
 import mongoose, { Connection } from "mongoose";
 
-const TRACKING_MONGODB_URI = process.env.MONGODB_TRACKING_URI;
+/** Prefer dedicated tracking cluster/DB when set; otherwise reuse main app DB (typical for Vercel/single-cluster deploys). */
+const TRACKING_MONGODB_URI =
+  process.env.MONGODB_TRACKING_URI?.trim() || process.env.MONGODB_URI?.trim();
 
 interface TrackingCache {
   conn: Connection | null;
@@ -18,7 +20,9 @@ const cached: TrackingCache = globalForTracking.trackingMongoose ?? {
 
 export async function connectTrackingDB(): Promise<Connection> {
   if (!TRACKING_MONGODB_URI) {
-    throw new Error("Missing MONGODB_TRACKING_URI environment variable.");
+    throw new Error(
+      "Missing database URI for learning progress: set MONGODB_TRACKING_URI or MONGODB_URI.",
+    );
   }
   if (cached.conn) {
     return cached.conn;
