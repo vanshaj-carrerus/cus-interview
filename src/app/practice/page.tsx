@@ -198,15 +198,15 @@ function TrackCard({ track, index }: { track: TrackCardData; index: number }) {
         <div className="relative h-full bg-white border border-slate-100 p-10 rounded-[3rem] transition-all duration-500 hover:shadow-[0_32px_64px_-16px_rgba(0,0,0,0.08)] hover:border-indigo-100 hover:-translate-y-2 flex flex-col">
           {/* Icon Container */}
           <div
-            className={`w-16 h-16 ${backgrounds[index % backgrounds.length]} ${colors[index % colors.length]} group-hover:text-white! group-hover:bg-primary! rounded-3xl flex items-center justify-center mb-8 transition-all duration-500 group-hover:scale-110 group-hover:rotate-6 group-hover:shadow-lg group-hover:shadow-current/10`}
+            className={`w-16 h-16 bg-white ${colors[index % colors.length]} rounded-3xl flex items-center justify-center mb-8 transition-all duration-500 group-hover:scale-110`}
           >
             {track.iconImage ? (
               <Image
                 src={track.iconImage}
                 alt={`${track.name} icon`}
-                className="h-8 w-8 object-cover rounded-lg"
-                width={200}
-                height={200}
+                className="h-16 w-auto object-cover rounded-lg"
+                width={400}
+                height={400}
               />
             ) : (
               <Icon className="w-7 h-7" />
