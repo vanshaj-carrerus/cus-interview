@@ -29,6 +29,14 @@ function toId(value: unknown) {
   return String(value);
 }
 
+/** Matches attempt rows whether `userId` was stored as ObjectId or string (imports / edge cases). */
+function matchUserLearningAttempts(userId: string): Record<string, unknown> {
+  const oid = new Types.ObjectId(userId);
+  return {
+    $or: [{ userId: oid }, { userId }],
+  };
+}
+
 async function getTrackingModelsSafe() {
   try {
     return await getTrackingModels();
@@ -278,29 +286,10 @@ async function refreshUserProfile(userId: string) {
   if (!trackingModels) return;
   const { UserLearningAttempt, UserLearningProfile } = trackingModels;
   const objectUserId = new Types.ObjectId(userId);
+  const userAttemptMatch = matchUserLearningAttempts(userId);
 
-  const [microAgg] = await UserLearningAttempt.aggregate<{
-    _id: null;
-    totalMicro: number;
-    totalCorrect: number;
-    questionMicro: number;
-    taskMicro: number;
-    lastActiveAt: Date | null;
-  }>([
-    { $match: { userId: objectUserId } },
-    {
-      $group: {
-        _id: null,
-        totalMicro: { $sum: 1 },
-        totalCorrect: { $sum: { $cond: ["$isCorrect", 1, 0] } },
-        questionMicro: { $sum: { $cond: [{ $eq: ["$entityType", "question"] }, 1, 0] } },
-        taskMicro: { $sum: { $cond: [{ $eq: ["$entityType", "task"] }, 1, 0] } },
-        lastActiveAt: { $max: "$attemptedAt" },
-      },
-    },
-  ]);
-
-  if (!microAgg) {
+  const attemptCount = await UserLearningAttempt.countDocuments(userAttemptMatch);
+  if (attemptCount === 0) {
     await UserLearningProfile.findOneAndUpdate(
       { userId: objectUserId },
       {
@@ -322,6 +311,35 @@ async function refreshUserProfile(userId: string) {
     return;
   }
 
+  const [microAgg] = await UserLearningAttempt.aggregate<{
+    _id: null;
+    totalMicro: number;
+    totalCorrect: number;
+    questionMicro: number;
+    taskMicro: number;
+    lastActiveAt: Date | null;
+  }>([
+    { $match: userAttemptMatch },
+    {
+      $group: {
+        _id: null,
+        totalMicro: { $sum: 1 },
+        totalCorrect: { $sum: { $cond: ["$isCorrect", 1, 0] } },
+        questionMicro: { $sum: { $cond: [{ $eq: ["$entityType", "question"] }, 1, 0] } },
+        taskMicro: { $sum: { $cond: [{ $eq: ["$entityType", "task"] }, 1, 0] } },
+        lastActiveAt: { $max: "$attemptedAt" },
+      },
+    },
+  ]);
+
+  if (!microAgg) {
+    console.error(
+      "[cus-learning] refreshUserProfile: attempts exist but aggregate returned no group — check userId field types in userlearningattempts",
+      { userId, attemptCount },
+    );
+    return;
+  }
+
   const [facetResult] = await UserLearningAttempt.aggregate<{
     levelDayCounts: { _id: Types.ObjectId; practiceDays: number }[];
     levelMicro: {
@@ -331,7 +349,7 @@ async function refreshUserProfile(userId: string) {
       lastAttemptAt: Date;
     }[];
   }>([
-    { $match: { userId: objectUserId } },
+    { $match: userAttemptMatch },
     {
       $facet: {
         levelDayCounts: [
@@ -361,7 +379,7 @@ async function refreshUserProfile(userId: string) {
   ]);
 
   const firstCorrectRows = await UserLearningAttempt.aggregate<{ _id: Types.ObjectId; firstAt: Date }>([
-    { $match: { userId: objectUserId, isCorrect: true } },
+    { $match: { $and: [userAttemptMatch, { isCorrect: true }] } },
     { $sort: { attemptedAt: 1 } },
     { $group: { _id: "$levelId", firstAt: { $first: "$attemptedAt" } } },
   ]);
@@ -394,23 +412,14 @@ async function refreshUserProfile(userId: string) {
   }
 
   const levelIds = Array.from(microByLevel.keys()).map((id) => new Types.ObjectId(id));
-  let levelsFromDb = await LearningLevel.find({
+  /** Any status — attempts already happened on these levels; excluding drafts/archived hid progress entirely. */
+  const levelsFromDb = await LearningLevel.find({
     _id: { $in: levelIds },
-    status: "published",
   }).lean();
 
   if (levelsFromDb.length === 0 && levelIds.length > 0) {
-    logLearningProgress("refreshUserProfile", "no published levels matched attempt levelIds; retrying without status filter", {
-      levelIdCount: levelIds.length,
-    });
-    levelsFromDb = await LearningLevel.find({
-      _id: { $in: levelIds },
-    }).lean();
-  }
-
-  if (levelsFromDb.length === 0 && levelIds.length > 0) {
     console.error(
-      "[learning-progress] refreshUserProfile: attempts reference levelIds not found in LearningLevel collection (check DB / content vs tracking).",
+      "[cus-learning] refreshUserProfile: attempts reference levelIds not found in LearningLevel collection",
       { levelIds: levelIds.map((id) => String(id)) },
     );
   }
@@ -816,39 +825,55 @@ export async function attemptTask(params: {
 }
 
 export async function getUserLearningProfile(userId: string, displayName: string): Promise<UserLearningProfileType> {
+  const empty: UserLearningProfileType = {
+    userId,
+    displayName,
+    totals: {
+      totalAttempts: 0,
+      totalCleared: 0,
+      totalQuestionsAttempted: 0,
+      totalTasksAttempted: 0,
+      totalLevelsCompleted: 0,
+    },
+    languages: [],
+    recentAttempts: [],
+  };
+
   await connectDB();
   const trackingModels = await getTrackingModelsSafe();
   if (!trackingModels) {
-    return {
-      userId,
-      displayName,
-      totals: {
-        totalAttempts: 0,
-        totalCleared: 0,
-        totalQuestionsAttempted: 0,
-        totalTasksAttempted: 0,
-        totalLevelsCompleted: 0,
-      },
-      languages: [],
-      recentAttempts: [],
-    };
+    return empty;
   }
   const { UserLearningAttempt, UserLearningProfile } = trackingModels;
-  const profile = await UserLearningProfile.findOne({ userId: new Types.ObjectId(userId) }).lean();
+  const oid = new Types.ObjectId(userId);
+  const userAttemptMatch = matchUserLearningAttempts(userId);
+
+  const attemptCount = await UserLearningAttempt.countDocuments(userAttemptMatch);
+  let profile = await UserLearningProfile.findOne({ userId: oid }).lean();
+
+  const languageRows = (profile?.languages ?? []).length;
+  const cachedSubmissions =
+    Number(profile?.totals?.totalQuestionsAttempted ?? 0) +
+    Number(profile?.totals?.totalTasksAttempted ?? 0);
+
+  const needsReconcile =
+    attemptCount > 0 &&
+    (!profile || languageRows === 0 || (cachedSubmissions === 0 && attemptCount > 0));
+
+  if (needsReconcile) {
+    console.warn("[cus-learning:reconcile] rebuilding UserLearningProfile from attempts", {
+      userId: `${userId.slice(0, 8)}…`,
+      attemptCount,
+      hadProfileDoc: Boolean(profile),
+      languageRows,
+      cachedSubmissions,
+    });
+    await refreshUserProfile(userId);
+    profile = await UserLearningProfile.findOne({ userId: oid }).lean();
+  }
+
   if (!profile) {
-    return {
-      userId,
-      displayName,
-      totals: {
-        totalAttempts: 0,
-        totalCleared: 0,
-        totalQuestionsAttempted: 0,
-        totalTasksAttempted: 0,
-        totalLevelsCompleted: 0,
-      },
-      languages: [],
-      recentAttempts: [],
-    };
+    return empty;
   }
 
   return {
@@ -893,10 +918,10 @@ function escapeRegex(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-function buildUserAttemptsFilter(userId: Types.ObjectId, q: string): Record<string, unknown> {
-  const base: Record<string, unknown> = { userId };
+function buildUserAttemptsFilter(userId: string, q: string): Record<string, unknown> {
+  const userMatch = matchUserLearningAttempts(userId);
   const trimmed = q.trim();
-  if (!trimmed) return base;
+  if (!trimmed) return userMatch;
   const escaped = escapeRegex(trimmed);
   const or: Record<string, unknown>[] = [
     { entityType: new RegExp(escaped, "i") },
@@ -925,7 +950,7 @@ function buildUserAttemptsFilter(userId: Types.ObjectId, q: string): Record<stri
   const ql = trimmed.toLowerCase();
   if (["yes", "true", "correct"].includes(ql)) or.push({ isCorrect: true });
   if (["no", "false", "wrong", "incorrect"].includes(ql)) or.push({ isCorrect: false });
-  return { $and: [base, { $or: or }] };
+  return { $and: [userMatch, { $or: or }] };
 }
 
 export type UserAttemptsPageResult = {
@@ -949,8 +974,7 @@ export async function getUserAttemptsPage(
   const trackingModels = await getTrackingModelsSafe();
   if (!trackingModels) return null;
   const { UserLearningAttempt } = trackingModels;
-  const oid = new Types.ObjectId(userId);
-  const filter = buildUserAttemptsFilter(oid, opts.q);
+  const filter = buildUserAttemptsFilter(userId, opts.q);
   const sortDir = opts.dir === "asc" ? 1 : -1;
   const sort: Record<string, 1 | -1> = { [opts.sort]: sortDir };
   const page = Math.max(1, opts.page);
@@ -1002,15 +1026,15 @@ export async function getUserLearningActivityRollup(userId: string): Promise<Use
   const trackingModels = await getTrackingModelsSafe();
   if (!trackingModels) return emptyRollup;
   const { UserLearningAttempt } = trackingModels;
-  const uid = new Types.ObjectId(userId);
+  const userMatch = matchUserLearningAttempts(userId);
 
   const [scoreAgg, dayAgg, typeAgg, correctAgg] = await Promise.all([
     UserLearningAttempt.aggregate<{ _id: null; s: number }>([
-      { $match: { userId: uid } },
+      { $match: userMatch },
       { $group: { _id: null, s: { $sum: "$scoreAwarded" } } },
     ]),
     UserLearningAttempt.aggregate<{ _id: string; c: number }>([
-      { $match: { userId: uid } },
+      { $match: userMatch },
       {
         $project: {
           day: {
@@ -1029,11 +1053,11 @@ export async function getUserLearningActivityRollup(userId: string): Promise<Use
       { $sort: { _id: 1 } },
     ]),
     UserLearningAttempt.aggregate<{ _id: string; c: number }>([
-      { $match: { userId: uid } },
+      { $match: userMatch },
       { $group: { _id: "$entityType", c: { $sum: 1 } } },
     ]),
     UserLearningAttempt.aggregate<{ _id: boolean; c: number }>([
-      { $match: { userId: uid } },
+      { $match: userMatch },
       { $group: { _id: "$isCorrect", c: { $sum: 1 } } },
     ]),
   ]);

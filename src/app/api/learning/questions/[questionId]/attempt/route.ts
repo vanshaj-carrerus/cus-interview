@@ -32,6 +32,13 @@ export async function POST(request: Request, { params }: Props) {
       return NextResponse.json({ error: "Question not found." }, { status: 404 });
     }
 
+    console.info("[cus-learning:api/question-attempt]", {
+      questionId,
+      hasSession: Boolean(sessionUser),
+      tracked: "tracked" in result ? result.tracked : undefined,
+      isCorrect: result.isCorrect,
+      attemptId: result.attemptId,
+    });
     logLearningProgress("question-attempt", "POST completed", {
       questionId,
       hasSession: Boolean(sessionUser),

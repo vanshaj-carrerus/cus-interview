@@ -3,6 +3,8 @@ import { getSessionPublicUser } from "@/lib/get-session-user";
 import { getUserAttemptsPage } from "@/lib/learning/service";
 import type { AttemptTableSortField } from "@/types/learning/progress";
 
+export const dynamic = "force-dynamic";
+
 const SORT_FIELDS: AttemptTableSortField[] = [
   "attemptedAt",
   "levelNumber",
@@ -31,8 +33,14 @@ export async function GET(request: Request) {
 
     const result = await getUserAttemptsPage(sessionUser.id, { page, pageSize, sort, dir, q });
     if (!result) {
+      console.warn("[cus-learning:api/me/attempts] tracking unavailable — returning empty list");
       return NextResponse.json({ items: [], total: 0, page, pageSize });
     }
+    console.info("[cus-learning:api/me/attempts]", {
+      userIdSnippet: `${sessionUser.id.slice(0, 8)}…`,
+      total: result.total,
+      page: result.page,
+    });
     return NextResponse.json(result);
   } catch (error) {
     console.error("learning/me/attempts", error);

@@ -13,6 +13,12 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
     }
     const profile = await getUserLearningProfile(sessionUser.id, sessionUser.name || sessionUser.email);
+    console.info("[cus-learning:api/me/progress]", {
+      userIdSnippet: `${sessionUser.id.slice(0, 8)}…`,
+      languageRows: profile.languages.length,
+      totals: profile.totals,
+      trackSlugs: profile.languages.flatMap((l) => l.tracks.map((t) => t.trackSlug)),
+    });
     logLearningProgress("me-progress", "GET profile", {
       userIdSnippet: `${sessionUser.id.slice(0, 8)}…`,
       languageRows: profile.languages.length,

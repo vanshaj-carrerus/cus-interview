@@ -2,6 +2,7 @@
 
 import { useEffect, useLayoutEffect, useState } from "react";
 import type { AttemptTableSortField, LearningAttemptTableRowDto } from "@/types/learning/progress";
+import { logLearningProgress } from "@/lib/learning-progress-debug";
 
 function formatAttemptUtcLabel(iso: string): string {
   const d = new Date(iso);
@@ -60,12 +61,23 @@ export function ProfileRecentAttemptsTable() {
           dir,
           q,
         });
-        const res = await fetch(`/api/learning/me/attempts?${params}`);
-        if (!res.ok) throw new Error("Failed to load");
+        const res = await fetch(`/api/learning/me/attempts?${params}`, {
+          credentials: "include",
+          cache: "no-store",
+        });
         const data = (await res.json()) as {
           items?: LearningAttemptTableRowDto[];
           total?: number;
+          error?: string;
         };
+        logLearningProgress("profile-attempts-table", "GET /api/learning/me/attempts", {
+          status: res.status,
+          ok: res.ok,
+          total: data.total,
+          itemCount: Array.isArray(data.items) ? data.items.length : 0,
+          error: data.error,
+        });
+        if (!res.ok) throw new Error(data.error ?? "Failed to load");
         if (!cancelled) {
           setItems(Array.isArray(data.items) ? data.items : []);
           setTotal(typeof data.total === "number" ? data.total : 0);
