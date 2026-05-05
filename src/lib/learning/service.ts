@@ -17,7 +17,11 @@ import type {
   LearningTaskDto,
   LearningTrackDto,
 } from "@/types/learning/content";
-import type { LearningAttemptDto } from "@/types/learning/progress";
+import type {
+  AttemptTableSortField,
+  LearningAttemptDto,
+  LearningAttemptTableRowDto,
+} from "@/types/learning/progress";
 import type { UserLearningProfile as UserLearningProfileType } from "@/types/profile";
 
 function toId(value: unknown) {
@@ -270,130 +274,269 @@ async function refreshUserProfile(userId: string) {
   if (!trackingModels) return;
   const { UserLearningAttempt, UserLearningProfile } = trackingModels;
   const objectUserId = new Types.ObjectId(userId);
-  const attempts = await UserLearningAttempt.find({ userId: objectUserId })
-    .sort({ attemptedAt: -1 })
-    .limit(500)
-    .lean();
 
-  const totals = {
-    totalAttempts: attempts.length,
-    totalCleared: attempts.filter((item) => item.isCorrect).length,
-    totalQuestionsAttempted: attempts.filter((item) => item.entityType === "question").length,
-    totalTasksAttempted: attempts.filter((item) => item.entityType === "task").length,
-    totalLevelsCompleted: 0,
-  };
-
-  const perLanguage = new Map<string, {
-    languageId: string;
-    languageSlug: string;
-    attempts: number;
-    cleared: number;
-    tracks: Map<string, {
-      trackId: string;
-      trackSlug: string;
-      attempts: number;
-      cleared: number;
-      levels: Map<string, { levelId: string; levelNumber: number; attempts: number; cleared: number; lastAttemptAt?: Date }>;
-    }>;
-  }>();
-
-  for (const attempt of attempts) {
-    const languageKey = toId(attempt.languageId);
-    const trackKey = toId(attempt.trackId);
-    const levelKey = toId(attempt.levelId);
-    const languageState = perLanguage.get(languageKey) ?? {
-      languageId: languageKey,
-      languageSlug: "",
-      attempts: 0,
-      cleared: 0,
-      tracks: new Map(),
-    };
-    languageState.attempts += 1;
-    if (attempt.isCorrect) languageState.cleared += 1;
-
-    const trackState = languageState.tracks.get(trackKey) ?? {
-      trackId: trackKey,
-      trackSlug: "",
-      attempts: 0,
-      cleared: 0,
-      levels: new Map(),
-    };
-    trackState.attempts += 1;
-    if (attempt.isCorrect) trackState.cleared += 1;
-
-    const levelState = trackState.levels.get(levelKey) ?? {
-      levelId: levelKey,
-      levelNumber: attempt.levelNumber,
-      attempts: 0,
-      cleared: 0,
-      lastAttemptAt: undefined,
-    };
-    levelState.attempts += 1;
-    if (attempt.isCorrect) levelState.cleared += 1;
-    levelState.lastAttemptAt = attempt.attemptedAt;
-    trackState.levels.set(levelKey, levelState);
-
-    languageState.tracks.set(trackKey, trackState);
-    perLanguage.set(languageKey, languageState);
-  }
-
-  const trackIds = Array.from(new Set(attempts.map((item) => toId(item.trackId))));
-  const languageIds = Array.from(new Set(attempts.map((item) => toId(item.languageId))));
-  const [tracks, languages, levels] = await Promise.all([
-    LearningTrack.find({ _id: { $in: trackIds } }).lean(),
-    LearningLanguage.find({ _id: { $in: languageIds } }).lean(),
-    LearningLevel.find({ trackId: { $in: trackIds }, status: "published" }).lean(),
+  const [microAgg] = await UserLearningAttempt.aggregate<{
+    _id: null;
+    totalMicro: number;
+    totalCorrect: number;
+    questionMicro: number;
+    taskMicro: number;
+    lastActiveAt: Date | null;
+  }>([
+    { $match: { userId: objectUserId } },
+    {
+      $group: {
+        _id: null,
+        totalMicro: { $sum: 1 },
+        totalCorrect: { $sum: { $cond: ["$isCorrect", 1, 0] } },
+        questionMicro: { $sum: { $cond: [{ $eq: ["$entityType", "question"] }, 1, 0] } },
+        taskMicro: { $sum: { $cond: [{ $eq: ["$entityType", "task"] }, 1, 0] } },
+        lastActiveAt: { $max: "$attemptedAt" },
+      },
+    },
   ]);
 
-  const languageSlugMap = new Map(languages.map((item) => [toId(item._id), String(item.slug)]));
-  const trackSlugMap = new Map(tracks.map((item) => [toId(item._id), String(item.slug)]));
-  const trackLevelCountMap = new Map<string, number>();
-  levels.forEach((level) => {
-    const key = toId(level.trackId);
-    trackLevelCountMap.set(key, (trackLevelCountMap.get(key) ?? 0) + 1);
-  });
+  if (!microAgg) {
+    await UserLearningProfile.findOneAndUpdate(
+      { userId: objectUserId },
+      {
+        $set: {
+          totals: {
+            totalAttempts: 0,
+            totalCleared: 0,
+            totalQuestionsAttempted: 0,
+            totalTasksAttempted: 0,
+            totalLevelsCompleted: 0,
+          },
+          languages: [],
+          lastActiveAt: null,
+        },
+        $setOnInsert: { userId: objectUserId },
+      },
+      { upsert: true, new: true }
+    );
+    return;
+  }
 
-  const languageDocs = Array.from(perLanguage.values()).map((languageState) => {
-    languageState.languageSlug = languageSlugMap.get(languageState.languageId) ?? "unknown";
-    const tracksDoc = Array.from(languageState.tracks.values()).map((trackState) => {
-      trackState.trackSlug = trackSlugMap.get(trackState.trackId) ?? "unknown";
-      const levelDocs = Array.from(trackState.levels.values())
+  const [facetResult] = await UserLearningAttempt.aggregate<{
+    levelDayCounts: { _id: Types.ObjectId; practiceDays: number }[];
+    levelMicro: {
+      _id: Types.ObjectId;
+      microAttempts: number;
+      correctMicro: number;
+      lastAttemptAt: Date;
+    }[];
+  }>([
+    { $match: { userId: objectUserId } },
+    {
+      $facet: {
+        levelDayCounts: [
+          {
+            $project: {
+              levelId: 1,
+              utcDay: {
+                $dateToString: { format: "%Y-%m-%d", date: "$attemptedAt", timezone: "UTC" },
+              },
+            },
+          },
+          { $group: { _id: { lv: "$levelId", d: "$utcDay" } } },
+          { $group: { _id: "$_id.lv", practiceDays: { $sum: 1 } } },
+        ],
+        levelMicro: [
+          {
+            $group: {
+              _id: "$levelId",
+              microAttempts: { $sum: 1 },
+              correctMicro: { $sum: { $cond: ["$isCorrect", 1, 0] } },
+              lastAttemptAt: { $max: "$attemptedAt" },
+            },
+          },
+        ],
+      },
+    },
+  ]);
+
+  const firstCorrectRows = await UserLearningAttempt.aggregate<{ _id: Types.ObjectId; firstAt: Date }>([
+    { $match: { userId: objectUserId, isCorrect: true } },
+    { $sort: { attemptedAt: 1 } },
+    { $group: { _id: "$levelId", firstAt: { $first: "$attemptedAt" } } },
+  ]);
+
+  const practiceByLevel = new Map<string, number>();
+  for (const row of facetResult?.levelDayCounts ?? []) {
+    practiceByLevel.set(toId(row._id), Number(row.practiceDays ?? 0));
+  }
+
+  const microByLevel = new Map<
+    string,
+    { microAttempts: number; correctMicro: number; lastAttemptAt: Date }
+  >();
+  for (const row of facetResult?.levelMicro ?? []) {
+    microByLevel.set(toId(row._id), {
+      microAttempts: Number(row.microAttempts ?? 0),
+      correctMicro: Number(row.correctMicro ?? 0),
+      lastAttemptAt: row.lastAttemptAt,
+    });
+  }
+
+  const firstCorrectByLevel = new Map<string, Date>();
+  for (const row of firstCorrectRows) {
+    firstCorrectByLevel.set(toId(row._id), row.firstAt);
+  }
+
+  let totalLevelPracticeDays = 0;
+  for (const v of practiceByLevel.values()) {
+    totalLevelPracticeDays += v;
+  }
+
+  const levelIds = Array.from(microByLevel.keys()).map((id) => new Types.ObjectId(id));
+  const levelsFromDb = await LearningLevel.find({
+    _id: { $in: levelIds },
+    status: "published",
+  }).lean();
+
+  const trackIdStrs = [...new Set(levelsFromDb.map((l) => toId(l.trackId)))];
+  const trackOids = trackIdStrs.map((id) => new Types.ObjectId(id));
+  const [tracks, levelsForCounts] = await Promise.all([
+    LearningTrack.find({ _id: { $in: trackOids } }).lean(),
+    LearningLevel.find({ trackId: { $in: trackOids }, status: "published" }).lean(),
+  ]);
+
+  const trackById = new Map(tracks.map((t) => [toId(t._id), t]));
+  const languageOids = [...new Set(tracks.map((t) => toId(t.languageId)))].map((id) => new Types.ObjectId(id));
+  const languages = await LearningLanguage.find({ _id: { $in: languageOids } }).lean();
+
+  const languageSlugMap = new Map(languages.map((l) => [toId(l._id), String(l.slug)]));
+  const trackSlugMap = new Map(tracks.map((t) => [toId(t._id), String(t.slug)]));
+  const trackLevelCountMap = new Map<string, number>();
+  for (const level of levelsForCounts) {
+    const tid = toId(level.trackId);
+    trackLevelCountMap.set(tid, (trackLevelCountMap.get(tid) ?? 0) + 1);
+  }
+
+  type LevelRollup = {
+    levelId: string;
+    levelNumber: number;
+    attempts: number;
+    cleared: number;
+    completed: boolean;
+    firstPassedAt: Date | null;
+    lastAttemptAt: Date | null;
+  };
+
+  const perLanguage = new Map<
+    string,
+    {
+      languageId: string;
+      tracks: Map<
+        string,
+        {
+          trackId: string;
+          levels: Map<string, LevelRollup>;
+        }
+      >;
+    }
+  >();
+
+  for (const level of levelsFromDb) {
+    const lid = toId(level._id);
+    const micro = microByLevel.get(lid);
+    if (!micro) continue;
+
+    const track = trackById.get(toId(level.trackId));
+    if (!track) continue;
+
+    const langId = toId(track.languageId);
+    const tid = toId(track._id);
+    const practiceDays = practiceByLevel.get(lid) ?? 0;
+    const passScore = Math.max(1, Number(level.passScore ?? 1));
+    const correctMicro = micro.correctMicro;
+    const completed = correctMicro >= passScore;
+
+    const languageState = perLanguage.get(langId) ?? {
+      languageId: langId,
+      tracks: new Map(),
+    };
+
+    const trackState = languageState.tracks.get(tid) ?? {
+      trackId: tid,
+      levels: new Map(),
+    };
+
+    trackState.levels.set(lid, {
+      levelId: lid,
+      levelNumber: Number(level.levelNumber),
+      attempts: practiceDays,
+      cleared: correctMicro,
+      completed,
+      firstPassedAt: completed ? (firstCorrectByLevel.get(lid) ?? null) : null,
+      lastAttemptAt: micro.lastAttemptAt ?? null,
+    });
+
+    languageState.tracks.set(tid, trackState);
+    perLanguage.set(langId, languageState);
+  }
+
+  const languageDocs = Array.from(perLanguage.values()).map((ls) => {
+    const languageSlug = languageSlugMap.get(ls.languageId) ?? "unknown";
+    let langAttempts = 0;
+    let langCleared = 0;
+
+    const tracksDoc = Array.from(ls.tracks.values()).map((ts) => {
+      const trackSlug = trackSlugMap.get(ts.trackId) ?? "unknown";
+
+      const levelDocs = Array.from(ts.levels.values())
         .sort((a, b) => a.levelNumber - b.levelNumber)
-        .map((levelState) => {
-          const completed = levelState.cleared > 0;
-          return {
-            levelId: new Types.ObjectId(levelState.levelId),
-            levelNumber: levelState.levelNumber,
-            attempts: levelState.attempts,
-            cleared: levelState.cleared,
-            completed,
-            firstPassedAt: completed ? levelState.lastAttemptAt : null,
-            lastAttemptAt: levelState.lastAttemptAt ?? null,
-          };
-        });
+        .map((lev) => ({
+          levelId: new Types.ObjectId(lev.levelId),
+          levelNumber: lev.levelNumber,
+          attempts: lev.attempts,
+          cleared: lev.cleared,
+          completed: lev.completed,
+          firstPassedAt: lev.firstPassedAt,
+          lastAttemptAt: lev.lastAttemptAt,
+        }));
+
+      const trackAttempts = levelDocs.reduce((acc, l) => acc + l.attempts, 0);
+      const trackCleared = levelDocs.reduce((acc, l) => acc + l.cleared, 0);
+      langAttempts += trackAttempts;
+      langCleared += trackCleared;
 
       const completedLevels = levelDocs.filter((item) => item.completed).length;
-      totals.totalLevelsCompleted += completedLevels;
 
       return {
-        trackId: new Types.ObjectId(trackState.trackId),
-        trackSlug: trackState.trackSlug,
-        totalLevels: trackLevelCountMap.get(trackState.trackId) ?? levelDocs.length,
+        trackId: new Types.ObjectId(ts.trackId),
+        trackSlug,
+        totalLevels: trackLevelCountMap.get(ts.trackId) ?? levelDocs.length,
         completedLevels,
-        attempts: trackState.attempts,
-        cleared: trackState.cleared,
+        attempts: trackAttempts,
+        cleared: trackCleared,
         levels: levelDocs,
       };
     });
 
     return {
-      languageId: new Types.ObjectId(languageState.languageId),
-      languageSlug: languageState.languageSlug,
-      attempts: languageState.attempts,
-      cleared: languageState.cleared,
+      languageId: new Types.ObjectId(ls.languageId),
+      languageSlug,
+      attempts: langAttempts,
+      cleared: langCleared,
       tracks: tracksDoc,
     };
   });
+
+  const totalLevelsCompleted = languageDocs.reduce(
+    (acc, lang) =>
+      acc + lang.tracks.reduce((a, tr) => a + tr.levels.filter((lv) => lv.completed).length, 0),
+    0
+  );
+
+  const totals = {
+    totalAttempts: totalLevelPracticeDays,
+    totalCleared: Number(microAgg.totalCorrect ?? 0),
+    totalQuestionsAttempted: Number(microAgg.questionMicro ?? 0),
+    totalTasksAttempted: Number(microAgg.taskMicro ?? 0),
+    totalLevelsCompleted,
+  };
 
   await UserLearningProfile.findOneAndUpdate(
     { userId: objectUserId },
@@ -401,7 +544,7 @@ async function refreshUserProfile(userId: string) {
       $set: {
         totals,
         languages: languageDocs,
-        lastActiveAt: attempts[0]?.attemptedAt ?? null,
+        lastActiveAt: microAgg.lastActiveAt ?? null,
       },
       $setOnInsert: { userId: objectUserId },
     },
@@ -487,12 +630,10 @@ export async function attemptQuestion(params: {
     UserLearningAttempt.countDocuments({
       userId: new Types.ObjectId(params.userId),
       levelId: context.levelId,
-      entityType: "question",
     }),
     UserLearningAttempt.countDocuments({
       userId: new Types.ObjectId(params.userId),
       levelId: context.levelId,
-      entityType: "question",
       isCorrect: true,
     }),
   ]);
@@ -627,12 +768,10 @@ export async function attemptTask(params: {
     UserLearningAttempt.countDocuments({
       userId: new Types.ObjectId(params.userId),
       levelId: context.levelId,
-      entityType: "task",
     }),
     UserLearningAttempt.countDocuments({
       userId: new Types.ObjectId(params.userId),
       levelId: context.levelId,
-      entityType: "task",
       isCorrect: true,
     }),
   ]);
@@ -692,26 +831,6 @@ export async function getUserLearningProfile(userId: string, displayName: string
     };
   }
 
-  const recentAttempts = await UserLearningAttempt.find({ userId: new Types.ObjectId(userId) })
-    .sort({ attemptedAt: -1 })
-    .limit(25)
-    .lean();
-
-  const attemptsDto: LearningAttemptDto[] = recentAttempts.map((item) => ({
-    id: toId(item._id),
-    userId: toId(item.userId),
-    entityType: item.entityType,
-    entityId: toId(item.entityId),
-    languageId: toId(item.languageId),
-    trackId: toId(item.trackId),
-    levelId: toId(item.levelId),
-    levelNumber: item.levelNumber,
-    isCorrect: item.isCorrect,
-    scoreAwarded: item.scoreAwarded,
-    outcome: item.outcome,
-    attemptedAt: new Date(item.attemptedAt).toISOString(),
-  }));
-
   return {
     userId,
     displayName,
@@ -745,39 +864,103 @@ export async function getUserLearningProfile(userId: string, displayName: string
         })),
       })),
     })),
-    recentAttempts: attemptsDto,
+    recentAttempts: [],
     lastActiveAt: profile.lastActiveAt ? new Date(profile.lastActiveAt).toISOString() : undefined,
   };
 }
 
-export async function getUserAttempts(userId: string, limit = 100) {
+function escapeRegex(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function buildUserAttemptsFilter(userId: Types.ObjectId, q: string): Record<string, unknown> {
+  const base: Record<string, unknown> = { userId };
+  const trimmed = q.trim();
+  if (!trimmed) return base;
+  const escaped = escapeRegex(trimmed);
+  const or: Record<string, unknown>[] = [
+    { entityType: new RegExp(escaped, "i") },
+    { outcome: new RegExp(escaped, "i") },
+    {
+      $expr: {
+        $regexMatch: {
+          input: { $toString: "$levelNumber" },
+          regex: escaped,
+          options: "i",
+        },
+      },
+    },
+    {
+      $expr: {
+        $regexMatch: {
+          input: {
+            $dateToString: { format: "%Y-%m-%d %H:%M:%S", date: "$attemptedAt", timezone: "UTC" },
+          },
+          regex: escaped,
+          options: "i",
+        },
+      },
+    },
+  ];
+  const ql = trimmed.toLowerCase();
+  if (["yes", "true", "correct"].includes(ql)) or.push({ isCorrect: true });
+  if (["no", "false", "wrong", "incorrect"].includes(ql)) or.push({ isCorrect: false });
+  return { $and: [base, { $or: or }] };
+}
+
+export type UserAttemptsPageResult = {
+  items: LearningAttemptTableRowDto[];
+  total: number;
+  page: number;
+  pageSize: number;
+};
+
+export async function getUserAttemptsPage(
+  userId: string,
+  opts: {
+    page: number;
+    pageSize: number;
+    sort: AttemptTableSortField;
+    dir: "asc" | "desc";
+    q: string;
+  }
+): Promise<UserAttemptsPageResult | null> {
   await connectDB();
   const trackingModels = await getTrackingModelsSafe();
-  if (!trackingModels) return [];
+  if (!trackingModels) return null;
   const { UserLearningAttempt } = trackingModels;
-  const attempts = await UserLearningAttempt.find({ userId: new Types.ObjectId(userId) })
-    .sort({ attemptedAt: -1 })
-    .limit(Math.min(limit, 200))
-    .lean();
-  return attempts.map((item) => ({
-    id: toId(item._id),
-    userId: toId(item.userId),
-    entityType: item.entityType,
-    entityId: toId(item.entityId),
-    languageId: toId(item.languageId),
-    trackId: toId(item.trackId),
-    levelId: toId(item.levelId),
-    levelNumber: item.levelNumber,
-    isCorrect: item.isCorrect,
-    scoreAwarded: item.scoreAwarded,
-    outcome: item.outcome,
+  const oid = new Types.ObjectId(userId);
+  const filter = buildUserAttemptsFilter(oid, opts.q);
+  const sortDir = opts.dir === "asc" ? 1 : -1;
+  const sort: Record<string, 1 | -1> = { [opts.sort]: sortDir };
+  const page = Math.max(1, opts.page);
+  const pageSize = Math.min(50, Math.max(1, opts.pageSize));
+  const skip = (page - 1) * pageSize;
+
+  const [total, rows] = await Promise.all([
+    UserLearningAttempt.countDocuments(filter),
+    UserLearningAttempt.find(filter)
+      .sort(sort)
+      .skip(skip)
+      .limit(pageSize)
+      .select({ attemptedAt: 1, entityType: 1, levelNumber: 1, outcome: 1, isCorrect: 1 })
+      .lean(),
+  ]);
+
+  const items: LearningAttemptTableRowDto[] = rows.map((item) => ({
     attemptedAt: new Date(item.attemptedAt).toISOString(),
+    entityType: item.entityType,
+    levelNumber: item.levelNumber,
+    outcome: item.outcome,
+    isCorrect: item.isCorrect,
   }));
+
+  return { items, total, page, pageSize };
 }
 
 export type UserLearningActivityRollup = {
   totalScoreAwarded: number;
-  /** UTC calendar day → attempt count (all time). */
+  /** UTC calendar day → distinct published levels touched that day (all time). */
   dayCounts: { dateKey: string; count: number }[];
   questionAttempts: number;
   taskAttempts: number;
@@ -809,10 +992,17 @@ export async function getUserLearningActivityRollup(userId: string): Promise<Use
     UserLearningAttempt.aggregate<{ _id: string; c: number }>([
       { $match: { userId: uid } },
       {
-        $group: {
-          _id: {
+        $project: {
+          day: {
             $dateToString: { format: "%Y-%m-%d", date: "$attemptedAt", timezone: "UTC" },
           },
+          levelId: 1,
+        },
+      },
+      { $group: { _id: { day: "$day", levelId: "$levelId" } } },
+      {
+        $group: {
+          _id: "$_id.day",
           c: { $sum: 1 },
         },
       },

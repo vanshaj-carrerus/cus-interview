@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { UserRound } from "lucide-react";
 import type { ProfileDashboardModel } from "@/lib/profile/profile-dashboard-model";
+import { ProfileRecentAttemptsTable } from "@/components/profile/ProfileRecentAttemptsTable";
 
 function RingChart({
   percent,
@@ -61,16 +62,51 @@ function heatmapCellClass(level: 0 | 1 | 2 | 3 | 4): string {
   }
 }
 
+function utcDateKeyToCalendarLabel(dateKey: string): string {
+  const d = new Date(`${dateKey}T12:00:00.000Z`);
+  if (Number.isNaN(d.getTime())) return dateKey;
+  return d.toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+function heatmapDayTitle(cell: { dateKey: string; count: number; level: 0 | 1 | 2 | 3 | 4 }): string {
+  const when = utcDateKeyToCalendarLabel(cell.dateKey);
+  if (cell.count === 0) {
+    return `${when} (UTC) — No attempts`;
+  }
+  const n = cell.count;
+  const attemptsLabel = n === 1 ? "1 attempt" : `${n} attempts`;
+  return `${when} (UTC) — ${attemptsLabel} (intensity ${cell.level}/4)`;
+}
+
+function dailyAttemptPointTitle(day: {
+  dateKey: string;
+  weekdayLabel: string;
+  attempts: number;
+}): string {
+  const cal = utcDateKeyToCalendarLabel(day.dateKey);
+  const a = day.attempts;
+  const attemptsLabel = a === 0 ? "No attempts" : a === 1 ? "1 attempt" : `${a} attempts`;
+  return `${day.weekdayLabel}, ${cal} (UTC) — ${attemptsLabel}`;
+}
+
 export function ProfileDashboard({ model }: { model: ProfileDashboardModel }) {
   const { user, heatmap } = model;
-  const maxDaily = Math.max(1, ...model.dailyAttempts);
+  const attemptDays = model.dailyAttemptDays;
+  const maxDaily = Math.max(1, ...attemptDays.map((d) => d.attempts));
   const chartH = 120;
   const chartW = 280;
   const pad = 8;
-  const pts = model.dailyAttempts
-    .map((v, i) => {
-      const x = pad + (i * (chartW - pad * 2)) / Math.max(1, model.dailyAttempts.length - 1);
-      const y = chartH - pad - (v / maxDaily) * (chartH - pad * 2);
+  const nPts = attemptDays.length;
+  const pts = attemptDays
+    .map((row, i) => {
+      const x = pad + (i * (chartW - pad * 2)) / Math.max(1, nPts - 1);
+      const y = chartH - pad - (row.attempts / maxDaily) * (chartH - pad * 2);
       return `${x},${y}`;
     })
     .join(" ");
@@ -142,19 +178,27 @@ export function ProfileDashboard({ model }: { model: ProfileDashboardModel }) {
                       fill="none"
                       stroke="currentColor"
                       strokeWidth={2.5}
-                      className="text-primary"
+                      className="text-primary pointer-events-none"
                       points={pts}
                     />
-                    {model.dailyAttempts.map((v, i) => {
-                      const x = pad + (i * (chartW - pad * 2)) / Math.max(1, model.dailyAttempts.length - 1);
-                      const y = chartH - pad - (v / maxDaily) * (chartH - pad * 2);
-                      return <circle key={i} cx={x} cy={y} r={4} className="fill-primary" />;
+                    {attemptDays.map((day, i) => {
+                      const x = pad + (i * (chartW - pad * 2)) / Math.max(1, nPts - 1);
+                      const y = chartH - pad - (day.attempts / maxDaily) * (chartH - pad * 2);
+                      return (
+                        <g key={day.dateKey}>
+                          <title>{dailyAttemptPointTitle(day)}</title>
+                          <circle cx={x} cy={y} r={12} className="fill-transparent cursor-default" />
+                          <circle cx={x} cy={y} r={4} className="fill-primary pointer-events-none" />
+                        </g>
+                      );
                     })}
                   </svg>
                 </div>
                 <div className="flex justify-between text-[10px] font-bold text-secondary/40 uppercase tracking-widest mt-2 px-1">
-                  {model.weekLabels.map((d, i) => (
-                    <span key={`${d}-${i}`}>{d}</span>
+                  {attemptDays.map((d) => (
+                    <span key={d.dateKey} title={utcDateKeyToCalendarLabel(d.dateKey) + " (UTC)"}>
+                      {d.weekdayLabel}
+                    </span>
                   ))}
                 </div>
               </div>
@@ -174,9 +218,9 @@ export function ProfileDashboard({ model }: { model: ProfileDashboardModel }) {
                 <div className="flex flex-wrap gap-6 text-sm mb-4">
                   <div>
                     <p className="text-[10px] font-black uppercase tracking-widest text-secondary/40">
-                      Submissions {heatmap.year}
+                      Level practice days {heatmap.year}
                     </p>
-                    <p className="font-black text-secondary text-lg tabular-nums">{heatmap.submissionsYear}</p>
+                    <p className="font-black text-secondary text-lg tabular-nums">{heatmap.levelPracticeDaysYear}</p>
                   </div>
                   <div>
                     <p className="text-[10px] font-black uppercase tracking-widest text-secondary/40">
@@ -197,8 +241,8 @@ export function ProfileDashboard({ model }: { model: ProfileDashboardModel }) {
                       {col.map((cell) => (
                         <div
                           key={cell.dateKey}
-                          title={`${cell.dateKey}: ${cell.level ? "activity" : "none"}`}
-                          className={`w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-sm ${heatmapCellClass(cell.level)}`}
+                          title={heatmapDayTitle(cell)}
+                          className={`w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-sm shrink-0 ${heatmapCellClass(cell.level)}`}
                         />
                       ))}
                     </div>
@@ -341,39 +385,7 @@ export function ProfileDashboard({ model }: { model: ProfileDashboardModel }) {
               </section>
             ) : null}
 
-            <section>
-              <h2 className="text-lg font-black text-secondary mb-4">Recent attempts</h2>
-              {model.recentAttempts.length === 0 ? (
-                <p className="text-sm text-secondary/55 rounded-2xl border border-secondary/10 bg-white p-6">
-                  No recent attempts.
-                </p>
-              ) : (
-                <div className="rounded-2xl border border-secondary/10 bg-white shadow-sm overflow-hidden overflow-x-auto">
-                  <table className="w-full text-xs min-w-[520px]">
-                    <thead>
-                      <tr className="text-secondary/45 font-black uppercase tracking-widest bg-slate-50 border-b border-secondary/10">
-                        <th className="text-left py-3 px-4">When (UTC)</th>
-                        <th className="text-left py-3 px-4">Type</th>
-                        <th className="text-left py-3 px-4">Level</th>
-                        <th className="text-left py-3 px-4">Outcome</th>
-                        <th className="text-left py-3 px-4">Correct</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {model.recentAttempts.map((row, i) => (
-                        <tr key={`${row.attemptedAtIso}-${i}`} className="border-b border-secondary/5 text-secondary">
-                          <td className="py-2.5 px-4 whitespace-nowrap">{row.attemptedAtLabel}</td>
-                          <td className="py-2.5 px-4">{row.entityType}</td>
-                          <td className="py-2.5 px-4 tabular-nums">{row.levelNumber}</td>
-                          <td className="py-2.5 px-4">{row.outcome}</td>
-                          <td className="py-2.5 px-4">{row.isCorrect ? "Yes" : "No"}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </section>
+            <ProfileRecentAttemptsTable />
           </div>
         </div>
       </div>

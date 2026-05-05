@@ -51,12 +51,15 @@ export default function TopicStepPage({
     setSubmitError("");
     setSelectedAnswer(optionIndex);
     try {
-      const res = await fetch(`/api/learning/questions/${question.id}/attempt`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "same-origin",
-        body: JSON.stringify({ answer: String(optionIndex) }),
-      });
+      const res = await fetch(
+        `/api/learning/questions/${question.id}/attempt`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify({ answer: String(optionIndex) }),
+        },
+      );
       const payload = (await res.json()) as {
         error?: string;
         result?: {
@@ -71,7 +74,7 @@ export default function TopicStepPage({
         setShowFeedback(false);
         setSubmitError(
           payload.error ??
-            "Answer verification failed. Please sign in and ensure tracking DB is configured."
+            "Answer verification failed. Please sign in and ensure tracking DB is configured.",
         );
         return;
       }
@@ -81,7 +84,7 @@ export default function TopicStepPage({
         setFeedbackExplanation(
           result.tracked === false
             ? `${result.explanation ?? question.explanation} (Guest mode: sign in to save tracking.)`
-            : (result.explanation ?? question.explanation)
+            : (result.explanation ?? question.explanation),
         );
         if (result.scoreAwarded > 0) {
           setCorrectCount((prev) => prev + result.scoreAwarded);
@@ -94,7 +97,9 @@ export default function TopicStepPage({
     } catch {
       setSelectedAnswer(null);
       setShowFeedback(false);
-      setSubmitError("Network/server error while verifying answer. Please try again.");
+      setSubmitError(
+        "Network/server error while verifying answer. Please try again.",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -168,27 +173,20 @@ export default function TopicStepPage({
             >
               Back to Roadmap
             </Link>
-            {nextLevel ? (
+            {passed ? (
               <Link
-                href={`${basePath}/${topic.slug}/step-${nextLevel.level}`}
+                href={`${basePath}/${topic.slug}/step-${nextLevel?.level ?? 0}`}
                 className="flex-1 inline-flex items-center justify-center gap-2 bg-white text-slate-600 border border-slate-200 px-6 py-2 rounded-2xl font-bold hover:bg-slate-50 transition-all"
               >
                 <Compass className="w-5 h-5" />
                 <span>Next Step</span>
               </Link>
             ) : (
-              <button
-                type="button"
-                disabled
-                className="flex-1 inline-flex items-center justify-center gap-2 bg-slate-50 text-slate-400 border border-slate-200 px-6 py-2 rounded-2xl font-bold cursor-not-allowed"
-              >
-                <Compass className="w-5 h-5" />
-                <span>Next Step</span>
-              </button>
+              <></>
             )}
             <button
               onClick={() => window.location.reload()}
-              className="flex-1 bg-white text-slate-600 border border-slate-200 px-6 py-2 rounded-2xl font-bold hover:bg-slate-50 transition-all"
+              className="flex-1 cursor-pointer bg-white text-slate-600 border border-slate-200 px-6 py-2 rounded-2xl font-bold hover:bg-slate-50 transition-all"
             >
               Try Again
             </button>
@@ -260,11 +258,12 @@ export default function TopicStepPage({
                 <div className="grid gap-3">
                   {question.options.map((option, index) => {
                     const isSelected = selectedAnswer === index;
-                    const isCorrect = showFeedback && index === selectedAnswer && isAnswerCorrect;
-                    const isWrong =
+                    const isCorrect =
                       showFeedback &&
-                      isSelected &&
-                      !isAnswerCorrect;
+                      index === selectedAnswer &&
+                      isAnswerCorrect;
+                    const isWrong =
+                      showFeedback && isSelected && !isAnswerCorrect;
 
                     return (
                       <button
@@ -335,7 +334,9 @@ export default function TopicStepPage({
                 </motion.div>
               ) : (
                 <p className="text-slate-400 italic text-sm">
-                  {submitting ? "Submitting..." : "Select an answer to continue..."}
+                  {submitting
+                    ? "Submitting..."
+                    : "Select an answer to continue..."}
                 </p>
               )}
             </div>

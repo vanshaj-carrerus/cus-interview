@@ -4,6 +4,7 @@ import type {
 } from "./learning/progress";
 
 export type LearningTotals = {
+  /** Sum over levels of distinct UTC practice days (not per-question submissions). */
   totalAttempts: number;
   totalCleared: number;
   totalQuestionsAttempted: number;

@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { UserRound } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
 import Image from "next/image";
 
@@ -9,6 +10,8 @@ export default function Header() {
   const { user, loading, logout } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
   const navItems = [
     { label: "Practice", href: "/practice" },
     // { label: "Resources", href: "#" },
@@ -27,6 +30,26 @@ export default function Header() {
       document.body.style.overflow = "";
     };
   }, [mobileMenuOpen]);
+
+  useEffect(() => {
+    if (!userMenuOpen) return;
+    const handlePointerDown = (e: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handlePointerDown);
+    return () => document.removeEventListener("mousedown", handlePointerDown);
+  }, [userMenuOpen]);
+
+  useEffect(() => {
+    if (!userMenuOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setUserMenuOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [userMenuOpen]);
 
   return (
     <>
@@ -73,24 +96,60 @@ export default function Header() {
                 …
               </span>
             ) : user ? (
-              <>
-                <Link
-                  href="/profile"
-                  className="hidden sm:inline text-secondary font-black text-[12px] uppercase tracking-widest hover:text-primary transition-colors"
-                >
-                  Profile
-                </Link>
-                <span className="hidden sm:block max-w-[140px] truncate text-secondary/80 text-[11px] font-bold">
-                  {user.name ? user.name : user.email}
-                </span>
+              <div className="relative isolate" ref={userMenuRef}>
                 <button
                   type="button"
-                  onClick={() => void logout()}
-                  className="hidden sm:block text-secondary font-black text-[12px] uppercase tracking-widest hover:text-primary transition-colors"
+                  onClick={() => setUserMenuOpen((open) => !open)}
+                  className="inline-flex cursor-pointer items-center justify-center w-10 h-10 rounded-xl border border-secondary/15 bg-white/90 text-secondary hover:border-primary/40 hover:text-primary transition-colors shadow-sm"
+                  aria-expanded={userMenuOpen}
+                  aria-haspopup="menu"
+                  aria-controls="header-user-menu"
                 >
-                  Log out
+                  <UserRound className="w-5 h-5" strokeWidth={2} aria-hidden />
+                  <span className="sr-only">Account menu</span>
                 </button>
-              </>
+                {userMenuOpen ? (
+                  <div
+                    id="header-user-menu"
+                    role="menu"
+                    aria-orientation="vertical"
+                    className="absolute right-0 top-full z-50 mt-2 w-56 sm:w-60 rounded-2xl border border-secondary/10 bg-white py-2 shadow-xl ring-1 ring-secondary/5"
+                  >
+                    <div className="px-4 py-3 border-b border-secondary/10">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-secondary/45">
+                        Signed in
+                      </p>
+                      {user.name ? (
+                        <>
+                          <p className="text-sm font-black text-secondary truncate mt-1">{user.name}</p>
+                          <p className="text-xs text-secondary/55 truncate mt-0.5">{user.email}</p>
+                        </>
+                      ) : (
+                        <p className="text-sm font-bold text-secondary truncate mt-1">{user.email}</p>
+                      )}
+                    </div>
+                    <Link
+                      href="/profile"
+                      role="menuitem"
+                      onClick={() => setUserMenuOpen(false)}
+                      className="block px-4 py-2.5 text-sm font-black text-secondary uppercase tracking-widest hover:bg-primary/10 hover:text-primary transition-colors"
+                    >
+                      Profile
+                    </Link>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setUserMenuOpen(false);
+                        void logout();
+                      }}
+                      className="w-full text-left px-4 py-2.5 text-sm font-black text-secondary uppercase tracking-widest hover:bg-primary/10 hover:text-primary transition-colors"
+                    >
+                      Log out
+                    </button>
+                  </div>
+                ) : null}
+              </div>
             ) : (
               <>
                 <Link
@@ -110,7 +169,10 @@ export default function Header() {
 
             <button
               type="button"
-              onClick={() => setMobileMenuOpen(true)}
+              onClick={() => {
+                setUserMenuOpen(false);
+                setMobileMenuOpen(true);
+              }}
               className="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg border border-secondary/20 text-secondary hover:text-primary hover:border-primary/40 transition-colors"
               aria-label="Open menu"
               aria-expanded={mobileMenuOpen}

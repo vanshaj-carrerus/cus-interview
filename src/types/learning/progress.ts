@@ -38,11 +38,26 @@ export type LearningAttemptDto = {
   attemptedAt: string;
 };
 
+/** Slim row for profile / history tables (pagination API). */
+export type LearningAttemptTableRowDto = {
+  attemptedAt: string;
+  entityType: AttemptEntityType;
+  levelNumber: number;
+  outcome: AttemptOutcome;
+  isCorrect: boolean;
+};
+
+export type AttemptTableSortField = "attemptedAt" | "levelNumber" | "entityType" | "outcome" | "isCorrect";
+
+/** Per-level progress derived from stored attempts. */
 export type LevelProgressDto = {
   levelId: string;
   levelNumber: number;
+  /** Distinct UTC calendar days with any submission on this level. */
   attempts: number;
+  /** Count of correct question/task submissions toward passScore. */
   cleared: number;
+  /** True when cleared meets or exceeds the level passScore. */
   completed: boolean;
   firstPassedAt?: string;
   lastAttemptAt?: string;

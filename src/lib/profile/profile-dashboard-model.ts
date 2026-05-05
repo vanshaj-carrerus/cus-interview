@@ -1,13 +1,22 @@
 import type { PublicUser } from "@/types/auth";
 import type { UserLearningActivityRollup } from "@/lib/learning/service";
-import type {
-  LanguageProgressDto,
-  LearningAttemptDto,
-  TrackProgressDto,
-} from "@/types/learning/progress";
+import type { LanguageProgressDto, TrackProgressDto } from "@/types/learning/progress";
 import type { UserLearningProfile } from "@/types/profile";
 
-export type HeatmapDay = { dateKey: string; level: 0 | 1 | 2 | 3 | 4 };
+export type HeatmapDay = { dateKey: string; count: number; level: 0 | 1 | 2 | 3 | 4 };
+
+export type DailyAttemptDay = {
+  dateKey: string;
+  weekdayLabel: string;
+  attempts: number;
+};
+
+export type ProfileLevelRow = {
+  levelNumber: number;
+  practiceDays: number;
+  correctAnswers: number;
+  completed: boolean;
+};
 
 export type ProfileTrackRow = {
   trackSlug: string;
@@ -16,6 +25,7 @@ export type ProfileTrackRow = {
   totalLevels: number;
   attempts: number;
   cleared: number;
+  levels: ProfileLevelRow[];
 };
 
 export type ProfileLanguageRow = {
@@ -23,15 +33,6 @@ export type ProfileLanguageRow = {
   attempts: number;
   cleared: number;
   tracks: ProfileTrackRow[];
-};
-
-export type ProfileRecentAttemptRow = {
-  attemptedAtIso: string;
-  attemptedAtLabel: string;
-  entityType: string;
-  outcome: string;
-  levelNumber: number;
-  isCorrect: boolean;
 };
 
 export type ProfileDashboardModel = {
@@ -44,11 +45,11 @@ export type ProfileDashboardModel = {
   };
   lastActiveAtLabel: string | null;
   statTiles: { label: string; value: string }[];
-  weekLabels: string[];
-  dailyAttempts: number[];
+  dailyAttemptDays: DailyAttemptDay[];
   heatmap: {
     year: number;
-    submissionsYear: number;
+    /** Sum of daily “distinct levels practiced” counts in the calendar year (UTC). */
+    levelPracticeDaysYear: number;
     activeDaysYear: number;
     maxStreakDays: number;
     weeks: HeatmapDay[][];
@@ -57,7 +58,6 @@ export type ProfileDashboardModel = {
   donutCorrect: { arcPct: number; centerValue: string; caption: string };
   languages: ProfileLanguageRow[];
   trackBars: { label: string; cleared: number; maxCleared: number }[];
-  recentAttempts: ProfileRecentAttemptRow[];
 };
 
 function formatDateLabel(iso: string | undefined | null): string | null {
@@ -142,28 +142,28 @@ function buildCompactHeatmap(byDay: Map<string, number>, columns: number): Heatm
       d.setUTCDate(d.getUTCDate() - daysBackFromEnd);
       const key = d.toISOString().slice(0, 10);
       const n = byDay.get(key) ?? 0;
-      col.push({ dateKey: key, level: levelFromCount(n) });
+      col.push({ dateKey: key, count: n, level: levelFromCount(n) });
     }
     grid.push(col);
   }
   return grid;
 }
 
-function lastNDaysCounts(byDay: Map<string, number>, n: number): { labels: string[]; counts: number[] } {
-  const labels: string[] = [];
-  const counts: number[] = [];
+function lastNDailyAttemptDays(byDay: Map<string, number>, n: number): DailyAttemptDay[] {
+  const days: DailyAttemptDay[] = [];
   const d = new Date();
   d.setUTCHours(12, 0, 0, 0);
   for (let i = n - 1; i >= 0; i--) {
     const x = new Date(d);
     x.setUTCDate(x.getUTCDate() - i);
     const key = x.toISOString().slice(0, 10);
-    counts.push(byDay.get(key) ?? 0);
-    labels.push(
-      x.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" })
-    );
+    days.push({
+      dateKey: key,
+      weekdayLabel: x.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" }),
+      attempts: byDay.get(key) ?? 0,
+    });
   }
-  return { labels, counts };
+  return days;
 }
 
 function formatTrackLabel(slug: string): string {
@@ -175,6 +175,15 @@ function formatTrackLabel(slug: string): string {
 }
 
 function mapTrack(t: TrackProgressDto): ProfileTrackRow {
+  const levels = (t.levels ?? [])
+    .filter((lv) => lv.attempts > 0 || lv.cleared > 0 || lv.completed)
+    .sort((a, b) => a.levelNumber - b.levelNumber)
+    .map((lv) => ({
+      levelNumber: lv.levelNumber,
+      practiceDays: lv.attempts,
+      correctAnswers: lv.cleared,
+      completed: lv.completed,
+    }));
   return {
     trackSlug: t.trackSlug,
     titleLabel: formatTrackLabel(t.trackSlug),
@@ -182,6 +191,7 @@ function mapTrack(t: TrackProgressDto): ProfileTrackRow {
     totalLevels: t.totalLevels,
     attempts: t.attempts,
     cleared: t.cleared,
+    levels,
   };
 }
 
@@ -191,21 +201,6 @@ function mapLanguage(lang: LanguageProgressDto): ProfileLanguageRow {
     attempts: lang.attempts,
     cleared: lang.cleared,
     tracks: lang.tracks.map(mapTrack),
-  };
-}
-
-function mapRecent(a: LearningAttemptDto): ProfileRecentAttemptRow {
-  const d = new Date(a.attemptedAt);
-  const attemptedAtLabel = Number.isNaN(d.getTime())
-    ? a.attemptedAt
-    : `${d.toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit", timeZone: "UTC" })} UTC`;
-  return {
-    attemptedAtIso: a.attemptedAt,
-    attemptedAtLabel,
-    entityType: a.entityType,
-    outcome: a.outcome,
-    levelNumber: a.levelNumber,
-    isCorrect: a.isCorrect,
   };
 }
 
@@ -225,30 +220,30 @@ export function buildProfileDashboardModel(
 
   const year = new Date().getUTCFullYear();
   const yearPrefix = `${year}-`;
-  let submissionsYear = 0;
+  let levelPracticeDaysYear = 0;
   let activeDaysYear = 0;
   for (const [key, count] of byDay) {
     if (!key.startsWith(yearPrefix)) continue;
-    submissionsYear += count;
+    levelPracticeDaysYear += count;
     if (count > 0) activeDaysYear += 1;
   }
 
   const heatmapColumns = 24;
   const weeks = buildCompactHeatmap(byDay, heatmapColumns);
 
-  const { labels: weekLabels, counts: dailyAttempts } = lastNDaysCounts(byDay, 7);
+  const dailyAttemptDays = lastNDailyAttemptDays(byDay, 7);
 
-  const totalAttempts = totals.totalAttempts;
+  const microSubmissions = totals.totalQuestionsAttempted + totals.totalTasksAttempted;
   const correctPct =
-    totalAttempts > 0 ? Math.min(100, Math.round((totals.totalCleared / totalAttempts) * 100)) : 0;
+    microSubmissions > 0 ? Math.min(100, Math.round((totals.totalCleared / microSubmissions) * 100)) : 0;
   const questionSharePct =
-    totalAttempts > 0
-      ? Math.min(100, Math.round((totals.totalQuestionsAttempted / totalAttempts) * 100))
+    microSubmissions > 0
+      ? Math.min(100, Math.round((totals.totalQuestionsAttempted / microSubmissions) * 100))
       : 0;
 
   const statTiles: { label: string; value: string }[] = [
-    { label: "Total attempts", value: String(totals.totalAttempts) },
-    { label: "Correct attempts", value: String(totals.totalCleared) },
+    { label: "Level practice days", value: String(totals.totalAttempts) },
+    { label: "Correct answers", value: String(totals.totalCleared) },
     { label: "Question attempts", value: String(totals.totalQuestionsAttempted) },
     { label: "Task attempts", value: String(totals.totalTasksAttempted) },
     { label: "Levels completed", value: String(totals.totalLevelsCompleted) },
@@ -283,11 +278,10 @@ export function buildProfileDashboardModel(
     },
     lastActiveAtLabel: formatDateLabel(profile.lastActiveAt),
     statTiles,
-    weekLabels,
-    dailyAttempts,
+    dailyAttemptDays,
     heatmap: {
       year,
-      submissionsYear,
+      levelPracticeDaysYear,
       activeDaysYear,
       maxStreakDays,
       weeks,
@@ -295,15 +289,14 @@ export function buildProfileDashboardModel(
     donutQuestionShare: {
       arcPct: questionSharePct,
       centerValue: String(totals.totalQuestionsAttempted),
-      caption: "% of attempts on questions (vs tasks)",
+      caption: "% of submissions on questions (vs tasks)",
     },
     donutCorrect: {
       arcPct: correctPct,
       centerValue: `${correctPct}%`,
-      caption: "% of attempts marked correct",
+      caption: "% of submissions marked correct",
     },
     languages,
     trackBars,
-    recentAttempts: (profile.recentAttempts ?? []).map(mapRecent),
   };
 }

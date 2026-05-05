@@ -57,6 +57,8 @@ type ApiProgressResponse = {
   totals?: {
     totalAttempts?: number;
     totalCleared?: number;
+    totalQuestionsAttempted?: number;
+    totalTasksAttempted?: number;
   };
 };
 
@@ -74,8 +76,15 @@ type AiMockInterviewHistoryItem = {
 
 export default function Sidebar() {
   const pathname = usePathname();
+  /** All published tracks across languages (for snapshot totals). */
+  const [allTrackRows, setAllTrackRows] = useState<TopicProgress[]>([]);
   const [progressRows, setProgressRows] = useState<TopicProgress[]>([]);
   const [languageRows, setLanguageRows] = useState<LanguageProgress[]>([]);
+  /** Micro submissions vs correct answers (same units as profile totals). */
+  const [answerTotals, setAnswerTotals] = useState<{ submissions: number; correct: number }>({
+    submissions: 0,
+    correct: 0,
+  });
   const [mockInterviews, setMockInterviews] = useState<AiMockInterviewHistoryItem[]>([]);
 
   useEffect(() => {
@@ -120,6 +129,14 @@ export default function Sidebar() {
           });
         });
 
+        const t = progressPayload.totals;
+        const submissions =
+          (Number(t?.totalQuestionsAttempted) || 0) + (Number(t?.totalTasksAttempted) || 0);
+        setAnswerTotals({
+          submissions,
+          correct: Number(t?.totalCleared) || 0,
+        });
+
         const rows: TopicProgress[] = tracksPayload
           .flatMap(({ language, tracks }) =>
             tracks.map((track) => {
@@ -141,28 +158,31 @@ export default function Sidebar() {
         const nextLanguageRows: LanguageProgress[] = tracksPayload
           .map(({ language, tracks }) => {
             const progress = progressByLanguageSlug.get(language.slug);
-          const completedTracks = tracks.filter((track) => {
-            const trackProgress = progress?.tracks.find((item) => item.trackSlug === track.slug);
-            const completedLevels = trackProgress?.completedLevels ?? 0;
-            return track.totalLevels > 0 && completedLevels >= track.totalLevels;
-          }).length;
-          return {
-            languageSlug: language.slug,
-            languageName: language.name,
-            attempts: progress?.attempts ?? 0,
-            cleared: progress?.cleared ?? 0,
-            completedTracks,
-            totalTracks: tracks.length,
-          };
+            const completedTracks = tracks.filter((track) => {
+              const trackProgress = progress?.tracks.find((item) => item.trackSlug === track.slug);
+              const completedLevels = trackProgress?.completedLevels ?? 0;
+              return track.totalLevels > 0 && completedLevels >= track.totalLevels;
+            }).length;
+            return {
+              languageSlug: language.slug,
+              languageName: language.name,
+              attempts: progress?.attempts ?? 0,
+              cleared: progress?.cleared ?? 0,
+              completedTracks,
+              totalTracks: tracks.length,
+            };
           })
           .filter((language) => language.attempts > 0);
 
+        setAllTrackRows(rows);
         setProgressRows(rows.filter((row) => row.attemptedProblems > 0));
         setLanguageRows(nextLanguageRows);
         setMockInterviews(mockInterviewsPayload.interviews ?? []);
       } catch {
+        setAllTrackRows([]);
         setProgressRows([]);
         setLanguageRows([]);
+        setAnswerTotals({ submissions: 0, correct: 0 });
         setMockInterviews([]);
       }
     };
@@ -177,26 +197,44 @@ export default function Sidebar() {
   }, []);
 
   const summary = useMemo(() => {
-    const completedLevels = progressRows.reduce((sum, item) => sum + item.completedLevels, 0);
-    const totalLevels = progressRows.reduce((sum, item) => sum + item.totalLevels, 0);
+    const completedLevels = allTrackRows.reduce((sum, item) => sum + item.completedLevels, 0);
+    const totalLevels = allTrackRows.reduce((sum, item) => sum + item.totalLevels, 0);
     const completionPercent = totalLevels > 0 ? Math.round((completedLevels / totalLevels) * 100) : 0;
-    const startedTracks = progressRows.filter((item) => item.attemptedProblems > 0).length;
-    const fullyCompletedTracks = progressRows.filter((item) => item.completedLevels >= item.totalLevels).length;
-    const attemptedProblems = progressRows.reduce((sum, item) => sum + item.attemptedProblems, 0);
-    const solvedProblems = progressRows.reduce((sum, item) => sum + item.solvedProblems, 0);
+    const totalTracks = allTrackRows.length;
+    const startedTracks = allTrackRows.filter(
+      (item) => item.attemptedProblems > 0 || item.completedLevels > 0
+    ).length;
+    const fullyCompletedTracks = allTrackRows.filter(
+      (item) => item.totalLevels > 0 && item.completedLevels >= item.totalLevels
+    ).length;
+    const attemptedProblems = answerTotals.submissions;
+    const solvedProblems = answerTotals.correct;
     const solvedRatePercent =
-      attemptedProblems > 0 ? Math.round((solvedProblems / attemptedProblems) * 100) : 0;
+      attemptedProblems > 0
+        ? Math.min(100, Math.round((solvedProblems / attemptedProblems) * 100))
+        : 0;
+
+    const catalogLanguages = new Set(allTrackRows.map((r) => r.languageSlug)).size;
+    const languagesWithProgress = new Set(
+      allTrackRows
+        .filter((r) => r.attemptedProblems > 0 || r.completedLevels > 0)
+        .map((r) => r.languageSlug)
+    ).size;
+
     return {
       completedLevels,
       totalLevels,
       completionPercent,
+      totalTracks,
       startedTracks,
       fullyCompletedTracks,
       attemptedProblems,
       solvedProblems,
       solvedRatePercent,
+      catalogLanguages,
+      languagesWithProgress,
     };
-  }, [progressRows]);
+  }, [allTrackRows, answerTotals]);
 
   const activeTrack = useMemo(
     () => progressRows.find((item) => pathname?.startsWith(item.href)) ?? null,
@@ -214,10 +252,12 @@ export default function Sidebar() {
         <div className="bg-linear-to-r from-indigo-700 to-blue-600 p-5 text-white">
           <p className="text-xs uppercase tracking-[0.2em] text-white/75">Profile Snapshot</p>
           <p className="text-xl font-bold mt-2">Practice Snapshot</p>
-          <p className="text-sm text-white/85 mt-1">Live progress from your completed levels.</p>
+          <p className="text-sm text-white/85 mt-1">
+            Live progress across every language and track in the catalog.
+          </p>
         </div>
-        <div className="p-5">
-          <div className="flex items-center gap-4">
+        <div className="p-4">
+          <div className="flex flex-col items-center gap-4">
             <div className="relative w-20 h-20 shrink-0">
               <svg viewBox="0 0 36 36" className="w-20 h-20 -rotate-90">
                 <circle
@@ -245,13 +285,13 @@ export default function Sidebar() {
             </div>
             <div className="flex-1 grid gap-2 text-sm">
               <div className="flex items-center justify-between">
-                <span className="text-slate-500">Levels cleared</span>
+                <span className="text-slate-500">Levels cleared (all languages)</span>
                 <span className="font-semibold text-slate-800">
                   {summary.completedLevels} / {summary.totalLevels}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-500">Problems solved</span>
+                <span className="text-slate-500">Correct answers (all tracks)</span>
                 <span className="font-semibold text-slate-800">
                   {summary.solvedProblems} / {summary.attemptedProblems}
                 </span>
@@ -261,12 +301,22 @@ export default function Sidebar() {
                 <span className="font-semibold text-slate-800">{summary.solvedRatePercent}%</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-500">Tracks started</span>
-                <span className="font-semibold text-slate-800">{summary.startedTracks}</span>
+                <span className="text-slate-500">Languages with progress</span>
+                <span className="font-semibold text-slate-800">
+                  {summary.languagesWithProgress} / {summary.catalogLanguages}
+                </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-500">Tracks finished</span>
-                <span className="font-semibold text-emerald-600">{summary.fullyCompletedTracks}</span>
+                <span className="text-slate-500">Tracks with progress</span>
+                <span className="font-semibold text-slate-800">
+                  {summary.startedTracks} / {summary.totalTracks}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500">Tracks fully cleared</span>
+                <span className="font-semibold text-emerald-600">
+                  {summary.fullyCompletedTracks} / {summary.totalTracks}
+                </span>
               </div>
             </div>
           </div>
@@ -315,48 +365,6 @@ export default function Sidebar() {
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
         <div className="flex items-center justify-between mb-3">
           <p className="text-xs font-bold tracking-widest text-slate-400 uppercase">
-            AI Mock Interviews
-          </p>
-          <p className="text-xs text-slate-500">{mockInterviews.length} total</p>
-        </div>
-        <Link
-          href="/mock-interviews/ai-mock"
-          className="mb-3 inline-flex w-full items-center justify-center rounded-xl bg-secondary px-3 py-2 text-xs font-black uppercase tracking-widest text-white"
-        >
-          Start new AI mock
-        </Link>
-        <div className="flex flex-col gap-2">
-          {mockInterviews.length === 0 ? (
-            <p className="text-sm text-slate-500">No AI mock interviews yet.</p>
-          ) : (
-            mockInterviews.map((item) => (
-              <Link
-                key={item.id}
-                href={`/mock-interviews/ai-mock/${item.id}`}
-                className={`rounded-xl border px-3 py-2 transition-colors ${
-                  pathname?.includes(`/mock-interviews/ai-mock/${item.id}`)
-                    ? "border-primary bg-primary/5"
-                    : "border-slate-200 hover:bg-slate-50"
-                }`}
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <p className="text-sm font-semibold text-slate-800 truncate">
-                    {item.role || item.framework || "General mock"}
-                  </p>
-                  <p className="text-xs text-slate-500 shrink-0">{item.status.replaceAll("_", " ")}</p>
-                </div>
-                <p className="mt-1 text-[11px] text-slate-500">
-                  {item.answeredCount}/{item.questionsCount} answered | Avg: {item.averageScoreOutOf10}/10
-                </p>
-              </Link>
-            ))
-          )}
-        </div>
-      </div>
-
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
-        <div className="flex items-center justify-between mb-3">
-          <p className="text-xs font-bold tracking-widest text-slate-400 uppercase">
             Your Tracks
           </p>
           <p className="text-xs text-slate-500">{progressRows.length} total</p>
@@ -397,6 +405,48 @@ export default function Sidebar() {
               </Link>
             );
             })
+          )}
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-xs font-bold tracking-widest text-slate-400 uppercase">
+            AI Mock Interviews
+          </p>
+          <p className="text-xs text-slate-500">{mockInterviews.length} total</p>
+        </div>
+        <Link
+          href="/mock-interviews/ai-mock"
+          className="mb-3 inline-flex w-full items-center justify-center rounded-xl bg-secondary px-3 py-2 text-xs font-black uppercase tracking-widest text-white"
+        >
+          Start new AI mock
+        </Link>
+        <div className="flex flex-col gap-2">
+          {mockInterviews.length === 0 ? (
+            <p className="text-sm text-slate-500">No AI mock interviews yet.</p>
+          ) : (
+            mockInterviews.map((item) => (
+              <Link
+                key={item.id}
+                href={`/mock-interviews/ai-mock/${item.id}`}
+                className={`rounded-xl border px-3 py-2 transition-colors ${
+                  pathname?.includes(`/mock-interviews/ai-mock/${item.id}`)
+                    ? "border-primary bg-primary/5"
+                    : "border-slate-200 hover:bg-slate-50"
+                }`}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-semibold text-slate-800 truncate">
+                    {item.role || item.framework || "General mock"}
+                  </p>
+                  <p className="text-xs text-slate-500 shrink-0">{item.status.replaceAll("_", " ")}</p>
+                </div>
+                <p className="mt-1 text-[11px] text-slate-500">
+                  {item.answeredCount}/{item.questionsCount} answered | Avg: {item.averageScoreOutOf10}/10
+                </p>
+              </Link>
+            ))
           )}
         </div>
       </div>
