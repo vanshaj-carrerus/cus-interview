@@ -77,6 +77,15 @@ type AiMockInterviewHistoryItem = {
   averageScoreOutOf10: number;
 };
 
+function normalizeAttemptCount(attempts: number, cleared: number) {
+  return Math.max(0, attempts, cleared);
+}
+
+function getAccuracyPercent(cleared: number, attempts: number) {
+  if (attempts <= 0) return 0;
+  return Math.min(100, Math.round((cleared / attempts) * 100));
+}
+
 export default function Sidebar() {
   const pathname = usePathname();
   /** All published tracks across languages (for snapshot totals). */
@@ -397,14 +406,14 @@ export default function Sidebar() {
             <p className="text-sm text-slate-500">No attempted languages yet.</p>
           ) : (
             languageRows.map((language) => {
-            const percent =
-              language.attempts > 0 ? Math.round((language.cleared / language.attempts) * 100) : 0;
+            const normalizedAttempts = normalizeAttemptCount(language.attempts, language.cleared);
+            const percent = getAccuracyPercent(language.cleared, normalizedAttempts);
             return (
               <div key={language.languageSlug} className="rounded-xl border border-slate-200 px-3 py-2">
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-sm font-semibold text-slate-800 truncate">{language.languageName}</p>
                   <p className="text-xs text-slate-500 shrink-0">
-                    {language.cleared}/{language.attempts} solved
+                    {language.cleared}/{normalizedAttempts} solved
                   </p>
                 </div>
                 <p className="mt-1 text-[11px] text-slate-500">
@@ -433,10 +442,11 @@ export default function Sidebar() {
             const isActive = pathname?.startsWith(row.href);
             const percent =
               row.totalLevels > 0 ? Math.round((row.completedLevels / row.totalLevels) * 100) : 0;
-            const solvedPercent =
-              row.attemptedProblems > 0
-                ? Math.round((row.solvedProblems / row.attemptedProblems) * 100)
-                : 0;
+            const normalizedAttempts = normalizeAttemptCount(
+              row.attemptedProblems,
+              row.solvedProblems,
+            );
+            const solvedPercent = getAccuracyPercent(row.solvedProblems, normalizedAttempts);
             return (
               <Link
                 key={row.slug}
@@ -448,7 +458,7 @@ export default function Sidebar() {
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-sm font-semibold text-slate-800 truncate">{row.title}</p>
                   <p className="text-xs text-slate-500 shrink-0">
-                    {row.solvedProblems}/{row.attemptedProblems} solved
+                    {row.solvedProblems}/{normalizedAttempts} solved
                   </p>
                 </div>
                 <p className="mt-1 text-[11px] text-slate-500">

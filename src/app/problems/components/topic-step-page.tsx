@@ -324,14 +324,16 @@ export default function TopicStepPage({
                   animate={{ opacity: 1, y: 0 }}
                   className="space-y-6"
                 >
-                  <div className="p-6 bg-slate-900 rounded-4xl text-white">
-                    <p className="text-xs font-bold uppercase tracking-widest text-primary mb-2">
-                      Explanation
-                    </p>
-                    <p className="text-slate-300 leading-relaxed">
-                      {feedbackExplanation}
-                    </p>
-                  </div>
+                  {!isAnswerCorrect ? (
+                    <div className="p-6 bg-slate-900 rounded-4xl text-white">
+                      <p className="text-xs font-bold uppercase tracking-widest text-primary mb-2">
+                        Explanation
+                      </p>
+                      <p className="text-slate-300 leading-relaxed">
+                        {feedbackExplanation}
+                      </p>
+                    </div>
+                  ) : null}
                   <button
                     onClick={onNextQuestion}
                     className="flex items-center justify-center gap-2 w-full md:w-auto bg-primary text-white px-10 py-4 rounded-2xl font-bold hover:bg-primary transition-all shadow-lg shadow-primary/20"
