@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 
 import { LevelItem, TopicData } from "../../practice/data/types";
+import { logLearningProgress } from "@/lib/learning-progress-debug";
 
 type Props = {
   topic: TopicData;
@@ -56,7 +57,7 @@ export default function TopicStepPage({
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          credentials: "same-origin",
+          credentials: "include",
           body: JSON.stringify({ answer: String(optionIndex) }),
         },
       );
@@ -67,8 +68,17 @@ export default function TopicStepPage({
           explanation?: string;
           scoreAwarded: number;
           tracked?: boolean;
+          attemptId?: string;
         };
       };
+      logLearningProgress("topic-step", "question attempt response", {
+        questionId: question.id,
+        status: res.status,
+        tracked: payload.result?.tracked,
+        isCorrect: payload.result?.isCorrect,
+        attemptId: payload.result?.attemptId,
+        error: payload.error,
+      });
       if (!res.ok) {
         setSelectedAnswer(null);
         setShowFeedback(false);
@@ -173,17 +183,15 @@ export default function TopicStepPage({
             >
               Back to Roadmap
             </Link>
-            {passed ? (
+            {passed && nextLevel ? (
               <Link
-                href={`${basePath}/${topic.slug}/step-${nextLevel?.level ?? 0}`}
+                href={`${basePath}/${topic.slug}/step-${nextLevel.level}`}
                 className="flex-1 inline-flex items-center justify-center gap-2 bg-white text-slate-600 border border-slate-200 px-6 py-2 rounded-2xl font-bold hover:bg-slate-50 transition-all"
               >
                 <Compass className="w-5 h-5" />
                 <span>Next Step</span>
               </Link>
-            ) : (
-              <></>
-            )}
+            ) : null}
             <button
               onClick={() => window.location.reload()}
               className="flex-1 cursor-pointer bg-white text-slate-600 border border-slate-200 px-6 py-2 rounded-2xl font-bold hover:bg-slate-50 transition-all"

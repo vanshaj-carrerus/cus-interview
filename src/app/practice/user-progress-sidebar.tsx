@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
+import { logLearningProgress } from "@/lib/learning-progress-debug";
+
 type TopicProgress = {
   slug: string;
   title: string;
@@ -109,7 +111,14 @@ export default function Sidebar() {
           }),
         );
 
-        const progressRes = await fetch("/api/learning/me/progress", { cache: "no-store" });
+        const progressRes = await fetch("/api/learning/me/progress", {
+          cache: "no-store",
+          credentials: "include",
+        });
+        logLearningProgress("sidebar", "/api/learning/me/progress", {
+          status: progressRes.status,
+          ok: progressRes.ok,
+        });
         const progressPayload: ApiProgressResponse = progressRes.ok
           ? ((await progressRes.json()) as ApiProgressResponse)
           : {};

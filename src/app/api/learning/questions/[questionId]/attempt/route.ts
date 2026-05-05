@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
+import { logLearningProgress } from "@/lib/learning-progress-debug";
 import { attemptQuestion, verifyQuestionWithoutTracking } from "@/lib/learning/service";
 import { getSessionPublicUser } from "@/lib/get-session-user";
+
+export const dynamic = "force-dynamic";
 
 type Props = {
   params: Promise<{ questionId: string }>;
@@ -28,6 +31,15 @@ export async function POST(request: Request, { params }: Props) {
     if (!result) {
       return NextResponse.json({ error: "Question not found." }, { status: 404 });
     }
+
+    logLearningProgress("question-attempt", "POST completed", {
+      questionId,
+      hasSession: Boolean(sessionUser),
+      userIdSnippet: sessionUser ? `${sessionUser.id.slice(0, 8)}…` : null,
+      tracked: "tracked" in result ? result.tracked : undefined,
+      isCorrect: result.isCorrect,
+      attemptId: result.attemptId,
+    });
 
     return NextResponse.json({ result });
   } catch (error) {

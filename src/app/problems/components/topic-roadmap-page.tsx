@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 
 import { TopicData } from "../../practice/data/types";
+import { logLearningProgress } from "@/lib/learning-progress-debug";
 
 type Props = {
   topic: TopicData;
@@ -25,18 +26,35 @@ export default function TopicRoadmapPage({
   basePath = "/problems",
 }: Props) {
   const [passedLevels, setPassedLevels] = useState<number[]>([]);
+  const [progressLoadError, setProgressLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     let ignore = false;
 
     async function loadProgress() {
       try {
+        setProgressLoadError(null);
         const res = await fetch("/api/learning/me/progress", {
           method: "GET",
-          credentials: "same-origin",
+          credentials: "include",
           cache: "no-store",
         });
-        if (!res.ok) return;
+        logLearningProgress("roadmap", "/api/learning/me/progress", {
+          status: res.status,
+          topicSlug: topic.slug,
+        });
+        if (!res.ok) {
+          const errBody = (await res.json().catch(() => ({}))) as { error?: string };
+          if (!ignore) {
+            setPassedLevels([]);
+            setProgressLoadError(
+              res.status === 401
+                ? "Sign in to sync level unlocks and progress."
+                : (errBody.error ?? `Progress unavailable (HTTP ${res.status}).`),
+            );
+          }
+          return;
+        }
         const data = (await res.json()) as {
           progress?: {
             tracks: { trackSlug: string; levels: { levelNumber: number; completed: boolean }[] }[];
@@ -45,15 +63,26 @@ export default function TopicRoadmapPage({
         const languageTrack = data.progress
           ?.flatMap((language) => language.tracks)
           .find((track) => track.trackSlug === topic.slug);
+        logLearningProgress("roadmap", "parsed track progress", {
+          topicSlug: topic.slug,
+          foundTrack: Boolean(languageTrack),
+          completedLevels:
+            languageTrack?.levels.filter((l) => l.completed).map((l) => l.levelNumber) ?? [],
+        });
         if (!ignore && languageTrack) {
           setPassedLevels(
             languageTrack.levels
               .filter((level) => level.completed)
               .map((level) => level.levelNumber)
           );
+        } else if (!ignore) {
+          setPassedLevels([]);
         }
       } catch {
-        if (!ignore) setPassedLevels([]);
+        if (!ignore) {
+          setPassedLevels([]);
+          setProgressLoadError("Could not load progress. Check the network tab and Vercel logs.");
+        }
       }
     }
 
@@ -85,6 +114,12 @@ export default function TopicRoadmapPage({
           <ChevronLeft className="w-4 h-4 mr-1 group-hover:-translate-x-1 transition-transform" />
           Back to Practice Tracks
         </Link>
+
+        {progressLoadError ? (
+          <p className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            {progressLoadError}
+          </p>
+        ) : null}
 
         {/* Header Hero Section */}
         <header className="relative mb-16 pt-8">

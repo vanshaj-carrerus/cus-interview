@@ -1,5 +1,6 @@
 import { Types } from "mongoose";
 import { unstable_cache } from "next/cache";
+import { logLearningProgress } from "@/lib/learning-progress-debug";
 import { connectDB } from "@/lib/mongodb";
 import {
   LearningLanguage,
@@ -33,6 +34,9 @@ async function getTrackingModelsSafe() {
     return await getTrackingModels();
   } catch (error) {
     console.error("tracking-db-unavailable", error);
+    logLearningProgress("getTrackingModelsSafe", "tracking connection/model init failed", {
+      message: error instanceof Error ? error.message : String(error),
+    });
     return null;
   }
 }
@@ -390,10 +394,26 @@ async function refreshUserProfile(userId: string) {
   }
 
   const levelIds = Array.from(microByLevel.keys()).map((id) => new Types.ObjectId(id));
-  const levelsFromDb = await LearningLevel.find({
+  let levelsFromDb = await LearningLevel.find({
     _id: { $in: levelIds },
     status: "published",
   }).lean();
+
+  if (levelsFromDb.length === 0 && levelIds.length > 0) {
+    logLearningProgress("refreshUserProfile", "no published levels matched attempt levelIds; retrying without status filter", {
+      levelIdCount: levelIds.length,
+    });
+    levelsFromDb = await LearningLevel.find({
+      _id: { $in: levelIds },
+    }).lean();
+  }
+
+  if (levelsFromDb.length === 0 && levelIds.length > 0) {
+    console.error(
+      "[learning-progress] refreshUserProfile: attempts reference levelIds not found in LearningLevel collection (check DB / content vs tracking).",
+      { levelIds: levelIds.map((id) => String(id)) },
+    );
+  }
 
   const trackIdStrs = [...new Set(levelsFromDb.map((l) => toId(l.trackId)))];
   const trackOids = trackIdStrs.map((id) => new Types.ObjectId(id));
