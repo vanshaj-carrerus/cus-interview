@@ -2622,7 +2622,7 @@ export const cSharpMasteryData: TopicData = {
             "Provides a mechanism for releasing unmanaged resources like file handles",
             "Clears the screen",
             "Restarts the app",
-          ],
+          ],  
           answerIndex: 1,
           explanation:
             "Usually used with a 'using' block to ensure Dispose() is called.",

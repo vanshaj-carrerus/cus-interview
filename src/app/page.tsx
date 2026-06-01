@@ -4,7 +4,6 @@ import CompaniesAndTestimonials from "@/components/home/CompanesAndTestimonials"
 import FastTrackCourses from "@/components/home/Fasttrackcourses"
 import CusInterviewHero from "@/components/home/Header&Hero"
 import MockInterviewBanner from "@/components/home/Mockinterviewbanner"
-import MockInterviews from "@/components/home/Mockinterviews"
 import PracticeProblems from "@/components/home/Practiceproblems"
 import VideoExplanations from "@/components/home/Videoexplanations"
 import WebinarsSection from "@/components/home/Webinarssection"
@@ -45,7 +44,6 @@ const Home = async () => {
       </div>
 
       <div className="section-soft">
-        <MockInterviews />
         <VideoExplanations />
         <CodingEnvironment />
       </div>
