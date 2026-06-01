@@ -6,7 +6,7 @@ export default function VideoExplanations() {
       <div className=" max-w-7xl md:container! mx-auto px-6">
         <div className="flex flex-col lg:flex-row items-center gap-20">
           {/* ── LEFT CONTENT ── */}
-          <div className="flex-1">
+          <div className="flex-1 ">
             <h2 className="text-sm font-black text-primary uppercase tracking-[0.3em] mb-6">
               Expert Guidance
             </h2>
@@ -64,15 +64,15 @@ export default function VideoExplanations() {
               ))}
             </div>
 
-            <button className="px-10 py-4 bg-primary text-white font-black text-sm uppercase tracking-widest rounded-2xl shadow-xl hover:-translate-y-1 transition-all">
+            <button className="px-10  cursor-pointer py-4 bg-primary text-white font-black text-sm uppercase tracking-widest rounded-2xl shadow-xl hover:-translate-y-1 transition-all">
               Explore Videos
             </button>
           </div>
 
           {/* ── RIGHT VISUAL ── */}
-          <div className="flex-1 relative group w-full lg:w-auto">
+          <div className="flex-1 relative group w-full lg:w-auto ">
             {/* Main Video Card */}
-            <div className="relative z-10 aspect-video bg-slate-900 rounded-4xl overflow-hidden shadow-[0_40px_80px_rgba(0,0,0,0.3)] border border-slate-800">
+            <div className="relative z-10 aspect-video bg-slate-900 rounded-4xl overflow-hidden shadow-[0_40px_80px_rgba(0,0,0,0.3)] border border-slate-800 relative z-10 bg-slate-900 rounded-[2.5rem] p-4 shadow-[0_50px_100px_rgba(0,0,0,0.3)] border border-slate-800 rotate-1 group-hover:rotate-0 transition-transform duration-700">
               <div className="absolute inset-0 bg-linear-to-tr from-primary/20 via-transparent to-accent-purple/20" />
 
               <div className="absolute top-0 left-0 right-0 z-20 p-6 md:p-8 pt-14 md:pt-16 pointer-events-none">

@@ -151,7 +151,7 @@ export default function CodingEnvironment() {
             </div>
 
             <Link href={"/practice"}>
-              <button className="w-full cursor-pointer sm:w-auto px-10 py-5 bg-secondary text-white font-black text-sm uppercase tracking-[0.2em] rounded-2xl shadow-2xl hover:shadow-primary/30 hover:-translate-y-1 transition-all">
+              <button className="w-full  cursor-pointer sm:w-auto px-10 py-4 bg-primary text-white font-black text-sm uppercase tracking-[0.2em] rounded-2xl shadow-2xl hover:shadow-primary/30 hover:-translate-y-1 transition-all">
                 Start Coding
               </button>
             </Link>
