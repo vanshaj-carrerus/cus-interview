@@ -98,12 +98,7 @@ export default function FastTrackCourses({ courses, progressBySlug = {} }: FastT
               <span className="premium-text-gradient">Professional Solutions</span>
             </h3>
           </div>
-          <Link
-            href="/practice#language-syntax"
-            className="text-secondary/40 text-sm font-black uppercase tracking-widest hover:text-primary transition-colors"
-          >
-            View all courses
-          </Link>
+         
         </div>
 
         {courses.length === 0 ? (
@@ -190,6 +185,18 @@ export default function FastTrackCourses({ courses, progressBySlug = {} }: FastT
             })}
           </div>
         )}
+
+        <div className="mt-16 text-center">
+                  <Link
+                    href="/practice"
+                    className="inline-flex items-center gap-3 px-10 py-4 bg-secondary text-white font-black text-sm uppercase tracking-widest rounded-2xl shadow-2xl hover:-translate-y-1 transition-all"
+                  >
+                    View More Courses
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M14 5l7 7-7 7" />
+                    </svg>
+                  </Link>
+                </div>
       </div>
     </section>
   );
