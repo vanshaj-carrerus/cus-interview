@@ -73,7 +73,7 @@ export default async function Dashboard() {
       <div className="max-w-7xl mx-auto">
         {/* --- Hero / Header Section --- */}
         <header className="relative mb-20">
-          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-10">
+          <div className="flex flex-col md:flex-row lg:items-end justify-between gap-10">
             <div className="space-y-6">
               <div className="flex items-center gap-3">
                 <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-primary bg-indigo-50 px-3 py-1 rounded-full">

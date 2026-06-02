@@ -1,6 +1,12 @@
 import Link from "next/link";
 import type { HomeCourseProgressBySlug, HomeLearningCard } from "@/lib/learning/home-cards";
+import { mergeProfileProgressByTrackSlug } from "@/lib/learning/home-cards";
+import { getSessionPublicUser } from "@/lib/get-session-user";
+import { getUserLearningProfile } from "@/lib/learning/service";
+import { getTrackCards } from "@/lib/learning/server";
 import Image from "next/image";
+
+const SKELETON_CARD_COUNT = 8;
 
 /** Progress bar accents — cycle by card index (primary/secondary palette). */
 const ACCENT_BARS = [
@@ -23,6 +29,59 @@ function completionForCourse(slug: string, catalogLevels: number, progressBySlug
   const progressPct =
     totalLevels > 0 ? Math.min(100, Math.round((completedLevels / totalLevels) * 100)) : 0;
   return { completedLevels, totalLevels, progressPct };
+}
+
+export function FastTrackCoursesSkeleton() {
+  return (
+    <section className="py-24 bg-white relative" aria-busy="true" aria-label="Loading courses">
+      <div className="max-w-7xl md:container! mx-auto px-6">
+        <div className="flex flex-col md:flex-row items-end justify-between gap-8 mb-16">
+          <div className="max-w-5xl w-full text-center md:text-left space-y-4">
+            <div className="mx-auto md:mx-0 h-4 w-44 rounded-full bg-primary/15 animate-pulse" />
+            <div className="h-12 w-full max-w-2xl mx-auto md:mx-0 rounded-2xl bg-secondary/10 animate-pulse" />
+          </div>
+          <div className="h-4 w-32 rounded bg-secondary/10 animate-pulse shrink-0" />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          {Array.from({ length: SKELETON_CARD_COUNT }).map((_, index) => (
+            <div key={index} className="pro-card p-8 animate-pulse" aria-hidden>
+              <div className="flex items-center justify-between mb-8">
+                <div className="w-10 h-10 rounded-lg bg-secondary/15" />
+                <div className="space-y-2 text-right">
+                  <div className="h-2 w-14 rounded bg-secondary/10 ml-auto" />
+                  <div className="h-4 w-16 rounded bg-secondary/15 ml-auto" />
+                </div>
+              </div>
+              <div className="h-6 w-3/4 rounded bg-secondary/15 mb-2" />
+              <div className="h-3 w-1/2 rounded bg-secondary/10 mb-6" />
+              <div className="space-y-2">
+                <div className="flex justify-between gap-2">
+                  <div className="h-2 w-20 rounded bg-secondary/10" />
+                  <div className="h-2 w-8 rounded bg-secondary/10" />
+                </div>
+                <div className="h-2 w-full rounded bg-secondary/10" />
+                <div className="h-2 w-full rounded-full bg-slate-100" />
+              </div>
+              <div className="mt-8 h-11 w-full rounded-xl bg-slate-100" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export async function FastTrackCoursesSection() {
+  const [courses, sessionUser] = await Promise.all([
+    getTrackCards("course"),
+    getSessionPublicUser(),
+  ]);
+  const profile = sessionUser
+    ? await getUserLearningProfile(sessionUser.id, sessionUser.name || sessionUser.email)
+    : null;
+  const courseProgressBySlug = mergeProfileProgressByTrackSlug(profile);
+  return <FastTrackCourses courses={courses} progressBySlug={courseProgressBySlug} />;
 }
 
 export default function FastTrackCourses({ courses, progressBySlug = {} }: FastTrackCoursesProps) {

@@ -42,8 +42,6 @@ export default function RootLayout({
           easing="ease"
           speed={200}
         />
-
-        {children}
         <AppProviders>
           <Header />
           <div className="flex pt-20 min-h-screen flex-col">

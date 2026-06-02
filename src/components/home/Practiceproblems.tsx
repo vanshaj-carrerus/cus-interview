@@ -9,6 +9,9 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { HomeLearningCard } from "@/lib/learning/home-cards";
+import { getTrackCards } from "@/lib/learning/server";
+
+const SKELETON_CARD_COUNT = 6;
 
 const ICONS: LucideIcon[] = [Code2, Cpu, Layout, Database, Puzzle, Terminal];
 const CARD_COLORS = [
@@ -23,6 +26,44 @@ const CARD_COLORS = [
 type PracticeProblemsProps = {
   tracks: HomeLearningCard[];
 };
+
+export function PracticeProblemsSkeleton() {
+  return (
+    <section className="py-24 bg-slate-50 relative overflow-hidden" aria-busy="true" aria-label="Loading skill assessments">
+      <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
+
+      <div className="max-w-7xl md:container! mx-auto px-6 relative z-10">
+        <div className="text-center mb-16 space-y-4">
+          <div className="mx-auto h-4 w-40 rounded-full bg-primary/15 animate-pulse" />
+          <div className="mx-auto h-12 w-full max-w-xl rounded-2xl bg-secondary/10 animate-pulse" />
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+          {Array.from({ length: SKELETON_CARD_COUNT }).map((_, index) => (
+            <div
+              key={index}
+              className="pro-card p-8 flex flex-col items-center text-center bg-white animate-pulse"
+              aria-hidden
+            >
+              <div className="w-16 h-16 rounded-2xl bg-secondary/15 mb-6" />
+              <div className="h-4 w-20 rounded bg-secondary/15 mb-2" />
+              <div className="h-3 w-16 rounded bg-secondary/10" />
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-16 flex justify-center">
+          <div className="h-14 w-56 rounded-2xl bg-secondary/15 animate-pulse" />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export async function PracticeProblemsSection() {
+  const tracks = await getTrackCards("track");
+  return <PracticeProblems tracks={tracks} />;
+}
 
 export default function PracticeProblems({ tracks }: PracticeProblemsProps) {
   return (
