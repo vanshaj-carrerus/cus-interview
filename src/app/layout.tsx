@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import NextTopLoader from "nextjs-toploader";
 import Footer from "@/components/global/Footer";
 import Header from "@/components/global/Header";
 import { AppProviders } from "@/components/providers/app-providers";
@@ -31,6 +32,18 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased light`}
     >
       <body className="min-h-screen bg-background text-foreground">
+        <NextTopLoader
+          color="#5bb9e5"
+          initialPosition={0.08}
+          crawlSpeed={200}
+          height={3}
+          crawl={true}
+          showSpinner={false}
+          easing="ease"
+          speed={200}
+        />
+
+        {children}
         <AppProviders>
           <Header />
           <div className="flex pt-20 min-h-screen flex-col">
