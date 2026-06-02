@@ -93,18 +93,18 @@ export async function getTopicViewBySlug(trackSlug: string): Promise<TopicView |
     trackData.levels.map(async (level) => {
       const content = await getTrackLevelContent(trackSlug, level.levelNumber);
       return {
-      id: level.id,
-      level: level.levelNumber,
-      title: level.title,
-      description: level.description,
-      passScore: level.passScore,
-      questions:
-        content?.questions.map((question) => ({
-          id: question.id,
-          question: question.prompt,
-          options: question.options.map((option) => option.text),
-          explanation: question.explanation,
-        })) ?? [],
+        id: level.id,
+        level: level.levelNumber,
+        title: level.title,
+        description: level.description,
+        passScore: level.passScore,
+        questions:
+          content?.questions.map((question) => ({
+            id: question.id,
+            question: question.prompt,
+            options: question.options.map((option) => option.text),
+            explanation: question.explanation,
+          })) ?? [],
       };
     })
   );

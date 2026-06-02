@@ -9,6 +9,7 @@ type Props = {
 
 export default async function CourseRoadmapRoute({ params }: Props) {
   const { course } = await params;
+
   const courseData = await getTopicViewBySlug(course);
   if (!courseData) notFound();
 
