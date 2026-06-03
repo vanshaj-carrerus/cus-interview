@@ -1,16 +1,18 @@
 import Link from "next/link";
 import Image from "next/image";
+import { getTrackCards } from "@/lib/learning/server";
 
-const NAV_LINKS = [
-  { label: "Tracks", href: "/practice", description: "Domain roadmaps and learning paths" },
-  { label: "Languages", href: "/practice#language-syntax", description: "Language and course roadmaps" },
-  { label: "Mock interviews", href: "/mock-interviews", description: "AI-powered interview practice" },
-] as const;
+export default async function Footer() {
+  const [tracks, courses] = await Promise.all([
+    getTrackCards("track"),
+    getTrackCards("course"),
+  ]);
 
-export default function Footer() {
   return (
     <footer className="bg-secondary text-white/75 px-6 py-12 border-t border-white/10">
-      <div className="max-w-7xl md:container! mx-auto flex flex-col gap-10 md:flex-row md:items-start">
+      <div className="max-w-7xl md:container! mx-auto grid grid-cols-1 md:grid-cols-4 gap-10">
+
+        {/* Brand */}
         <div className="max-w-sm space-y-4">
           <Link href="/" className="inline-flex items-center gap-2 group">
             <Image
@@ -30,29 +32,113 @@ export default function Footer() {
               </span>
             </div>
           </Link>
+
           <p className="text-sm text-white/60 leading-relaxed">
-            Structured practice, language tracks, and realistic mock interviews in one place.
+            Structured practice, language tracks, and realistic mock interviews
+            in one place.
           </p>
         </div>
 
-        <nav aria-label="Footer">
+        {/* Tracks */}
+        <nav aria-label="Tracks">
           <h2 className="text-white font-black text-xs uppercase tracking-widest mb-4">
-            Explore
+            Tracks
           </h2>
-          <ul className="flex flex-col gap-4">
-            {NAV_LINKS.map(({ label, href, description }) => (
-              <li key={href}>
+
+          <ul className="space-y-2">
+            {tracks.slice(0, 6).map((track) => (
+              <li key={track.id}>
                 <Link
-                  href={href}
-                  className="group block font-bold text-sm text-white hover:text-primary transition-colors"
+                  href={`/problems/${track.slug}`}
+                  className="text-sm text-white/70 hover:text-primary transition-colors"
                 >
-                  {label}
-                  <span className="block text-xs font-normal text-white/50 group-hover:text-white/65 mt-0.5">
-                    {description}
-                  </span>
+                  {track.title}
                 </Link>
               </li>
             ))}
+
+            <li>
+              <Link
+                href="/practice"
+                className="text-primary text-sm font-bold hover:underline"
+              >
+                View All →
+              </Link>
+            </li>
+          </ul>
+        </nav>
+
+        {/* Languages / Courses */}
+        <nav aria-label="Languages">
+          <h2 className="text-white font-black text-xs uppercase tracking-widest mb-4">
+            Languages
+          </h2>
+
+          <ul className="space-y-2">
+            {courses.slice(0, 6).map((course) => (
+              <li key={course.id}>
+                <Link
+                  href={`/problems/courses/${course.slug}`}
+                  className="text-sm text-white/70 hover:text-primary transition-colors"
+                >
+                  {course.title}
+                </Link>
+              </li>
+            ))}
+
+            <li>
+              <Link
+                href="/practice"
+                className="text-primary text-sm font-bold hover:underline"
+              >
+                View All →
+              </Link>
+            </li>
+          </ul>
+        </nav>
+
+        {/* Mock Interviews */}
+        <nav aria-label="Mock Interviews">
+          <h2 className="text-white font-black text-xs uppercase tracking-widest mb-4">
+            Mock Interviews
+          </h2>
+
+          <ul className="space-y-2">
+            <li>
+              <Link
+                href="/mock-interviews"
+                className="text-sm text-white/70 hover:text-primary transition-colors"
+              >
+                AI Mock Interviews
+              </Link>
+            </li>
+
+            <li>
+              <Link
+                href="/mock-interviews"
+                className="text-sm text-white/70 hover:text-primary transition-colors"
+              >
+                Technical Interviews
+              </Link>
+            </li>
+
+            <li>
+              <Link
+                href="/mock-interviews"
+                className="text-sm text-white/70 hover:text-primary transition-colors"
+              >
+                HR Interviews
+              </Link>
+            </li>
+
+            <li>
+              <Link
+                href="/mock-interviews"
+                className="text-primary text-sm font-bold hover:underline"
+              >
+                Start Practice →
+              </Link>
+            </li>
           </ul>
         </nav>
       </div>

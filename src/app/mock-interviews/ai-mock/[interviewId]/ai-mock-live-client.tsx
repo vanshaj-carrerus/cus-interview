@@ -1,5 +1,7 @@
 "use client";
 
+
+
 import { useEffect, useMemo, useRef, useState } from "react";
 
 type Question = {
@@ -69,6 +71,10 @@ type SpeechWindow = Window & {
 type VoicePreference = "female" | "male";
 
 export function AiMockLiveClient({ interview }: Props) {
+
+  const interviewerVideoRef = useRef<HTMLVideoElement>(null);
+  const userVideoRef = useRef<HTMLVideoElement>(null);
+  const webcamStreamRef = useRef<MediaStream | null>(null);
   const [questions, setQuestions] = useState<Question[]>(
     interview.questions ?? [],
   );
@@ -181,6 +187,46 @@ export function AiMockLiveClient({ interview }: Props) {
     }
     timerPausedRef.current = false;
   }, [isAiSpeaking]);
+
+  //  Control with isAiSpeaking
+
+  useEffect(() => {
+  const video = interviewerVideoRef.current;
+
+  if (!video) return;
+
+  if (isAiSpeaking) {
+    video.currentTime = 0;
+    video.play().catch(() => {});
+  } else {
+    video.pause();
+  }
+}, [isAiSpeaking]);
+
+  useEffect(() => {
+    const startCamera = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false,
+        });
+
+        webcamStreamRef.current = stream;
+
+        if (userVideoRef.current) {
+          userVideoRef.current.srcObject = stream;
+        }
+      } catch (error) {
+        console.error("Camera access denied", error);
+      }
+    };
+
+    startCamera();
+
+    return () => {
+      webcamStreamRef.current?.getTracks().forEach((track) => track.stop());
+    };
+  }, []);
 
   useEffect(() => {
     if (!speechSynthesisSupported) return;
@@ -507,11 +553,10 @@ export function AiMockLiveClient({ interview }: Props) {
                     key={q.id}
                     type="button"
                     onClick={() => setActiveQuestionIndex(idx)}
-                    className={`w-full rounded-2xl border px-3 py-2.5 text-left text-xs font-bold ${
-                      active
-                        ? "border-primary bg-primary/5 text-primary"
-                        : "border-slate-200 bg-slate-50 text-slate-600"
-                    }`}
+                    className={`w-full rounded-2xl border px-3 py-2.5 text-left text-xs font-bold ${active
+                      ? "border-primary bg-primary/5 text-primary"
+                      : "border-slate-200 bg-slate-50 text-slate-600"
+                      }`}
                   >
                     Q{idx + 1} {answered ? " - scored" : ""}
                   </button>
@@ -521,6 +566,51 @@ export function AiMockLiveClient({ interview }: Props) {
           </aside>
 
           <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-[0_24px_48px_-12px_rgba(0,0,0,0.06)] space-y-5">
+
+            <div className="grid gap-4 lg:grid-cols-2">
+              {/* AI Interviewer */}
+              <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-black">
+                <video
+                  ref={interviewerVideoRef}
+                  muted
+                  playsInline
+                  preload="auto"
+                  className="h-[260px] w-full object-cover"
+                >
+                  <source src="/videos/interviewer.mp4" type="video/mp4" />
+                </video>
+
+                <div className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-xs font-bold">
+                  👩 AI Interviewer
+                </div>
+
+                {isAiSpeaking && (
+                  <div className="absolute bottom-3 left-3 rounded-full bg-green-500 px-3 py-1 text-xs font-bold text-white animate-pulse">
+                    🎤 Asking Question...
+                  </div>
+                )}
+              </div>
+
+              {/* User Camera */}
+              <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-black">
+                <video
+                  ref={userVideoRef}
+                  autoPlay
+                  muted
+                  playsInline
+                  className="h-[260px] w-full object-cover"
+                />
+
+                <div className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-xs font-bold">
+                  📷 You
+                </div>
+
+                <div className="absolute right-3 top-3 flex h-3 w-3">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400" />
+                  <span className="relative inline-flex h-3 w-3 rounded-full bg-red-500" />
+                </div>
+              </div>
+            </div>
             <div>
               <p className="text-[11px] font-black uppercase tracking-widest text-slate-400">
                 Question {safeActiveQuestionIndex + 1}

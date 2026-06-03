@@ -70,7 +70,7 @@ export default async function AiMockInterviewLivePage({ params }: PageProps) {
           </p>
         </header>
 
-        <section className="rounded-3xl border border-slate-100 bg-white p-6 shadow-[0_24px_48px_-12px_rgba(0,0,0,0.06)] space-y-5">
+        {/* <section className="rounded-3xl border border-slate-100 bg-white p-6 shadow-[0_24px_48px_-12px_rgba(0,0,0,0.06)] space-y-5">
           <div>
             <p className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-2">
               Seniority
@@ -124,7 +124,7 @@ export default async function AiMockInterviewLivePage({ params }: PageProps) {
               </p>
             </div>
           )}
-        </section>
+        </section> */}
 
         <AiMockLiveClient
           interview={{
