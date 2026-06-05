@@ -7,9 +7,9 @@ export default function MockInterviewBanner() {
   return (
     <section className="bg-white py-20 px-4 md:px-8 relative overflow-hidden">
       {/* Expanded width for a fuller cart/banner feel */}
-      <div className="w-full max-w-[96%] 2xl:max-w-[1500px] mx-auto">
+      <div className="w-full max-w-[96%] 2xl:max-w-[1390px] mx-auto">
         <div className="bg-gray-50 rounded-[2rem] p-8 md:p-16 flex flex-col lg:flex-row items-center gap-16 border border-gray-200 shadow-sm relative overflow-hidden">
-          
+
           {/* Subtle background gradient instead of a harsh skewed block */}
           <div className="absolute top-0 right-0 w-full lg:w-1/2 h-full bg-gradient-to-bl from-blue-50/50 to-transparent pointer-events-none" />
 
@@ -21,12 +21,12 @@ export default function MockInterviewBanner() {
                 Free Mock Round
               </span>
             </div>
-            
+
             <h3 className="text-4xl md:text-5xl font-bold text-gray-900 tracking-tight leading-[1.15] mb-6">
               Unsure where to start your <br className="hidden md:block" />
               <span className="text-blue-600">Career Journey?</span>
             </h3>
-            
+
             <p className="text-gray-600 text-lg md:text-xl leading-relaxed mb-10 max-w-lg mx-auto lg:mx-0">
               Take our expert-curated mock technical interview designed for IT Professionals to pinpoint your gaps and excel.
             </p>
@@ -38,8 +38,8 @@ export default function MockInterviewBanner() {
               >
                 Attempt Now
               </Link>
-              
-              
+
+
             </div>
 
             <div className="mt-12 pt-10 border-t border-gray-200/60">
@@ -59,18 +59,18 @@ export default function MockInterviewBanner() {
           <div className="flex-1 w-full max-w-lg lg:max-w-none relative z-10 group">
             {/* BIGGER ANIMATION: Massively increased glow, added pulse, and scale-up on hover */}
             <div className="absolute -inset-16 bg-blue-500/20 rounded-full blur-[100px] opacity-70 group-hover:opacity-100 group-hover:scale-110 group-hover:bg-blue-400/30 transition-all duration-700 animate-pulse" />
-            
+
             {/* Code Window */}
             <div className="relative bg-white rounded-2xl border border-gray-200 shadow-2xl p-2 hover:-translate-y-2 transition-transform duration-500">
               <div className="aspect-[4/3] sm:aspect-video bg-[#0f172a] rounded-xl overflow-hidden relative shadow-inner flex flex-col z-10">
-                
+
                 {/* Mac-style Window Header */}
                 <div className="h-10 bg-[#1e293b] border-b border-white/5 flex items-center px-4 gap-2 shrink-0">
                   <div className="w-2.5 h-2.5 rounded-full bg-rose-400" />
                   <div className="w-2.5 h-2.5 rounded-full bg-amber-400" />
                   <div className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
                 </div>
-                
+
                 {/* Editor Body */}
                 <div className="p-6 md:p-8 flex-1">
                   <TypewriterHeadingParagraph
@@ -91,7 +91,7 @@ export default function MockInterviewBanner() {
               </div>
             </div>
           </div>
-          
+
         </div>
       </div>
     </section>
