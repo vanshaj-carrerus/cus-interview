@@ -2,25 +2,26 @@ import { TypewriterHeadingParagraph } from "./TypewriterHeadingParagraph";
 
 export default function VideoExplanations() {
   return (
-    <section className="py-12 bg-white relative overflow-hidden">
-      <div className=" max-w-7xl md:container! mx-auto px-6">
-        <div className="flex flex-col lg:flex-row items-center gap-20">
+    <section className="py-20 bg-white relative overflow-hidden">
+      <div className="max-w-7xl md:container mx-auto px-6">
+        <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-20">
+          
           {/* ── LEFT CONTENT ── */}
-          <div className="flex-1 ">
-            <h2 className="text-sm font-black text-primary uppercase tracking-[0.3em] mb-6">
+          <div className="flex-1 w-full text-center lg:text-left">
+            <h2 className="text-xs font-bold text-primary uppercase tracking-widest mb-3">
               Expert Guidance
             </h2>
-            <h3 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-none mb-8">
+            <h3 className="text-3xl md:text-4xl lg:text-5xl font-bold text-slate-900 tracking-tight leading-tight mb-6">
               Crystal clear{" "}
-              <span className="premium-text-gradient">Video Explanations</span>
+              <span className="">Video Explanations</span>
             </h3>
-            <p className="text-slate-500 text-lg font-medium leading-relaxed mb-10">
+            <p className="text-slate-500 text-lg font-medium leading-relaxed mb-10 max-w-2xl mx-auto lg:mx-0">
               Don&apos;t just see the code. Understand the intuition behind
               every solution with high-quality videos recorded by industry
               veterans.
             </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-12">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-8 mb-12 text-left">
               {[
                 {
                   title: "Visual Intuition",
@@ -30,16 +31,19 @@ export default function VideoExplanations() {
                   title: "Multiple Approaches",
                   desc: "From brute force to optimal",
                 },
-                { title: "Code Walkthrough", desc: "Line by line explanation" },
+                { 
+                  title: "Code Walkthrough", 
+                  desc: "Line by line explanation" 
+                },
                 {
                   title: "Complexity Analysis",
                   desc: "Time & Space breakdown",
                 },
               ].map((item, i) => (
-                <div key={i} className="flex gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center shrink-0">
+                <div key={i} className="flex items-start gap-4">
+                  <div className="w-8 h-8 rounded-full bg-blue-50/80 flex items-center justify-center shrink-0 border border-blue-100">
                     <svg
-                      className="w-5 h-5 text-primary"
+                      className="w-4 h-4 text-primary"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -47,16 +51,16 @@ export default function VideoExplanations() {
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        strokeWidth={3}
+                        strokeWidth={2.5}
                         d="M5 13l4 4L19 7"
                       />
                     </svg>
                   </div>
                   <div>
-                    <h4 className="font-black text-slate-900 text-sm">
+                    <h4 className="font-semibold text-slate-900 text-sm mb-1">
                       {item.title}
                     </h4>
-                    <p className="text-slate-400 text-xs font-medium">
+                    <p className="text-slate-500 text-xs font-medium">
                       {item.desc}
                     </p>
                   </div>
@@ -64,44 +68,70 @@ export default function VideoExplanations() {
               ))}
             </div>
 
-            <button className="px-10  cursor-pointer py-4 bg-primary text-white font-black text-sm uppercase tracking-widest rounded-2xl shadow-xl hover:-translate-y-1 transition-all">
+            <button className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-slate-900 text-white font-medium text-sm rounded-xl shadow-sm hover:bg-slate-800 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 group">
               Explore Videos
+              <svg 
+                className="w-4 h-4 text-white/70 group-hover:text-white group-hover:translate-x-1 transition-all" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7-7 7" />
+              </svg>
             </button>
           </div>
 
           {/* ── RIGHT VISUAL ── */}
-          <div className="flex-1 relative group w-full lg:w-auto ">
-            {/* Main Video Card */}
-            <div className="relative z-10 aspect-video bg-slate-900 rounded-4xl overflow-hidden shadow-[0_40px_80px_rgba(0,0,0,0.3)] border border-slate-800 relative z-10 bg-slate-900 rounded-[2.5rem] p-4 shadow-[0_50px_100px_rgba(0,0,0,0.3)] border border-slate-800 rotate-1 group-hover:rotate-0 transition-transform duration-700">
-              <div className="absolute inset-0 bg-linear-to-tr from-primary/20 via-transparent to-accent-purple/20" />
+          <div className="flex-1 w-full max-w-2xl lg:max-w-none relative group">
+            
+            {/* Soft background glow */}
+            <div className="absolute -inset-10 bg-primary/5 rounded-full blur-[100px] opacity-50 pointer-events-none" />
 
-              <div className="absolute top-0 left-0 right-0 z-20 p-6 md:p-8 pt-14 md:pt-16 pointer-events-none">
+            {/* Main Video Card Mockup */}
+            <div className="relative z-10 aspect-video bg-[#0f172a] rounded-2xl overflow-hidden shadow-2xl border border-slate-800 flex flex-col hover:-translate-y-2 transition-transform duration-500 ease-out">
+              
+              {/* Subtle inner gradient */}
+              <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 via-transparent to-accent-purple/10 pointer-events-none" />
+
+              {/* Video Content Overlay */}
+              <div className="relative z-20 p-8 md:p-10 pt-12 md:pt-14 flex-1 pointer-events-none">
                 <TypewriterHeadingParagraph
                   heading="See the intuition, not just the code"
                   paragraph="Veteran engineers narrate every tradeoff so video explanations feel like a 1:1 walkthrough."
-                  headingClassName="text-white font-black text-sm md:text-base drop-shadow-md"
-                  paragraphClassName="text-white/65 text-[11px] md:text-xs font-medium mt-1.5 max-w-md leading-relaxed"
+                  headingClassName="text-white font-semibold text-lg md:text-xl tracking-tight mb-3 drop-shadow-md"
+                  paragraphClassName="text-slate-400 text-sm font-medium max-w-md leading-relaxed"
                   typeMs={40}
                   deleteMs={24}
                 />
               </div>
 
-              {/* Video Info Overlay */}
-              <div className="absolute bottom-0 left-0 w-full p-8 bg-linear-to-t from-slate-900 via-slate-900/40 to-transparent">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-accent-orange" />
-                  <div>
-                    <p className="text-white text-sm font-black">
+              {/* Modern Media Footer Bar */}
+              <div className="relative z-20 mt-auto p-5 md:p-6 bg-slate-900/60 backdrop-blur-md border-t border-slate-800/80 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-full bg-accent-orange/20 border border-accent-orange/30 flex items-center justify-center shrink-0">
+                    <div className="w-3 h-3 rounded-full bg-accent-orange animate-pulse" />
+                  </div>
+                  <div className="flex flex-col">
+                    <p className="text-slate-200 text-sm font-semibold mb-0.5">
                       Dynamic Programming Masterclass
                     </p>
-                    <p className="text-white/40 text-[10px] font-black uppercase tracking-widest">
+                    <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider">
                       SDE at Google
                     </p>
                   </div>
                 </div>
+                
+                {/* Visual Play Icon */}
+                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center shrink-0 border border-white/5">
+                   <svg className="w-4 h-4 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                     <path d="M8 5v14l11-7z" />
+                   </svg>
+                </div>
               </div>
+              
             </div>
           </div>
+          
         </div>
       </div>
     </section>

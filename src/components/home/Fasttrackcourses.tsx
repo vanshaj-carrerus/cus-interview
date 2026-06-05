@@ -35,8 +35,8 @@ function completionForCourse(slug: string, catalogLevels: number, progressBySlug
 
 export function FastTrackCoursesSkeleton() {
   return (
-    <section className="py-24 bg-white relative" aria-busy="true" aria-label="Loading courses">
-      <div className="max-w-7xl md:container mx-auto px-6">
+    <section className="py-24 bg-slate-50/50 border-y border-slate-100 relative overflow-hidden" aria-busy="true" aria-label="Loading courses">
+      <div className="max-w-7xl md:container mx-auto px-6 relative z-10">
         <div className="flex flex-col md:flex-row items-end justify-between gap-8 mb-16">
           <div className="max-w-5xl w-full text-center md:text-left space-y-4">
             <div className="mx-auto md:mx-0 h-3 w-40 rounded-full bg-slate-200 animate-pulse" />
@@ -94,11 +94,14 @@ export async function FastTrackCoursesSection() {
 
 export default function FastTrackCourses({ courses, progressBySlug = {} }: FastTrackCoursesProps) {
   return (
-    <section className="py-24 bg-white relative">
-      <div className="max-w-7xl md:container mx-auto px-6">
+    <section className="py-24 bg-slate-50/50 border-y border-slate-100 relative overflow-hidden">
+      {/* Premium Ambient Background Color Blobs */}
+      <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[120px] pointer-events-none -translate-x-1/2 -translate-y-1/4" />
+      <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-accent-blue/5 rounded-full blur-[120px] pointer-events-none translate-x-1/3 translate-y-1/4" />
+
+      <div className="max-w-7xl md:container mx-auto px-6 relative z-10">
         <div className="flex flex-col md:flex-row items-end justify-between gap-8 mb-16">
           <div className="max-w-5xl text-center md:text-left">
-            {/* Added Primary color to the subtitle to warm up the section header */}
             <h2 className="text-xs font-bold text-primary uppercase tracking-widest mb-3">
               Career Development
             </h2>
