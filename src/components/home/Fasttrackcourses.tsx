@@ -8,12 +8,14 @@ import Image from "next/image";
 
 const SKELETON_CARD_COUNT = 8;
 
-/** Progress bar accents — cycle by card index (primary/secondary palette). */
-const ACCENT_BARS = [
-  "bg-primary",
-  "bg-secondary",
-  "bg-accent-teal",
-  "bg-accent-blue",
+/** * Fully mapped theme colors for each card to ensure Tailwind compiles them correctly.
+ * This adds a subtle, professional splash of color to the icons and hover states.
+ */
+const CARD_THEMES = [
+  { bar: "bg-primary", iconBg: "bg-primary/10", iconText: "text-primary", hoverBorder: "hover:border-primary/40", hoverText: "group-hover:text-primary" },
+  { bar: "bg-accent-teal", iconBg: "bg-accent-teal/10", iconText: "text-accent-teal", hoverBorder: "hover:border-accent-teal/40", hoverText: "group-hover:text-accent-teal" },
+  { bar: "bg-accent-purple", iconBg: "bg-accent-purple/10", iconText: "text-accent-purple", hoverBorder: "hover:border-accent-purple/40", hoverText: "group-hover:text-accent-purple" },
+  { bar: "bg-accent-blue", iconBg: "bg-accent-blue/10", iconText: "text-accent-blue", hoverBorder: "hover:border-accent-blue/40", hoverText: "group-hover:text-accent-blue" },
 ] as const;
 
 type FastTrackCoursesProps = {
@@ -34,36 +36,42 @@ function completionForCourse(slug: string, catalogLevels: number, progressBySlug
 export function FastTrackCoursesSkeleton() {
   return (
     <section className="py-24 bg-white relative" aria-busy="true" aria-label="Loading courses">
-      <div className="max-w-7xl md:container! mx-auto px-6">
+      <div className="max-w-7xl md:container mx-auto px-6">
         <div className="flex flex-col md:flex-row items-end justify-between gap-8 mb-16">
           <div className="max-w-5xl w-full text-center md:text-left space-y-4">
-            <div className="mx-auto md:mx-0 h-4 w-44 rounded-full bg-primary/15 animate-pulse" />
-            <div className="h-12 w-full max-w-2xl mx-auto md:mx-0 rounded-2xl bg-secondary/10 animate-pulse" />
+            <div className="mx-auto md:mx-0 h-3 w-40 rounded-full bg-slate-200 animate-pulse" />
+            <div className="h-10 w-full max-w-2xl mx-auto md:mx-0 rounded-xl bg-slate-200 animate-pulse" />
           </div>
-          <div className="h-4 w-32 rounded bg-secondary/10 animate-pulse shrink-0" />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {Array.from({ length: SKELETON_CARD_COUNT }).map((_, index) => (
-            <div key={index} className="pro-card p-8 animate-pulse" aria-hidden>
-              <div className="flex items-center justify-between mb-8">
-                <div className="w-10 h-10 rounded-lg bg-secondary/15" />
-                <div className="space-y-2 text-right">
-                  <div className="h-2 w-14 rounded bg-secondary/10 ml-auto" />
-                  <div className="h-4 w-16 rounded bg-secondary/15 ml-auto" />
+            <div key={index} className="flex flex-col bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm animate-pulse" aria-hidden>
+              <div className="flex items-start justify-between mb-5">
+                <div className="w-12 h-12 rounded-xl bg-slate-100" />
+                <div className="space-y-2 text-right flex flex-col items-end">
+                  <div className="h-2 w-16 rounded bg-slate-200" />
+                  <div className="h-3 w-12 rounded bg-slate-200" />
                 </div>
               </div>
-              <div className="h-6 w-3/4 rounded bg-secondary/15 mb-2" />
-              <div className="h-3 w-1/2 rounded bg-secondary/10 mb-6" />
-              <div className="space-y-2">
-                <div className="flex justify-between gap-2">
-                  <div className="h-2 w-20 rounded bg-secondary/10" />
-                  <div className="h-2 w-8 rounded bg-secondary/10" />
+              <div className="h-5 w-3/4 rounded bg-slate-200 mb-2" />
+              <div className="h-3 w-1/2 rounded bg-slate-100 mb-6" />
+              
+              <div className="mt-auto bg-slate-50 rounded-xl p-4">
+                <div className="flex justify-between items-end mb-3">
+                  <div className="space-y-2">
+                    <div className="h-2 w-16 rounded bg-slate-200" />
+                    <div className="h-2 w-20 rounded bg-slate-100" />
+                  </div>
+                  <div className="h-3 w-6 rounded bg-slate-200" />
                 </div>
-                <div className="h-2 w-full rounded bg-secondary/10" />
-                <div className="h-2 w-full rounded-full bg-slate-100" />
+                <div className="h-1.5 w-full rounded-full bg-slate-200" />
               </div>
-              <div className="mt-8 h-11 w-full rounded-xl bg-slate-100" />
+              
+              <div className="mt-4 pt-4 border-t border-slate-100 flex justify-between">
+                 <div className="h-3 w-24 rounded bg-slate-100" />
+                 <div className="h-3 w-3 rounded bg-slate-100" />
+              </div>
             </div>
           ))}
         </div>
@@ -87,28 +95,28 @@ export async function FastTrackCoursesSection() {
 export default function FastTrackCourses({ courses, progressBySlug = {} }: FastTrackCoursesProps) {
   return (
     <section className="py-24 bg-white relative">
-      <div className=" max-w-7xl md:container! mx-auto px-6">
+      <div className="max-w-7xl md:container mx-auto px-6">
         <div className="flex flex-col md:flex-row items-end justify-between gap-8 mb-16">
           <div className="max-w-5xl text-center md:text-left">
-            <h2 className="text-sm font-black text-primary uppercase tracking-[0.3em] mb-4">
+            {/* Added Primary color to the subtitle to warm up the section header */}
+            <h2 className="text-xs font-bold text-primary uppercase tracking-widest mb-3">
               Career Development
             </h2>
-            <h3 className="text-4xl md:text-5xl font-black text-secondary tracking-tight leading-none">
+            <h3 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight leading-tight">
               Upskill with our{" "}
               <span className="premium-text-gradient">Professional Solutions</span>
             </h3>
           </div>
-         
         </div>
 
         {courses.length === 0 ? (
-          <p className="text-secondary/60 font-medium text-center md:text-left">
+          <p className="text-slate-500 font-medium text-center md:text-left">
             Language roadmaps will appear here once they are published.
           </p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {courses.slice(0, 8).map((course, index) => {
-              const barColor = ACCENT_BARS[index % ACCENT_BARS.length];
+              const theme = CARD_THEMES[index % CARD_THEMES.length];
               const initials = course.title.slice(0, 2).toUpperCase();
               const questionLabel =
                 course.questionCount === 1 ? "1 Problem" : `${course.questionCount} Problems`;
@@ -124,16 +132,18 @@ export default function FastTrackCourses({ courses, progressBySlug = {} }: FastT
                 <Link
                   key={course.id}
                   href={`/problems/courses/${course.slug}`}
-                  className="pro-card p-8 group cursor-pointer block"
+                  className={`group flex flex-col bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] ${theme.hoverBorder} transition-all duration-300 ease-out`}
                 >
-                  <div className="flex items-center justify-between mb-8">
-                    <div className="w-10 h-10 rounded-lg flex items-center justify-center text-xs font-black text-secondary shadow-sm border border-slate-100 bg-slate-50 group-hover:border-primary/30 group-hover:bg-primary/5 transition-colors">
+                  {/* Card Header */}
+                  <div className="flex items-start justify-between mb-5">
+                    {/* Tinted Icon Box */}
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-sm font-bold shadow-sm border border-white/50 ${theme.iconBg} ${theme.iconText} transition-colors duration-300`}>
                       {course.iconImage ? (
                         <Image
                           src={course.iconImage}
                           alt={`${course.title} icon`}
                           loading="lazy"
-                          className="h-8 w-8 rounded-md object-cover"
+                          className="h-7 w-7 rounded-md object-contain"
                           width={200}
                           height={200}
                         />
@@ -141,62 +151,83 @@ export default function FastTrackCourses({ courses, progressBySlug = {} }: FastT
                         initials
                       )}
                     </div>
-                    <div className="text-right">
-                      <span className="block text-secondary/40 text-[10px] font-black uppercase tracking-widest">
+                    <div className="text-right flex flex-col items-end">
+                      <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 mb-0.5">
                         Questions
                       </span>
-                      <span className="block font-black text-secondary text-sm">
+                      <span className="font-bold text-slate-900 text-sm">
                         {questionLabel}
                       </span>
                     </div>
                   </div>
 
-                  <h4 className="text-xl font-black text-secondary mb-2 group-hover:text-primary transition-colors">
+                  {/* Title & Steps */}
+                  <h4 className={`text-[17px] font-bold text-slate-900 mb-1 leading-tight ${theme.hoverText} transition-colors line-clamp-1`}>
                     {course.title}
                   </h4>
-
-                  <p className="text-secondary/50 text-[10px] font-bold uppercase tracking-widest mb-6">
+                  <p className="text-xs font-medium text-slate-500 mb-6">
                     {stepsLabel}
                   </p>
 
-                  <div className="space-y-2">
-                    <div className="flex justify-between gap-2 text-[10px] font-black uppercase tracking-widest text-secondary/40">
-                      <span>Your progress</span>
-                      <span className="text-secondary shrink-0">{progressPct}%</span>
+                  {/* Highlighted Progress Dashboard Area */}
+                  <div className="mt-auto bg-slate-50 rounded-xl p-4 border border-slate-100/50">
+                    <div className="flex justify-between items-end mb-2.5">
+                      <div className="flex flex-col">
+                        <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 mb-0.5">
+                          Progress
+                        </span>
+                        <span className="text-[11px] font-medium text-slate-600">
+                          {completedLevels} / {totalLevels} steps
+                        </span>
+                      </div>
+                      <span className="text-sm font-bold text-slate-900">{progressPct}%</span>
                     </div>
 
-                    <p className="text-[10px] font-bold text-secondary/45 normal-case tracking-normal">
-                      {completedLevels} of {totalLevels} roadmap steps completed
-                    </p>
-
-                    <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                    <div className="h-1.5 w-full bg-slate-200/60 rounded-full overflow-hidden">
                       <div
-                        className={`h-full ${barColor} transition-all duration-1000 ease-out`}
+                        className={`h-full ${theme.bar} rounded-full transition-all duration-1000 ease-out`}
                         style={{ width: `${progressPct}%` }}
                       />
                     </div>
                   </div>
 
-                  <span className="mt-8 w-full py-3 rounded-xl bg-slate-50 text-secondary text-xs font-black uppercase tracking-widest group-hover:bg-primary group-hover:text-white transition-all inline-block text-center">
-                    Continue Learning
-                  </span>
+                  {/* Sleek Footer Action */}
+                  <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between w-full">
+                    <span className={`text-xs font-semibold text-slate-600 ${theme.hoverText} transition-colors`}>
+                      Continue Learning
+                    </span>
+                    <svg
+                      className={`w-4 h-4 text-slate-400 ${theme.hoverText} group-hover:translate-x-1 transition-all duration-300`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7-7 7" />
+                    </svg>
+                  </div>
                 </Link>
               );
             })}
           </div>
         )}
 
-        <div className="mt-16 text-center">
-                  <Link
-                    href="/practice"
-                    className="inline-flex items-center gap-3 px-10 py-4 bg-secondary text-white font-black text-sm uppercase tracking-widest rounded-2xl shadow-2xl hover:-translate-y-1 transition-all"
-                  >
-                    View More Courses
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M14 5l7 7-7 7" />
-                    </svg>
-                  </Link>
-                </div>
+        {/* View More Button */}
+        <div className="mt-14 text-center">
+          <Link
+            href="/practice"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 text-white font-medium text-sm rounded-lg shadow-sm hover:bg-slate-800 hover:shadow-md transition-all duration-200 group"
+          >
+            View More Courses
+            <svg
+              className="w-4 h-4 text-white/70 group-hover:text-white group-hover:translate-x-0.5 transition-all"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7-7 7" />
+            </svg>
+          </Link>
+        </div>
       </div>
     </section>
   );

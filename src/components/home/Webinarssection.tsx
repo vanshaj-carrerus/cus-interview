@@ -40,7 +40,7 @@ const EVENTS = [
     badgeLabel: "System Design",
   },
   {
-    id: 4,
+    id: 5,
     title: "System Design for Senior Engineers",
     date: "27 Apr 2026 • 07:30 PM",
     registered: "4.5k+",
@@ -52,7 +52,7 @@ const EVENTS = [
 
 function EventCard({ event }: { event: (typeof EVENTS)[0] }) {
   return (
-    <div className="flex flex-col min-w-87.5  max-w-95 shrink-0 bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden cursor-pointer group">
+    <div className="flex flex-col min-w-87.5  max-w-95 shrink-0 bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 overflow-hidden cursor-pointer group">
       {/* Top Section / Category */}
       <div className="p-6 pb-4">
         <div className="flex items-center justify-between mb-4">
@@ -62,7 +62,7 @@ function EventCard({ event }: { event: (typeof EVENTS)[0] }) {
             {event.badgeLabel}
           </span>
 
-          <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center border border-gray-100 group-hover:bg-gray-900 group-hover:text-white transition-colors">
+          {/* <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center border border-gray-100 group-hover:bg-gray-900 group-hover:text-white transition-colors">
             <svg
               className="w-4 h-4"
               fill="none"
@@ -76,15 +76,16 @@ function EventCard({ event }: { event: (typeof EVENTS)[0] }) {
                 d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25"
               />
             </svg>
-          </div>
+          </div> */}
         </div>
 
-        {/* Content */}
-        <h3 className="font-bold text-gray-900 text-xl leading-snug mb-3 text-center group-hover:text-blue-600 transition-colors line-clamp-2 h-14">
+        {/* Content - Changed text-center to text-left here */}
+        <h3 className="font-bold text-gray-900 text-xl leading-snug mb-3 text-left group-hover:text-[#4CB1E6] transition-colors line-clamp-2 h-14">
           {event.title}
         </h3>
 
-        <div className="flex items-center justify-center gap-2 text-gray-500 text-sm font-medium">
+        {/* Date - Changed justify-center to justify-start here */}
+        <div className="flex items-center justify-start gap-2 text-gray-500 text-sm font-medium">
           <svg
             className="w-4 h-4 text-gray-400"
             fill="none"
@@ -119,7 +120,7 @@ function EventCard({ event }: { event: (typeof EVENTS)[0] }) {
           </span>
         </div>
 
-        <button className="bg-white text-gray-900 border border-gray-200 text-sm font-semibold px-4 py-2 rounded-lg hover:bg-gray-900 hover:text-white hover:border-gray-900 transition-all">
+        <button className="bg-white cursor-pointer text-gray-900 border border-gray-200 text-sm font-semibold px-4 py-2 rounded-lg hover:bg-gray-900 hover:text-white hover:border-gray-900 transition-all">
           Register
         </button>
       </div>
@@ -143,20 +144,15 @@ export default function WebinarsSection() {
         {/* Section Header */}
         <div className="flex flex-col items-center justify-center gap-8 mb-12">
           <div className="max-w-3xl mx-auto text-center">
-            
-
-            <h3 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight mb-4">
+            <h3 className="text-4xl md:text-[40px] font-bold text-gray-900 tracking-tight mb-4">
               Expert-led Webinars & Masterclasses
             </h3>
 
-            <p className="text-gray-500 text-lg max-w-2xl mx-auto">
+            <p className="text-gray-500 text-lg mb-8 max-w-2xl mx-auto">
               Attend practical sessions designed to improve your engineering
               skills and interview performance in real-time.
             </p>
           </div>
-
-          {/* Desktop Navigation Buttons */}
-        
         </div>
 
         {/* Carousel Container */}
@@ -201,7 +197,6 @@ export default function WebinarsSection() {
             </svg>
           </button>
           <div
-
             ref={scrollRef}
             className="flex gap-6 overflow-x-auto pb-8 pt-4 -mt-4 no-scrollbar scroll-smooth snap-x snap-mandatory"
             style={{
@@ -223,7 +218,7 @@ export default function WebinarsSection() {
         <div className="mt-6 text-center">
           <a
             href="#"
-            className="inline-flex items-center justify-center gap-2 font-semibold text-gray-900 hover:text-blue-600 transition-colors group"
+            className="inline-flex items-center justify-center gap-2 font-semibold text-gray-900 group-hover:text-[#4CB1E6] transition-colors group"
           >
             View Full Schedule
 
