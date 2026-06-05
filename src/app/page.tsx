@@ -2,6 +2,7 @@ import { Suspense } from "react"
 import NewsLetter from "@/components/global/NewsLetter"
 import CodingEnvironment from "@/components/home/Codingenvironment"
 import CompaniesAndTestimonials from "@/components/home/CompanesAndTestimonials"
+import LearningSection from "@/components/home/LearningSection"
 import FastTrackCourses, {
   FastTrackCoursesSection,
   FastTrackCoursesSkeleton,
@@ -22,13 +23,14 @@ const Home = () => {
     <>
       <CusInterviewHero />
 
-      <div className="section-surface">
-        <CompaniesAndTestimonials />
-      </div>
+
 
       <div className="section-soft">
-        <MockInterviewBanner />
+         <LearningSection />
         <WebinarsSection />
+       
+        <MockInterviewBanner />
+
       </div>
 
       <div className="section-surface">
@@ -43,6 +45,10 @@ const Home = () => {
       <div className="section-soft">
         <VideoExplanations />
         <CodingEnvironment />
+      </div>
+
+      <div className="section-surface">
+        <CompaniesAndTestimonials />
       </div>
 
       <div className="section-surface">

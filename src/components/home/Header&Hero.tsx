@@ -39,7 +39,7 @@ export default function CusInterviewHero() {
       <div className="absolute top-32 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-primary/10 rounded-full blur-[120px] -z-10" />
 
       {/* ── HERO CONTENT (CENTERED) ── */}
-      <main className="relative  ms-10 md:pt-20 z-19">
+      <main className="relative md:pt-20 z-19">
         <div className="max-w-7xl mx-auto px-6 flex flex-col items-center text-center">
 
           {/* Top Pill */}

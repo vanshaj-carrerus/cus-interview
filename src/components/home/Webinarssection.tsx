@@ -6,51 +6,65 @@ const EVENTS = [
   {
     id: 1,
     title: "Forward Deployed Engineer",
-    date: "07:30 PM, 21 Apr 2026",
+    date: "21 Apr 2026 • 07:30 PM",
     registered: "2.4k+",
-    bg: "bg-primary/10",
-    accent: "text-primary",
+    badgeBg: "bg-blue-50",
+    badgeText: "text-blue-700",
+    badgeLabel: "Engineering",
   },
   {
     id: 2,
     title: "Why AI-Native SDEs Are Getting Jobs Outside India Faster",
-    date: "07:30 PM, 23 Apr 2026",
+    date: "23 Apr 2026 • 07:30 PM",
     registered: "3.1k+",
-    bg: "bg-accent-purple/10",
-    accent: "text-accent-purple",
+    badgeBg: "bg-purple-50",
+    badgeText: "text-purple-700",
+    badgeLabel: "Career",
   },
   {
     id: 3,
     title: "S.O.L.I.D Principles in Modern Software",
-    date: "07:30 PM, 25 Apr 2026",
+    date: "25 Apr 2026 • 07:30 PM",
     registered: "1.8k+",
-    bg: "bg-accent-blue/10",
-    accent: "text-accent-blue",
-    isCusInterview: true,
+    badgeBg: "bg-emerald-50",
+    badgeText: "text-emerald-700",
+    badgeLabel: "Architecture",
   },
   {
     id: 4,
     title: "System Design for Senior Engineers",
-    date: "07:30 PM, 27 Apr 2026",
+    date: "27 Apr 2026 • 07:30 PM",
     registered: "4.5k+",
-    bg: "bg-accent-orange/10",
-    accent: "text-accent-orange",
+    badgeBg: "bg-orange-50",
+    badgeText: "text-orange-700",
+    badgeLabel: "System Design",
+  },
+  {
+    id: 4,
+    title: "System Design for Senior Engineers",
+    date: "27 Apr 2026 • 07:30 PM",
+    registered: "4.5k+",
+    badgeBg: "bg-orange-50",
+    badgeText: "text-orange-700",
+    badgeLabel: "System Design",
   },
 ];
 
 function EventCard({ event }: { event: (typeof EVENTS)[0] }) {
   return (
-    <div className="pro-card flex flex-col min-w-[340px] max-w-[380px] shrink-0 overflow-hidden group">
-      {/* Visual Area */}
-      <div
-        className={`h-48 ${event.bg} relative flex items-center justify-center p-8`}
-      >
-        <div className="relative z-10 w-full h-full bg-white/40 backdrop-blur-md rounded-2xl border border-white/40 shadow-xl overflow-hidden flex flex-col items-center justify-center gap-2">
-          <div
-            className={`w-12 h-12 rounded-full ${event.bg.replace("/10", "")} flex items-center justify-center mb-2`}
+    <div className="flex flex-col min-w-87.5  max-w-95 shrink-0 bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden cursor-pointer group">
+      {/* Top Section / Category */}
+      <div className="p-6 pb-4">
+        <div className="flex items-center justify-between mb-4">
+          <span
+            className={`px-3 py-1 rounded-full text-xs font-semibold ${event.badgeBg} ${event.badgeText}`}
           >
+            {event.badgeLabel}
+          </span>
+
+          <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center border border-gray-100 group-hover:bg-gray-900 group-hover:text-white transition-colors">
             <svg
-              className="w-6 h-6 text-white"
+              className="w-4 h-4"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -58,32 +72,21 @@ function EventCard({ event }: { event: (typeof EVENTS)[0] }) {
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                strokeWidth={3}
-                d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+                strokeWidth={2}
+                d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25"
               />
             </svg>
           </div>
-          <span
-            className={`text-[10px] font-black uppercase tracking-[0.2em] ${event.accent}`}
-          >
-            Masterclass
-          </span>
         </div>
-        {/* Animated blobs */}
-        <div
-          className={`absolute top-0 right-0 w-24 h-24 rounded-full blur-3xl opacity-30 ${event.bg.replace("/10", "")} animate-pulse`}
-        />
-      </div>
 
-      {/* Content */}
-      <div className="p-6 flex flex-col gap-4 flex-1">
-        <h3 className="font-black text-slate-900 text-lg leading-tight group-hover:text-primary transition-colors">
+        {/* Content */}
+        <h3 className="font-bold text-gray-900 text-xl leading-snug mb-3 text-center group-hover:text-blue-600 transition-colors line-clamp-2 h-14">
           {event.title}
         </h3>
 
-        <div className="flex items-center gap-2 text-slate-400 text-xs font-bold uppercase tracking-wider">
+        <div className="flex items-center justify-center gap-2 text-gray-500 text-sm font-medium">
           <svg
-            className="w-4 h-4"
+            className="w-4 h-4 text-gray-400"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -97,23 +100,28 @@ function EventCard({ event }: { event: (typeof EVENTS)[0] }) {
           </svg>
           {event.date}
         </div>
+      </div>
 
-        <div className="mt-auto pt-6 border-t border-slate-50 flex items-center justify-between">
-          <div className="flex -space-x-2">
+      {/* Footer Area */}
+      <div className="mt-auto p-6 pt-4 border-t border-gray-100 bg-gray-50/50 flex items-center justify-between">
+        <div className="flex items-center">
+          <div className="flex -space-x-2 mr-3">
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="w-6 h-6 rounded-full border border-white bg-slate-200"
+                className="w-7 h-7 rounded-full border-2 border-white bg-gray-200"
               />
             ))}
-            <span className="pl-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-              {event.registered}
-            </span>
           </div>
-          <button className="bg-secondary text-white text-[10px] font-black uppercase tracking-widest px-4 py-2.5 rounded-xl hover:shadow-lg transition-all">
-            Register
-          </button>
+
+          <span className="text-xs font-semibold text-gray-600">
+            {event.registered}
+          </span>
         </div>
+
+        <button className="bg-white text-gray-900 border border-gray-200 text-sm font-semibold px-4 py-2 rounded-lg hover:bg-gray-900 hover:text-white hover:border-gray-900 transition-all">
+          Register
+        </button>
       </div>
     </div>
   );
@@ -124,52 +132,42 @@ export default function WebinarsSection() {
 
   const scroll = (dir: "left" | "right") => {
     scrollRef.current?.scrollBy({
-      left: dir === "right" ? 400 : -400,
+      left: dir === "right" ? 340 : -340,
       behavior: "smooth",
     });
   };
 
   return (
-    <section className="bg-white pb-24 pt-12">
-      <div className=" max-w-7xl md:container! mx-auto px-6">
-        <div className="flex flex-col md:flex-row items-end justify-between gap-12 mb-16">
-          <div className="">
-            <h2 className="text-sm font-black text-primary uppercase tracking-[0.3em] mb-4">
-              Live Learning
-            </h2>
-            <h3 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-none mb-6">
-              Expert-led{" "}
-              <span className="premium-text-gradient">
-                Webinars & Masterclasses
-              </span>
+    <section className="bg-gray-50 py-50">
+      <div className="max-w-450 w-350 mx-auto px-6">
+        {/* Section Header */}
+        <div className="flex flex-col items-center justify-center gap-8 mb-12">
+          <div className="max-w-3xl mx-auto text-center">
+            
+
+            <h3 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight mb-4">
+              Expert-led Webinars & Masterclasses
             </h3>
-            <p className="text-slate-500 text-lg font-medium leading-relaxed max-w-lg">
-              Attend practical sessions designed to improve your interview
-              performance in real-time.
+
+            <p className="text-gray-500 text-lg max-w-2xl mx-auto">
+              Attend practical sessions designed to improve your engineering
+              skills and interview performance in real-time.
             </p>
           </div>
+
+          {/* Desktop Navigation Buttons */}
+        
         </div>
 
         {/* Carousel Container */}
-        <div className="relative group/carousel">
-          <div
-            ref={scrollRef}
-            className="flex gap-8 overflow-x-auto pb-8 no-scrollbar scroll-smooth"
-            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-          >
-            {EVENTS.map((event) => (
-              <EventCard key={event.id} event={event} />
-            ))}
-            <div className="min-w-[100px] shrink-0 lg:hidden" />
-          </div>
-
-          {/* Nav Arrows */}
+        <div className="relative">
+          {/* Left Arrow */}
           <button
             onClick={() => scroll("left")}
-            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-6 w-14 h-14 bg-white rounded-2xl shadow-xl border border-slate-100 flex items-center justify-center text-slate-900 opacity-0 group-hover/carousel:opacity-100 transition-all hover:bg-slate-50 z-20"
+            className="hidden cursor-pointer md:flex absolute -left-5 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white border border-gray-200 items-center justify-center text-gray-600 hover:bg-gray-900 hover:text-white hover:border-gray-900 transition-all shadow-lg"
           >
             <svg
-              className="w-6 h-6"
+              className="w-5 h-5"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -177,17 +175,19 @@ export default function WebinarsSection() {
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                strokeWidth={3}
+                strokeWidth={2}
                 d="M15 19l-7-7 7-7"
               />
             </svg>
           </button>
+
+          {/* Right Arrow */}
           <button
             onClick={() => scroll("right")}
-            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-6 w-14 h-14 bg-white rounded-2xl shadow-xl border border-slate-100 flex items-center justify-center text-slate-900 opacity-0 group-hover/carousel:opacity-100 transition-all hover:bg-slate-50 z-20"
+            className="hidden cursor-pointer md:flex absolute -right-5 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white border border-gray-200 items-center justify-center text-gray-600 hover:bg-gray-900 hover:text-white hover:border-gray-900 transition-all shadow-lg"
           >
             <svg
-              className="w-6 h-6"
+              className="w-5 h-5"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -195,21 +195,40 @@ export default function WebinarsSection() {
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                strokeWidth={3}
+                strokeWidth={2}
                 d="M9 5l7 7-7 7"
               />
             </svg>
           </button>
+          <div
+
+            ref={scrollRef}
+            className="flex gap-6 overflow-x-auto pb-8 pt-4 -mt-4 no-scrollbar scroll-smooth snap-x snap-mandatory"
+            style={{
+              scrollbarWidth: "none",
+              msOverflowStyle: "none",
+            }}
+          >
+            {EVENTS.map((event) => (
+              <div key={event.id} className="snap-start">
+                <EventCard event={event} />
+              </div>
+            ))}
+
+            <div className="min-w-5 md:min-w-10 shrink-0" />
+          </div>
         </div>
 
-        <div className="mt-12 text-center">
+        {/* View All Link */}
+        <div className="mt-6 text-center">
           <a
             href="#"
-            className="inline-flex items-center gap-2 font-black text-sm text-primary uppercase tracking-widest hover:gap-3 transition-all"
+            className="inline-flex items-center justify-center gap-2 font-semibold text-gray-900 hover:text-blue-600 transition-colors group"
           >
-            View All Events
+            View Full Schedule
+
             <svg
-              className="w-4 h-4"
+              className="w-4 h-4 group-hover:translate-x-1 transition-transform"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -217,7 +236,7 @@ export default function WebinarsSection() {
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                strokeWidth={3}
+                strokeWidth={2}
                 d="M14 5l7 7-7 7"
               />
             </svg>
