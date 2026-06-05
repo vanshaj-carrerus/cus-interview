@@ -138,7 +138,7 @@ export default function WebinarsSection() {
   };
 
   return (
-    <section className="bg-gray-50 py-50">
+    <section className="bg-gray-50 py-29">
       <div className="max-w-450 w-350 mx-auto px-6">
         {/* Section Header */}
         <div className="flex flex-col items-center justify-center gap-8 mb-12">
