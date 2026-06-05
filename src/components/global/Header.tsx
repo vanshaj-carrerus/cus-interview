@@ -54,35 +54,40 @@ export default function Header() {
   return (
     <>
       <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          scrolled
-            ? "py-3 bg-white/80 backdrop-blur-xl shadow-sm"
-            : "py-5 bg-transparent"
-        }`}
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled
+          ? "py-3 bg-white/80 backdrop-blur-xl shadow-sm"
+          : "py-5 bg-transparent"
+          }`}
       >
         <div className="max-w-7xl md:container! mx-auto px-4 sm:px-6 flex items-center justify-between gap-4">
           {/* LOGO */}
           <Link href={"/"}>
             <div className="flex items-center gap-2 group cursor-pointer">
-              <Image src={"/favicon.png"} alt="CUS" width={35} height={35} loading="lazy" />
-              <div className="flex flex-col leading-none">
+              <Image
+                src="/logo (1).png"
+                alt="CUS"
+                width={155}
+                height={165}
+                loading="lazy"
+              />
+              {/* <div className="flex flex-col leading-none">
                 <span className="text-secondary font-black text-xl tracking-tighter uppercase">
                   CareerUs
                 </span>
                 <span className="text-primary text-[8px] font-black tracking-[0.3em] uppercase">
                   Interview Solutions
                 </span>
-              </div>
+              </div> */}
             </div>
           </Link>
 
           {/* NAVIGATION */}
-          <div className="hidden md:flex items-center gap-10">
+          <div className="hidden md:flex items-center gap-10 ">
             {navItems.map((item) => (
               <Link
                 key={item.label}
                 href={item.href}
-                className="text-secondary/70 hover:text-primary font-bold text-xs uppercase tracking-widest transition-colors"
+                className="text-secondary/70 text-[14px] hover:text-primary font-bold text-xs uppercase tracking-widest transition-colors"
               >
                 {item.label}
               </Link>
@@ -154,13 +159,13 @@ export default function Header() {
               <>
                 <Link
                   href="/login"
-                  className="hidden sm:block text-secondary font-black text-[12px] uppercase tracking-widest hover:text-primary transition-colors"
+                  className="hidden font-semibold tracking-wide sm:block text-secondary font-black text-[14 px] uppercase tracking-widest hover:text-primary transition-colors"
                 >
                   Log In
                 </Link>
                 <Link
                   href="/signup"
-                  className="hidden sm:block px-5 py-2.5 bg-secondary text-white font-black text-[10px] uppercase tracking-[0.15em] rounded-xl shadow-xl hover:-translate-y-0.5 transition-all active:scale-95 text-center"
+                  className="hidden bg-primary sm:block font-semibold tracking-wide  px-6 py-2.5 text-white font-black text-[14px] uppercase tracking-[0.15em] rounded-xl shadow-xl hover:-translate-y-0.5 transition-all active:scale-95 text-center"
                 >
                   Get Started
                 </Link>
@@ -192,25 +197,22 @@ export default function Header() {
       </nav>
 
       <div
-        className={`md:hidden fixed inset-0 z-60 transition ${
-          mobileMenuOpen ? "pointer-events-auto" : "pointer-events-none"
-        }`}
+        className={`md:hidden fixed inset-0 z-60 transition ${mobileMenuOpen ? "pointer-events-auto" : "pointer-events-none"
+          }`}
         aria-hidden={!mobileMenuOpen}
       >
         <button
           type="button"
-          className={`absolute inset-0 bg-black/40 backdrop-blur-[1px] transition-opacity ${
-            mobileMenuOpen ? "opacity-100" : "opacity-0"
-          }`}
+          className={`absolute inset-0 bg-black/40 backdrop-blur-[1px] transition-opacity ${mobileMenuOpen ? "opacity-100" : "opacity-0"
+            }`}
           onClick={() => setMobileMenuOpen(false)}
           aria-label="Close menu overlay"
         />
 
         <aside
           id="mobile-sidebar-menu"
-          className={`absolute top-0 right-0 h-full w-[85%] max-w-sm bg-white shadow-2xl px-6 py-6 transition-transform duration-300 ${
-            mobileMenuOpen ? "translate-x-0" : "translate-x-full"
-          }`}
+          className={`absolute top-0 right-0 h-full w-[85%] max-w-sm bg-white shadow-2xl px-6 py-6 transition-transform duration-300 ${mobileMenuOpen ? "translate-x-0" : "translate-x-full"
+            }`}
           role="dialog"
           aria-modal="true"
           aria-label="Mobile menu"

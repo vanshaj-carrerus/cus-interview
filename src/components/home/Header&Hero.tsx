@@ -66,29 +66,27 @@ export default function CusInterviewHero() {
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row items-center gap-5 justify-center mb-16 w-full px-4">
             <Link target="_blank" href={"http://custech.co/"} className="w-full sm:w-auto">
-              <button className="w-full sm:w-auto px-6 py-2 bg-primary text-white font-black text-[0.900rem]  tracking-[0.2em] rounded-2xl shadow-[0_20px_40px_-15px_rgba(31,61,143,0.5)] cursor-pointer hover:bg-primary/90 transition-all">
+              <button className="w-full   font-semibold tracking-wide sm:w-auto px-6 py-3 text-[16px] bg-primary text-white font-black   tracking-[0.2em] rounded-2xl  cursor-pointer hover:bg-primary/90 transition-all">
                 Apply for Jobs
               </button>
             </Link>
             <Link href={"/practice"} className="w-full sm:w-auto">
-              <button className="w-full sm:w-auto px-6 py-2 bg-white border border-slate-200 text-secondary font-black text-sm uppercase tracking-[0.2em] rounded-2xl hover:bg-slate-50 transition-all cursor-pointer">
+              <button className="w-full font-semibold tracking-wide sm:w-auto px-6 py-3 `bg-white border border-slate-200 text-secondary font-black text-sm uppercase tracking-[0.2em] rounded-2xl hover:bg-slate-50 transition-all cursor-pointer">
                 Practice Now
               </button>
             </Link>
           </div>
 
           <div>
-            <section className=" max-w-4xl  mx-auto px-6 mb-14">
-
-
-
+            <section className="max-w-4xl  mx-auto px-6 mb-14">
               {/* Inline CSS for the continuous infinite slider */}
-              <style>{`
-          @keyframes infinite-slider {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-          }
-          .animate-infinite-slider {
+              <style>
+                {`
+                   @keyframes infinite-slider {
+                   0% { transform: translateX(0); }
+                     100% { transform: translateX(-50%); }
+                     }
+                  .animate-infinite-slider {
             animation: infinite-slider 50s linear infinite;
             width: max-content;
           }
