@@ -74,7 +74,7 @@ export default function PracticeProblems({ tracks }: PracticeProblemsProps) {
     <section className="py-24 bg-slate-50 relative overflow-hidden">
       <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
 
-      <div className="max-w-7xl md:container mx-auto px-17 my-5 relative z-10">
+      <div className="max-w-7xl md:container mx-auto px-24 my-5 relative z-10">
         <div className="text-center mb-16">
           {/* <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">
             Workforce Solutions
