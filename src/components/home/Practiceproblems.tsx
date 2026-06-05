@@ -32,28 +32,28 @@ export function PracticeProblemsSkeleton() {
     <section className="py-24 bg-slate-50 relative overflow-hidden" aria-busy="true" aria-label="Loading skill assessments">
       <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
 
-      <div className="max-w-7xl md:container! mx-auto px-6 relative z-10">
+      <div className="max-w-7xl md:container mx-auto px-6 relative z-10">
         <div className="text-center mb-16 space-y-4">
-          <div className="mx-auto h-4 w-40 rounded-full bg-primary/15 animate-pulse" />
-          <div className="mx-auto h-12 w-full max-w-xl rounded-2xl bg-secondary/10 animate-pulse" />
+          <div className="mx-auto h-4 w-40 rounded-full bg-slate-200 animate-pulse" />
+          <div className="mx-auto h-10 w-full max-w-xl rounded-xl bg-slate-200 animate-pulse" />
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
           {Array.from({ length: SKELETON_CARD_COUNT }).map((_, index) => (
             <div
               key={index}
-              className="pro-card p-8 flex flex-col items-center text-center bg-white animate-pulse"
+              className="p-6 flex flex-col items-center text-center bg-white border border-slate-200/60 rounded-2xl animate-pulse shadow-sm"
               aria-hidden
             >
-              <div className="w-16 h-16 rounded-2xl bg-secondary/15 mb-6" />
-              <div className="h-4 w-20 rounded bg-secondary/15 mb-2" />
-              <div className="h-3 w-16 rounded bg-secondary/10" />
+              <div className="w-14 h-14 rounded-xl bg-slate-100 mb-5" />
+              <div className="h-4 w-3/4 rounded bg-slate-200 mb-3" />
+              <div className="h-3 w-1/2 rounded bg-slate-100" />
             </div>
           ))}
         </div>
 
         <div className="mt-16 flex justify-center">
-          <div className="h-14 w-56 rounded-2xl bg-secondary/15 animate-pulse" />
+          <div className="h-12 w-48 rounded-xl bg-slate-200 animate-pulse" />
         </div>
       </div>
     </section>
@@ -70,10 +70,12 @@ export default function PracticeProblems({ tracks }: PracticeProblemsProps) {
     <section className="py-24 bg-slate-50 relative overflow-hidden">
       <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
 
-      <div className=" max-w-7xl md:container! mx-auto px-6 relative z-10">
+      <div className="max-w-7xl md:container mx-auto px-6 relative z-10">
         <div className="text-center mb-16">
-          <h2 className="text-sm font-black text-primary uppercase tracking-[0.3em] mb-4">Workforce Solutions</h2>
-          <h3 className="text-4xl md:text-5xl font-black text-secondary tracking-tight leading-none">
+          <h2 className="text-sm font-bold text-primary uppercase tracking-wider mb-3">
+            Workforce Solutions
+          </h2>
+          <h3 className="text-3xl md:text-4xl font-bold text-secondary tracking-tight leading-tight">
             Comprehensive <span className="premium-text-gradient">Skill Assessments</span>
           </h3>
         </div>
@@ -91,19 +93,26 @@ export default function PracticeProblems({ tracks }: PracticeProblemsProps) {
                 track.questionCount === 1
                   ? "1 Question"
                   : `${track.questionCount} Questions`;
+
               return (
                 <Link
                   key={track.id}
                   href={`/problems/${track.slug}`}
-                  className="pro-card p-8 flex flex-col items-center text-center group bg-white"
+                  className="group bg-white border border-slate-200/60 rounded-2xl p-6 flex flex-col items-center text-center shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300"
                 >
                   <div
-                    className={`w-16 h-16 rounded-2xl ${color} flex items-center justify-center mb-6 shadow-xl transition-transform group-hover:scale-110 group-hover:rotate-6 text-white`}
+                    className={`w-14 h-14 rounded-xl ${color} flex items-center justify-center mb-5 text-white shadow-sm transition-transform duration-300 group-hover:scale-105`}
                   >
-                    <Icon className="w-8 h-8" strokeWidth={2.25} />
+                    <Icon className="w-6 h-6" strokeWidth={2} />
                   </div>
-                  <h4 className="font-black text-slate-900 text-sm mb-1">{track.title}</h4>
-                  <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">{countLabel}</p>
+                  <h4 className="font-semibold text-slate-900 text-sm leading-snug mb-2 group-hover:text-primary transition-colors line-clamp-2">
+                    {track.title}
+                  </h4>
+                  <div className="mt-auto">
+                    <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider">
+                      {countLabel}
+                    </p>
+                  </div>
                 </Link>
               );
             })}
@@ -113,11 +122,16 @@ export default function PracticeProblems({ tracks }: PracticeProblemsProps) {
         <div className="mt-16 text-center">
           <Link
             href="/practice"
-            className="inline-flex items-center gap-3 px-10 py-4 bg-secondary text-white font-black text-sm uppercase tracking-widest rounded-2xl shadow-2xl hover:-translate-y-1 transition-all"
+            className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-secondary text-white font-semibold text-base rounded-xl shadow-md hover:bg-slate-800 hover:shadow-lg hover:-translate-y-0.5 transition-all group"
           >
             Start Solving Now
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M14 5l7 7-7 7" />
+            <svg 
+              className="w-4 h-4 group-hover:translate-x-1 transition-transform" 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7-7 7" />
             </svg>
           </Link>
         </div>
