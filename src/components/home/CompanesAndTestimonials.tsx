@@ -4,19 +4,7 @@ import { useState, useRef, useEffect } from "react";
 
 // --- DATA ---
 
-const COMPANIES = [
-  { name: "facebook", style: "font-bold text-[#1877f2] text-3xl tracking-tight lowercase" },
-  { name: "Google", style: "font-normal text-slate-500 text-3xl" },
-  { name: "amazon", style: "font-bold text-slate-900 text-3xl lowercase tracking-tighter" },
-  { name: "media.net", style: "font-bold text-slate-700 text-2xl" },
-  { name: "Flipkart", style: "font-bold italic text-slate-600 text-2xl" },
-  { name: "PhonePe", style: "font-semibold text-slate-600 text-2xl" },
-  { name: "Walmart", style: "font-bold text-slate-500 text-2xl" },
-  { name: "gojek", style: "font-bold text-slate-800 text-2xl lowercase" },
-  { name: "OYO", style: "font-black text-slate-800 text-3xl tracking-widest" },
-  { name: "ATLASSIAN", style: "font-bold text-slate-700 text-xl tracking-wider uppercase" },
-  { name: "Goldman Sachs", style: "font-semibold text-slate-500 text-xl leading-tight" },
-];
+
 
 const TESTIMONIALS = [
   {
@@ -55,17 +43,7 @@ const TESTIMONIALS = [
 
 // --- SUBCOMPONENTS ---
 
-function CompanyLogo({ name, style }: { name: string; style: string }) {
-  if (name === "Goldman Sachs") {
-    return (
-      <div className="flex flex-col items-start leading-tight opacity-50 hover:opacity-100 transition-opacity">
-        <span className={style}>Goldman</span>
-        <span className={style}>Sachs</span>
-      </div>
-    );
-  }
-  return <span className={`${style} opacity-40 hover:opacity-100 transition-all cursor-default grayscale hover:grayscale-0`}>{name}</span>;
-}
+
 
 function TestimonialCard({ testimonial }: { testimonial: (typeof TESTIMONIALS)[0] }) {
   return (
@@ -122,7 +100,7 @@ export default function CompaniesAndTestimonials() {
 
   const scroll = (dir: "left" | "right") => {
     scrollRef.current?.scrollBy({
-      left: dir === "right" ? 400 : -400,
+      left: dir === "right" ? 100 : -400,
       behavior: "smooth",
     });
   };
@@ -130,20 +108,7 @@ export default function CompaniesAndTestimonials() {
   return (
     <div className="pb-24 pt-12 overflow-hidden bg-white">
       {/* ── COMPANIES SECTION ── */}
-      <section className=" max-w-7xl md:container! mx-auto px-6 mb-24">
-        <div className="text-center mb-16">
-          <h2 className="text-sm font-black text-primary uppercase tracking-[0.3em] mb-4">Our Track Record</h2>
-          <h3 className="text-3xl md:text-5xl font-black text-secondary tracking-tight premium-text-gradient">
-            Elevating career journeys at Top Global Enterprises
-          </h3>
-        </div>
 
-        <div className="flex flex-wrap justify-center items-center gap-x-16 gap-y-10">
-          {COMPANIES.map((c) => (
-            <CompanyLogo key={c.name} name={c.name} style={c.style} />
-          ))}
-        </div>
-      </section>
 
       {/* ── TESTIMONIALS SECTION ── */}
       <section className="bg-slate-50 py-24 relative">
