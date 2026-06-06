@@ -94,10 +94,10 @@ export async function FastTrackCoursesSection() {
 
 export default function FastTrackCourses({ courses, progressBySlug = {} }: FastTrackCoursesProps) {
   return (
-    <section className="py-24 bg-gray-50  relative overflow-hidden">
+    <section className="py-24 bg-slate-50/50 border-y border-slate-100 relative overflow-hidden">
       {/* Premium Ambient Background Color Blobs */}
-      <div className="absolute top-0 left-0 w-150 h-150 bg-primary/5 rounded-full blur-[120px] pointer-events-none -translate-x-1/2 -translate-y-1/4" />
-      <div className="absolute bottom-0 right-0 w-150 h-150 bg-accent-blue/5 rounded-full blur-[120px] pointer-events-none translate-x-1/3 translate-y-1/4" />
+      <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[120px] pointer-events-none -translate-x-1/2 -translate-y-1/4" />
+      <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-accent-blue/5 rounded-full blur-[120px] pointer-events-none translate-x-1/3 translate-y-1/4" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
         <div className="flex flex-col items-center justify-center mb-14">
@@ -107,7 +107,7 @@ export default function FastTrackCourses({ courses, progressBySlug = {} }: FastT
             </h2>
             <h3 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight leading-tight">
               Upskill with our{" "}
-              <span className="premium-text-gradient">Professional Solutions</span>
+              Professional Solutions
             </h3>
           </div>
         </div>
@@ -117,8 +117,8 @@ export default function FastTrackCourses({ courses, progressBySlug = {} }: FastT
             Language roadmaps will appear here once they are published.
           </p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {courses.slice(0, 6).map((course, index) => {
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {courses.slice(0, 8).map((course, index) => {
               const theme = CARD_THEMES[index % CARD_THEMES.length];
               const initials = course.title.slice(0, 2).toUpperCase();
               const questionLabel =
