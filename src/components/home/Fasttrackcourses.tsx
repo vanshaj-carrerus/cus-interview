@@ -36,11 +36,11 @@ function completionForCourse(slug: string, catalogLevels: number, progressBySlug
 export function FastTrackCoursesSkeleton() {
   return (
     <section className="py-24 bg-slate-50/50 border-y border-slate-100 relative overflow-hidden" aria-busy="true" aria-label="Loading courses">
-      <div className="max-w-7xl md:container mx-auto px-6 relative z-10">
-        <div className="flex flex-col md:flex-row items-end justify-between gap-8 mb-16">
-          <div className="max-w-5xl w-full text-center md:text-left space-y-4">
-            <div className="mx-auto md:mx-0 h-3 w-40 rounded-full bg-slate-200 animate-pulse" />
-            <div className="h-10 w-full max-w-2xl mx-auto md:mx-0 rounded-xl bg-slate-200 animate-pulse" />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
+        <div className="flex flex-col items-center justify-center gap-8 mb-14">
+          <div className="max-w-3xl w-full text-center space-y-4">
+            <div className="mx-auto h-3 w-40 rounded-full bg-slate-200 animate-pulse" />
+            <div className="h-10 w-full max-w-xl mx-auto rounded-xl bg-slate-200 animate-pulse" />
           </div>
         </div>
 
@@ -94,14 +94,14 @@ export async function FastTrackCoursesSection() {
 
 export default function FastTrackCourses({ courses, progressBySlug = {} }: FastTrackCoursesProps) {
   return (
-    <section className="py-24 bg-slate-50/50 border-y border-slate-100 relative overflow-hidden">
+    <section className="py-24 bg-gray-50  relative overflow-hidden">
       {/* Premium Ambient Background Color Blobs */}
-      <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[120px] pointer-events-none -translate-x-1/2 -translate-y-1/4" />
-      <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-accent-blue/5 rounded-full blur-[120px] pointer-events-none translate-x-1/3 translate-y-1/4" />
+      <div className="absolute top-0 left-0 w-150 h-150 bg-primary/5 rounded-full blur-[120px] pointer-events-none -translate-x-1/2 -translate-y-1/4" />
+      <div className="absolute bottom-0 right-0 w-150 h-150 bg-accent-blue/5 rounded-full blur-[120px] pointer-events-none translate-x-1/3 translate-y-1/4" />
 
-      <div className="max-w-7xl md:container mx-auto px-6 relative z-10">
-        <div className="flex flex-col md:flex-row items-end justify-between gap-8 mb-16">
-          <div className="max-w-5xl text-center md:text-left">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
+        <div className="flex flex-col items-center justify-center mb-14">
+          <div className="max-w-3xl text-center mx-auto">
             <h2 className="text-xs font-bold text-primary uppercase tracking-widest mb-3">
               Career Development
             </h2>
@@ -113,12 +113,12 @@ export default function FastTrackCourses({ courses, progressBySlug = {} }: FastT
         </div>
 
         {courses.length === 0 ? (
-          <p className="text-slate-500 font-medium text-center md:text-left">
+          <p className="text-slate-500 font-medium text-center">
             Language roadmaps will appear here once they are published.
           </p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {courses.slice(0, 8).map((course, index) => {
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {courses.slice(0, 6).map((course, index) => {
               const theme = CARD_THEMES[index % CARD_THEMES.length];
               const initials = course.title.slice(0, 2).toUpperCase();
               const questionLabel =

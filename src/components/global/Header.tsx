@@ -87,7 +87,7 @@ export default function Header() {
               <Link
                 key={item.label}
                 href={item.href}
-                className="text-secondary/70 text-[14px] hover:text-primary font-bold text-xs uppercase tracking-widest transition-colors"
+                className="text-secondary/70 text-[13px] hover:text-primary font-bold text-xs uppercase tracking-widest transition-colors"
               >
                 {item.label}
               </Link>
@@ -159,7 +159,7 @@ export default function Header() {
               <>
                 <Link
                   href="/login"
-                  className="hidden font-semibold tracking-wide sm:block text-secondary font-black text-[14 px] uppercase tracking-widest hover:text-primary transition-colors"
+                  className="hidden font-semibold tracking-wide sm:block text-secondary font-black text-[14px] uppercase tracking-widest hover:text-primary transition-colors"
                 >
                   Log In
                 </Link>

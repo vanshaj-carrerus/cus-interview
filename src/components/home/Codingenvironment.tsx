@@ -5,10 +5,10 @@ import { TypewriterHeadingParagraph } from "./TypewriterHeadingParagraph";
 
 export default function CodingEnvironment() {
   return (
-    <section className="py-24 bg-white relative overflow-hidden">
-      <div className="max-w-7xl md:container mx-auto px-6">
+    <section className="py-24  relative overflow-hidden">
+      <div className="max-w-6xl md:container mx-auto px-19">
         <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-20">
-          
+
           {/* ── VISUAL SIDE ── */}
           <div className="flex-1 order-2 lg:order-1 relative group w-full lg:w-auto">
             {/* Soft background glow */}
@@ -16,7 +16,7 @@ export default function CodingEnvironment() {
 
             {/* Code Editor Window */}
             <div className="relative z-10 bg-[#0f172a] rounded-2xl shadow-2xl border border-slate-800 flex flex-col hover:-translate-y-1.5 transition-transform duration-500 ease-out overflow-hidden">
-              
+
               {/* Editor Header (Mac-style) */}
               <div className="flex items-center justify-between px-5 py-3.5 bg-[#1e293b] border-b border-white/5">
                 <div className="flex gap-2">
@@ -42,7 +42,7 @@ export default function CodingEnvironment() {
                     deleteMs={22}
                   />
                 </div>
-                
+
                 {/* Code Lines */}
                 <div className="space-y-1">
                   <div className="flex gap-4">
@@ -106,13 +106,13 @@ export default function CodingEnvironment() {
             <h2 className="text-xs font-bold text-primary uppercase tracking-widest mb-3">
               World Class Editor
             </h2>
-            <h3 className="text-3xl md:text-4xl lg:text-5xl font-bold text-slate-900 tracking-tight leading-tight mb-6">
-              A workspace built for <br className="hidden lg:block" />
-              <span className="">Productivity</span>
+            <h3 className="text-3xl md:text-4xl lg:text-3xl font-bold text-slate-900 tracking-tight leading-tight mb-4">
+              A workspace built for 
+              Productivity
             </h3>
-            <p className="text-slate-500 text-lg font-medium leading-relaxed mb-10 max-w-2xl mx-auto lg:mx-0">
+            <p className="text-slate-500 font-medium leading-relaxed mb-10 max-w-2xl mx-auto lg:mx-0">
               Practice in an environment that mimics top-tier IDEs. Designed
-              specifically for coding interviews with 20+ language supports.
+              specifically <br/> for coding interviews with 20+ language supports.
             </p>
 
             <div className="space-y-6 mb-12 text-left max-w-2xl mx-auto lg:mx-0">
@@ -161,10 +161,10 @@ export default function CodingEnvironment() {
             <Link href={"/practice"}>
               <button className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-slate-900 text-white font-medium text-sm rounded-xl shadow-sm hover:bg-slate-800 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 group">
                 Start Coding
-                <svg 
-                  className="w-4 h-4 text-white/70 group-hover:text-white group-hover:translate-x-1 transition-all" 
-                  fill="none" 
-                  stroke="currentColor" 
+                <svg
+                  className="w-4 h-4 text-white/70 group-hover:text-white group-hover:translate-x-1 transition-all"
+                  fill="none"
+                  stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7-7 7" />
@@ -172,7 +172,7 @@ export default function CodingEnvironment() {
               </button>
             </Link>
           </div>
-          
+
         </div>
       </div>
     </section>

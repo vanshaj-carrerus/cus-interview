@@ -5,13 +5,13 @@ import { TypewriterHeadingParagraph } from "./TypewriterHeadingParagraph";
 
 export default function MockInterviewBanner() {
   return (
-    <section className="bg-white py-20 px-4 md:px-8 relative overflow-hidden">
+    <section className="py-20 px-4 md:px-8 relative overflow-hidden">
       {/* Expanded width for a fuller cart/banner feel */}
-      <div className="w-full max-w-[96%] 2xl:max-w-[1390px] mx-auto">
-        <div className="bg-gray-50 rounded-[2rem] p-8 md:p-16 flex flex-col lg:flex-row items-center gap-16 border border-gray-200 shadow-sm relative overflow-hidden">
+      <div className="w-full max-w-[96%] 2xl:max-w-322.5   mx-auto">
+        <div className="bg-gray-50 rounded-4xl max-h-162.5 p-8 md:p-16 flex flex-col lg:flex-row items-center gap-16 border border-gray-200 shadow-sm relative overflow-hidden">
 
           {/* Subtle background gradient instead of a harsh skewed block */}
-          <div className="absolute top-0 right-0 w-full lg:w-1/2 h-full bg-gradient-to-bl from-blue-50/50 to-transparent pointer-events-none" />
+          <div className="absolute top-0 right-0 w-full lg:w-1/2 h-full bg-linear-to-bl from-blue-50/50 to-transparent pointer-events-none" />
 
           {/* ── LEFT CONTENT ── */}
           <div className="flex-1 text-center lg:text-left relative z-10">
@@ -22,19 +22,19 @@ export default function MockInterviewBanner() {
               </span>
             </div>
 
-            <h3 className="text-4xl md:text-5xl font-bold text-gray-900 tracking-tight leading-[1.15] mb-6">
+            <h3 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight leading-[1.15] mb-3">
               Unsure where to start your <br className="hidden md:block" />
               <span className="text-blue-600">Career Journey?</span>
             </h3>
 
-            <p className="text-gray-600 text-lg md:text-xl leading-relaxed mb-10 max-w-lg mx-auto lg:mx-0">
+            <p className="text-gray-500   leading-relaxed mb-10 max-w-lg mx-auto lg:mx-0">
               Take our expert-curated mock technical interview designed for IT Professionals to pinpoint your gaps and excel.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-6">
               <Link
                 href="/mock-interviews"
-                className="w-full sm:w-auto px-8 py-3.5 bg-gray-900 text-white font-semibold text-base rounded-xl shadow-md hover:bg-gray-800 hover:shadow-lg hover:-translate-y-0.5 transition-all"
+                className="w-full sm:w-auto px-8 py-3.5 bg-gray-900 text-white font-semibold text-base rounded-xl shadow-md hover:bg-gray-800 hover:shadow-lg "
               >
                 Attempt Now
               </Link>
@@ -42,7 +42,7 @@ export default function MockInterviewBanner() {
 
             </div>
 
-            <div className="mt-12 pt-10 border-t border-gray-200/60">
+            <div className="mt-12 pt-5 border-t border-gray-200/60">
               <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-5">
                 Our Learners Work At
               </p>
@@ -62,7 +62,7 @@ export default function MockInterviewBanner() {
 
             {/* Code Window */}
             <div className="relative bg-white rounded-2xl border border-gray-200 shadow-2xl p-2 hover:-translate-y-2 transition-transform duration-500">
-              <div className="aspect-[4/3] sm:aspect-video bg-[#0f172a] rounded-xl overflow-hidden relative shadow-inner flex flex-col z-10">
+              <div className="aspect-4/3 sm:aspect-video bg-[#0f172a] rounded-xl overflow-hidden relative shadow-inner flex flex-col z-10">
 
                 {/* Mac-style Window Header */}
                 <div className="h-10 bg-[#1e293b] border-b border-white/5 flex items-center px-4 gap-2 shrink-0">
