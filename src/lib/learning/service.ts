@@ -125,11 +125,16 @@ function toTaskDto(task: Record<string, unknown>): LearningTaskDto {
 
 const getCachedLanguages = unstable_cache(
   async () => {
-    await connectDB();
-    const languages = await LearningLanguage.find({ status: "published" })
-      .sort({ order: 1, slug: 1 })
-      .lean();
-    return languages.map((item) => toLanguageDto(item as unknown as Record<string, unknown>));
+    try {
+      await connectDB();
+      const languages = await LearningLanguage.find({ status: "published" })
+        .sort({ order: 1, slug: 1 })
+        .lean();
+      return languages.map((item) => toLanguageDto(item as unknown as Record<string, unknown>));
+    } catch (error) {
+      console.warn("[getCachedLanguages] Failed to fetch languages:", error);
+      return [];
+    }
   },
   ["learning-languages"],
   { revalidate: 60 }
