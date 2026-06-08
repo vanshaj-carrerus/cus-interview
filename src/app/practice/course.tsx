@@ -49,7 +49,7 @@ export default async function AllCoursesPage() {
             return (
               <article key={course.id} className="h-full">
                 <Link href={course.href} className="group block h-full">
-                  <div className="flex flex-col items-center justify-center p-6 bg-white border border-slate-100 rounded-[2rem] transition-all duration-300 hover:shadow-[0_10px_30px_-10px_rgba(0,0,0,0.08)] hover:border-slate-200 group-hover:-translate-y-1 h-full min-h-[180px]">
+                  <div className="flex flex-col items-center justify-center p-6 bg-white border border-slate-100 rounded-4xl transition-all duration-300 hover:shadow-[0_10px_30px_-10px_rgba(0,0,0,0.08)] hover:border-slate-200 group-hover:-translate-y-1 h-full min-h-45">
                     <div
                       className={`w-14 h-14 ${bgClass} rounded-2xl flex items-center justify-center text-lg font-bold mb-5 shadow-sm border border-white transition-transform group-hover:-translate-y-1`}
                     >
