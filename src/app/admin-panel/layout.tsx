@@ -28,14 +28,14 @@ export default async function AdminPanelLayout({ children }: { children: ReactNo
             <section>
               <p className="mb-2 text-xs uppercase tracking-wider text-primary">Core</p>
               <div className="space-y-1">
-                <SidebarLink href="/admin-panel/learning-tracks" label="Learning Tracks" />
+                <SidebarLink href="/admin-panel/learning-tracks" label="Practice Problems" />
                 <SidebarLink href="/admin-panel/courses" label="Courses" />
                 <SidebarLink href="/admin-panel/users" label="Users" />
               </div>
             </section>
 
             <section>
-              <p className="mb-2 text-xs uppercase tracking-wider text-primary">Track Pages</p>
+              <p className="mb-2 text-xs uppercase tracking-wider text-primary">Practice Sheets</p>
               <div className="space-y-1">
                 {tracks.map((track) => (
                   <SidebarLink

@@ -69,21 +69,21 @@ export default function FeatureCards() {
     <section className="max-w-7xl mx-auto px-6 py-10">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12 text-center">
         <div className="ms-5 ps-5 transition-all">
-          <h4 className="text-5xl  font-extrabold text-primary">
+          <h4 className="text-5xl font-extrabold text-sky-400">
             <Counter end={35000} suffix="+" />
           </h4>
           <p className="text-slate-600 mt-2">Practice Questions</p>
         </div>
 
         <div className="ms-5 ps-5 transition-all">
-          <h4 className="text-5xl font-extrabold text-primary">
+          <h4 className="text-5xl font-extrabold text-indigo-400">
             <Counter end={10000} suffix="+" />
           </h4>
           <p className="text-slate-600 mt-2">Mock Interviews</p>
         </div>
 
-        <div className="ms-5 ps-5  transition-all">
-          <h4 className="text-5xl font-extrabold text-primary">
+        <div className="ms-5 ps-5 transition-all">
+          <h4 className="text-5xl font-extrabold text-amber-400">
             <Counter end={500} suffix="+" />
           </h4>
           <p className="text-slate-600 mt-2">Learning Paths</p>

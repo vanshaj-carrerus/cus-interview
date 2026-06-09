@@ -103,6 +103,7 @@ export default async function LearningTrackDetailPage({ params }: { params: Prom
         })),
         correctOptionId: String(question.correctOptionId ?? "0"),
         explanation: String(question.explanation ?? ""),
+        difficulty: question.difficulty ?? "medium",
       })),
   }));
 

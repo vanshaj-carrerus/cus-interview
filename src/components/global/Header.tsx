@@ -2,9 +2,12 @@
 
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
-import { UserRound } from "lucide-react";
+import { UserRound, Search, ChevronDown } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
 import Image from "next/image";
+import { usePathname, useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
+import { getSearchRedirectUrl, getSearchSuggestions } from "@/lib/search-utils";
 
 export default function Header() {
   const { user, loading, logout } = useAuth();
@@ -12,10 +15,60 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
+  const router = useRouter();
+  const [showNavbarSearch, setShowNavbarSearch] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  
+  const suggestions = getSearchSuggestions(searchValue);
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && searchValue.trim()) {
+      router.push(getSearchRedirectUrl(searchValue));
+    }
+  };
+
   const navItems = [
-    { label: "Practice", href: "/practice" },
-    // { label: "Resources", href: "#" },
-    { label: "Mock Interviews", href: "/mock-interviews" },
+    {
+      label: "Practice Problems",
+      href: "/problems",
+      items: [
+        { label: "DSA Roadmaps", href: "/problems" },
+        { label: "Core CS Subjects", href: "/practice" },
+        { label: "All Problems", href: "/problems" },
+      ],
+    },
+    {
+      label: "Languages",
+      href: "/problems/courses",
+      accent: "#22c55e",
+      items: [
+        { label: "Python Mastery", href: "problems/courses/python-mastery" },
+        { label: "HTML Mastery", href: "/problems/courses/html-mastery" },
+        { label: "CSS Mastery", href: "/problems/courses/css-mastery" },
+        { label: "Java Mastery", href: "/problems/courses/java-mastery" },
+        { label: "C# Mastery", href: "/problems/courses/csharp-mastery" },
+        { label: "View All →", href: "/problems/courses" },
+      ],
+    },
+    {
+      label: "Mock Interviews",
+      href: "/mock-interviews",
+      items: [
+        { label: "AI Mock Interview", href: "/mock-interviews/ai-mock" },
+        { label: "Interview History", href: "/mock-interviews" },
+        { label: "Prep Dashboard", href: "/mock-interviews" },
+      ],
+    },
+    {
+      label: "Compiler",
+      href: "/compiler",
+      items: [
+        { label: "Code Playground", href: "/compiler" },
+        { label: "Interview Editor", href: "/compiler" },
+      ],
+    },
   ];
 
   useEffect(() => {
@@ -23,6 +76,21 @@ export default function Header() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  useEffect(() => {
+    if (pathname !== "/") {
+      setShowNavbarSearch(true);
+      return;
+    }
+
+    const handleScroll = () => {
+      setShowNavbarSearch(window.scrollY > 500);
+    };
+
+    handleScroll();
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [pathname]);
 
   useEffect(() => {
     document.body.style.overflow = mobileMenuOpen ? "hidden" : "";
@@ -60,38 +128,101 @@ export default function Header() {
           }`}
       >
         <div className="max-w-7xl md:container! mx-auto px-4 sm:px-6 flex items-center justify-between gap-4">
-          {/* LOGO */}
-          <Link href={"/"}>
-            <div className="flex items-center gap-2 group cursor-pointer">
-              <Image
-                src="/logo (1).png"
-                alt="CUS"
-                width={155}
-                height={165}
-                loading="lazy"
-              />
-              {/* <div className="flex flex-col leading-none">
-                <span className="text-secondary font-black text-xl tracking-tighter uppercase">
-                  CareerUs
-                </span>
-                <span className="text-primary text-[8px] font-black tracking-[0.3em] uppercase">
-                  Interview Solutions
-                </span>
-              </div> */}
-            </div>
-          </Link>
+          <div className="flex items-center gap-6 flex-1">
+            {/* LOGO */}
+            <Link href={"/"}>
+              <div className="flex items-center gap-2 group cursor-pointer shrink-0">
+                <Image
+                  src="/cus-logo-1.png"
+                  alt="CUS"
+                  width={105}
+                  height={125}
+                  loading="lazy"
+                />
+              </div>
+            </Link>
 
-          {/* NAVIGATION */}
-          <div className="hidden md:flex items-center gap-10 ">
-            {navItems.map((item) => (
-              <Link
-                key={item.label}
-                href={item.href}
-                className="text-secondary/70 text-[13px] hover:text-primary font-bold text-xs uppercase tracking-widest transition-colors"
-              >
-                {item.label}
-              </Link>
-            ))}
+            {/* SEARCH BAR */}
+            <div className="hidden sm:flex items-center h-[46px] relative shrink-0">
+              <AnimatePresence>
+                {showNavbarSearch && (
+                  <motion.div
+                    layoutId="search-bar-shared"
+                    initial={{ opacity: 0, width: 0 }}
+                    animate={{ opacity: 1, width: 220 }}
+                    exit={{ opacity: 0, width: 0 }}
+                    transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                    className="flex items-center relative h-[38px] w-[220px] shrink-0 mt-[4px] bg-white border border-slate-200 hover:border-slate-300 focus-within:border-indigo-500 focus-within:ring-4 focus-within:ring-indigo-500/10 rounded-full shadow-sm transition-all duration-300"
+                  >
+                    <div className="relative flex items-center w-full rounded-full">
+                      <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                      <input
+                        type="text"
+                        placeholder="Search..."
+                        value={searchValue}
+                        onChange={(e) => setSearchValue(e.target.value)}
+                        onKeyDown={handleSearchKeyDown}
+                        onFocus={() => setIsSearchFocused(true)}
+                        onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
+                        className="w-full pl-10 pr-4 py-2 text-xs text-slate-800 placeholder:text-slate-400 bg-transparent rounded-full focus:outline-none transition-all"
+                      />
+                    </div>
+                    {/* Autocomplete Dropdown */}
+                    <AnimatePresence>
+                      {isSearchFocused && searchValue && (
+                        <motion.div 
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 10 }}
+                          className="absolute top-[120%] left-0 w-[250px] bg-white rounded-xl shadow-2xl border border-slate-100 overflow-hidden z-50 flex flex-col"
+                        >
+                          {suggestions.length > 0 ? (
+                            <div className="flex flex-col py-2 max-h-[300px] overflow-y-auto">
+                              {suggestions.map((s, i) => (
+                                <Link key={i} href={s.url} className="px-4 py-2 hover:bg-slate-50 flex items-center gap-2 group">
+                                  <span className="text-[10px] font-bold uppercase bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-colors">{s.type}</span>
+                                  <span className="text-sm font-semibold text-slate-700 group-hover:text-slate-900 transition-colors truncate">{s.title}</span>
+                                </Link>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="px-4 py-3 text-xs text-slate-500 font-medium text-center">
+                              Press Enter to search for "{searchValue}"
+                            </div>
+                          )}
+                          <Link href="/problems/courses" className="border-t border-slate-100 px-4 py-3 bg-slate-50 hover:bg-indigo-50 text-xs font-black tracking-widest uppercase text-indigo-600 flex justify-between items-center transition-colors">
+                            View all languages <span>→</span>
+                          </Link>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* NAVIGATION */}
+            <div className="hidden lg:flex items-center gap-8 xl:gap-12 ml-20">
+              {navItems.map((item) => (
+                <div key={item.label} className="relative group">
+                  <button className="flex items-center gap-1 text-slate-850 text-black hover:text-primary font-bold text-[14px] transition-colors py-2 cursor-pointer">
+                    {item.label}
+                    <ChevronDown className="w-3.5 h-3.5 text-slate-700 dark:text-slate-400 group-hover:text-primary transition-all duration-200 group-hover:rotate-180" />
+                  </button>
+                  <div className="absolute top-full left-0 z-50 mt-1 hidden group-hover:block w-48 rounded-xl border border-secondary/10 bg-white py-2 shadow-xl">
+                    {item.items.map((sub) => (
+                      <Link
+                        key={sub.label}
+                        href={sub.href}
+                        className="block px-4 py-2 text-xs font-semibold text-secondary hover:bg-primary/10 hover:text-primary transition-colors"
+                      >
+                        {sub.label}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* ACTIONS */}
@@ -164,10 +295,14 @@ export default function Header() {
                   Log In
                 </Link>
                 <Link
-                  href="/signup"
-                  className="hidden bg-primary sm:block font-semibold tracking-wide  px-6 py-2.5 text-white font-black text-[14px] uppercase tracking-[0.15em] rounded-xl shadow-xl hover:-translate-y-0.5 transition-all active:scale-95 text-center"
+                  href="/mock-interviews"
+                  className="hidden sm:block font-semibold tracking-wide px-6 py-2.5 text-white font-black text-[13px] uppercase tracking-[0.15em] rounded-xl shadow-lg hover:-translate-y-0.5 transition-all active:scale-95 text-center"
+                  style={{
+                    background: "linear-gradient(135deg, #6c5ce7 0%, #a855f7 100%)",
+                    boxShadow: "0 4px 15px rgba(108, 92, 231, 0.35)",
+                  }}
                 >
-                  Get Started
+                  🎯 Mock Interview
                 </Link>
               </>
             )}
@@ -178,7 +313,7 @@ export default function Header() {
                 setUserMenuOpen(false);
                 setMobileMenuOpen(true);
               }}
-              className="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg border border-secondary/20 text-secondary hover:text-primary hover:border-primary/40 transition-colors"
+              className="lg:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg border border-secondary/20 text-secondary hover:text-primary hover:border-primary/40 transition-colors"
               aria-label="Open menu"
               aria-expanded={mobileMenuOpen}
               aria-controls="mobile-sidebar-menu"
@@ -197,7 +332,7 @@ export default function Header() {
       </nav>
 
       <div
-        className={`md:hidden fixed inset-0 z-60 transition ${mobileMenuOpen ? "pointer-events-auto" : "pointer-events-none"
+        className={`lg:hidden fixed inset-0 z-60 transition ${mobileMenuOpen ? "pointer-events-auto" : "pointer-events-none"
           }`}
         aria-hidden={!mobileMenuOpen}
       >
@@ -238,16 +373,25 @@ export default function Header() {
             </button>
           </div>
 
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-5 overflow-y-auto max-h-[60vh] pr-2">
             {navItems.map((item) => (
-              <Link
-                key={item.label}
-                href={item.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className="px-3 py-3 rounded-lg text-secondary font-extrabold text-xs uppercase tracking-widest hover:bg-secondary/5 hover:text-primary transition-colors"
-              >
-                {item.label}
-              </Link>
+              <div key={item.label} className="space-y-1">
+                <p className="px-3 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                  {item.label}
+                </p>
+                <div className="flex flex-col gap-1 pl-2">
+                  {item.items.map((sub) => (
+                    <Link
+                      key={sub.label}
+                      href={sub.href}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="px-3 py-2 rounded-lg text-secondary font-extrabold text-[13px] hover:bg-secondary/5 hover:text-primary transition-colors"
+                    >
+                      {sub.label}
+                    </Link>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
 

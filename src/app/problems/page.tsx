@@ -1,65 +1,122 @@
-import Link from "next/link";
-import { getTrackCards } from "@/lib/learning/server";
-import Image from "next/image";
+import { connectDB } from "@/lib/mongodb";
+import { LearningTrack, LearningLevel, LearningQuestion, getTrackingModels } from "@/models/learning";
+import { getSessionPublicUser } from "@/lib/get-session-user";
+import ProblemsSheetClient from "./components/problems-sheet-client";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 export default async function ProblemsHomePage() {
-  const [topics, courses] = await Promise.all([getTrackCards("track"), getTrackCards("course")]);
+  await connectDB();
+
+  // 1. Fetch published tracks of kind "track"
+  const tracksDoc = await LearningTrack.find({ status: "published", kind: "track" })
+    .sort({ order: 1, title: 1 })
+    .lean();
+
+  const trackIds = tracksDoc.map((t) => t._id);
+
+  // 2. Fetch published levels belonging to those tracks
+  const levelsDoc = await LearningLevel.find({
+    trackId: { $in: trackIds },
+    status: "published",
+  })
+    .sort({ levelNumber: 1 })
+    .lean();
+
+  const levelIds = levelsDoc.map((l) => l._id);
+
+  // 3. Fetch published questions belonging to those levels
+  const questionsDoc = await LearningQuestion.find({
+    levelId: { $in: levelIds },
+    status: "published",
+  })
+    .sort({ order: 1 })
+    .lean();
+
+  // 4. Fetch session and solved question attempts
+  let initialSolvedQuestionIds: string[] = [];
+  let userSession = null;
+
+  try {
+    const session = await getSessionPublicUser();
+    if (session) {
+      userSession = {
+        id: session.id,
+        email: session.email,
+        name: session.name || undefined,
+      };
+
+      const tracking = await getTrackingModels();
+      const { UserLearningAttempt } = tracking;
+
+      const correctAttempts = await UserLearningAttempt.find({
+        userId: session.id,
+        entityType: "question",
+        isCorrect: true,
+      })
+        .select({ entityId: 1 })
+        .lean();
+
+      initialSolvedQuestionIds = correctAttempts.map((item) => String(item.entityId));
+    }
+  } catch (error) {
+    console.warn("[ProblemsHomePage] Failed to fetch user progress details:", error);
+  }
+
+  // 5. Structure data hierarchically: Track -> Level -> Question
+  // Map levelId to level objects
+  const levelsMap = new Map();
+  levelsDoc.forEach((level) => {
+    levelsMap.set(String(level._id), {
+      id: String(level._id),
+      levelNumber: Number(level.levelNumber),
+      title: String(level.title),
+      description: String(level.description ?? ""),
+      questions: [],
+    });
+  });
+
+  // Distribute questions into their levels
+  questionsDoc.forEach((q) => {
+    const levelObj = levelsMap.get(String(q.levelId));
+    if (levelObj) {
+      levelObj.questions.push({
+        id: String(q._id),
+        externalId: String(q.externalId),
+        prompt: String(q.prompt),
+        difficulty: (q.difficulty ?? "medium") as "easy" | "medium" | "hard",
+        order: Number(q.order ?? 0),
+      });
+    }
+  });
+
+  // Assemble tracks with their levels
+  const tracks = tracksDoc.map((track) => {
+    const trackLevels = levelsDoc
+      .filter((level) => String(level.trackId) === String(track._id))
+      .map((level) => levelsMap.get(String(level._id)))
+      .filter(Boolean);
+
+    // Sort questions within each level
+    trackLevels.forEach((level) => {
+      level.questions.sort((a: any, b: any) => a.order - b.order);
+    });
+
+    return {
+      id: String(track._id),
+      slug: String(track.slug),
+      title: String(track.title),
+      intro: String(track.intro ?? ""),
+      iconImage: track.iconImage ? String(track.iconImage) : undefined,
+      levels: trackLevels,
+    };
+  });
+
   return (
-    <div className="min-h-screen bg-slate-100 p-8 font-sans">
-      <div className="max-w-5xl mx-auto">
-        <div className="flex items-center justify-between gap-3">
-          <h1 className="text-3xl font-bold text-slate-900">Problem Roadmaps</h1>
-          <Link href="/admin-panel" className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-bold uppercase tracking-wide text-white">
-            Open Admin
-          </Link>
-        </div>
-        <p className="text-slate-600 mt-2">
-          Pick a topic and follow the step-by-step tutor path.
-        </p>
-
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {topics.map((topic) => (
-            <Link
-              key={topic.id}
-              href={`/problems/${topic.slug}`}
-              className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow"
-            >
-              {topic.iconImage ? (
-                <Image src={topic.iconImage} alt={`${topic.title} icon`} loading="lazy" className="mb-3 h-10 w-10 rounded-lg object-cover" width={200} height={200} />
-              ) : null}
-              <p className="text-xs uppercase tracking-wide text-slate-400">Topic</p>
-              <h2 className="text-xl font-bold text-slate-800 mt-1">{topic.title}</h2>
-              <p className="text-sm text-slate-500 mt-1">{topic.intro}</p>
-              <p className="text-sm text-primary font-semibold mt-4">Open Roadmap →</p>
-            </Link>
-          ))}
-        </div>
-
-        <h2 className="text-2xl font-bold text-slate-900 mt-10">Language Courses</h2>
-        <p className="text-slate-600 mt-2">
-          Skill-focused language roadmaps with interview-style step tests.
-        </p>
-
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {courses.map((course) => (
-            <Link
-              key={course.id}
-              href={`/problems/courses/${course.slug}`}
-              className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow"
-            >
-              {course.iconImage ? (
-                <Image src={course.iconImage} alt={`${course.title} icon`} loading="lazy" className="mb-3 h-10 w-10 rounded-lg object-cover" width={200} height={200} />
-              ) : null}
-              <p className="text-xs uppercase tracking-wide text-slate-400">Course</p>
-              <h2 className="text-xl font-bold text-slate-800 mt-1">{course.title}</h2>
-              <p className="text-sm text-slate-500 mt-1">{course.intro}</p>
-              <p className="text-sm text-primary font-semibold mt-4">Open Course Path →</p>
-            </Link>
-          ))}
-        </div>
-      </div>
-    </div>
+    <ProblemsSheetClient
+      tracks={tracks}
+      initialSolvedQuestionIds={initialSolvedQuestionIds}
+      userSession={userSession}
+    />
   );
 }

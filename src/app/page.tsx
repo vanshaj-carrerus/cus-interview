@@ -13,8 +13,11 @@ import PracticeProblems, {
   PracticeProblemsSection,
   PracticeProblemsSkeleton,
 } from "@/components/home/Practiceproblems"
-import VideoExplanations from "@/components/home/Videoexplanations"
-import WebinarsSection from "@/components/home/Webinarssection"
+
+import CareerGuidanceBanner from "@/components/home/CareerGuidanceBanner"
+import MustExplore from "@/components/home/MustExplore"
+import ExploreTopics from "@/components/home/ExploreTopics"
+
 
 export const revalidate = 60
 
@@ -23,37 +26,39 @@ const Home = () => {
     <>
       <CusInterviewHero />
 
-
-
       <div className="section-soft">
-         <LearningSection />
-        <WebinarsSection />
-       
-        <MockInterviewBanner />
+        <LearningSection />
+        <CareerGuidanceBanner />
+        <MustExplore />
+        <ExploreTopics />
+   
+        {/* <WebinarsSection /> */}
+
+        {/* <MockInterviewBanner /> */}
 
       </div>
 
-      <div className="section-surface">
+      {/* <div className="section-surface">
         <Suspense fallback={<PracticeProblemsSkeleton />}>
           <PracticeProblemsSection />
         </Suspense>
         <Suspense fallback={<FastTrackCoursesSkeleton />}>
           <FastTrackCoursesSection />
         </Suspense>
-      </div>
+      </div> */}
 
-      <div className="section-soft">
+      {/* <div className="section-soft">
         <VideoExplanations />
         <CodingEnvironment />
-      </div>
-
+      </div> */}
+{/* 
       <div className="section-surface">
         <CompaniesAndTestimonials />
       </div>
 
       <div className="section-surface">
         <NewsLetter />
-      </div>
+      </div> */}
     </>
   );
 };

@@ -111,16 +111,7 @@ export default async function Dashboard() {
               value={tracks.length.toString()}
               icon={<Target className="w-4 h-4" />}
             />
-            <HeaderStat
-              label="Total Content"
-              value={`${combinedSteps}+ Steps`}
-              icon={<BookOpen className="w-4 h-4" />}
-            />
-            <HeaderStat
-              label="Interview Challenges"
-              value={combinedQuestions.toString()}
-              icon={<BarChart3 className="w-4 h-4" />}
-            />
+           
           </div>
 
           <div className="mt-20 h-px w-full max-w-5xl bg-linear-to-r from-transparent via-slate-200 to-transparent" />
@@ -128,10 +119,10 @@ export default async function Dashboard() {
 
         {/* --- Main Tracks Section --- */}
         <section className="mb-24">
-          <SectionHeading
+          {/* <SectionHeading
             title="Curated Learning Tracks"
             subtitle="Deep-dive roadmaps designed for interview success and architectural mastery."
-          />
+          /> */}
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {tracks.map((track, index) => (
@@ -141,72 +132,7 @@ export default async function Dashboard() {
         </section>
 
         {/* --- Language Specializations --- */}
-        <section id="language-syntax" className="pb-20">
-          <SectionHeading
-            title="Language & Syntax"
-            subtitle="Hone your skills in specific programming environments with fast-track modules."
-          />
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 max-w-6xl mx-auto relative">
-            {/* 1. Visible Courses (First 9) */}
-            {visibleCourses.map((course, index) => (
-              <CourseLink key={course.id} course={course} index={index} />
-            ))}
-
-            {/* 2. Hidden Checkbox for CSS Toggle Trick */}
-            {hasMoreCourses && (
-              <input type="checkbox" id="toggle-languages" className="peer hidden" />
-            )}
-
-            {/* 3. View All Button (Hides when checked) */}
-            {hasMoreCourses && (
-              <label
-                htmlFor="toggle-languages"
-                className="peer-checked:hidden cursor-pointer group flex flex-col items-center justify-center p-6 bg-slate-50/50 border border-slate-200 border-dashed rounded-4xl transition-all duration-300 hover:shadow-[0_10px_30px_-10px_rgba(0,0,0,0.08)] hover:border-slate-300 hover:-translate-y-1 h-full min-h-45"
-              >
-                <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-slate-400 mb-5 shadow-sm border border-slate-100 transition-transform group-hover:-translate-y-1 group-hover:text-primary group-hover:bg-indigo-50">
-                  <ChevronDown className="w-6 h-6" />
-                </div>
-                <div className="text-center">
-                  <p className="font-bold text-slate-600 text-sm group-hover:text-primary transition-colors">
-                    View All
-                  </p>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1.5">
-                    {hiddenCourses.length} More
-                  </p>
-                </div>
-              </label>
-            )}
-
-            {/* 4. Extra Hidden Courses (Shows when checked) */}
-            {hasMoreCourses &&
-              hiddenCourses.map((course, idx) => (
-                <div key={course.id} className="hidden peer-checked:block h-full">
-                  <CourseLink course={course} index={visibleCourses.length + idx} />
-                </div>
-              ))}
-
-            {/* 5. Show Less Button (Shows when checked) */}
-            {hasMoreCourses && (
-              <label
-                htmlFor="toggle-languages"
-                className="hidden peer-checked:flex cursor-pointer group flex-col items-center justify-center p-6 bg-slate-50/50 border border-slate-200 border-dashed rounded-[2rem] transition-all duration-300 hover:shadow-[0_10px_30px_-10px_rgba(0,0,0,0.08)] hover:border-slate-300 hover:-translate-y-1 h-full min-h-[180px]"
-              >
-                <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-slate-400 mb-5 shadow-sm border border-slate-100 transition-transform group-hover:-translate-y-1 group-hover:text-primary group-hover:bg-indigo-50">
-                  <ChevronUp className="w-6 h-6" />
-                </div>
-                <div className="text-center">
-                  <p className="font-bold text-slate-600 text-sm group-hover:text-primary transition-colors">
-                    Show Less
-                  </p>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1.5">
-                    Collapse List
-                  </p>
-                </div>
-              </label>
-            )}
-          </div>
-        </section>
+      
       </div>
     </div>
   );

@@ -101,6 +101,7 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ s
         })),
         correctOptionId: String(question.correctOptionId ?? "0"),
         explanation: String(question.explanation ?? ""),
+        difficulty: question.difficulty ?? "medium",
       })),
   }));
 

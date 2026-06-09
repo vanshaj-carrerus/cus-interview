@@ -12,6 +12,7 @@ type QuestionItem = {
   options: OptionItem[];
   correctOptionId: string;
   explanation: string;
+  difficulty?: "easy" | "medium" | "hard";
 };
 
 type LevelItem = {
@@ -57,6 +58,7 @@ export default function QuestionTableManager({ levels }: Props) {
     const optionsCsv = String(formData.get("options") ?? "");
     const explanation = String(formData.get("explanation") ?? "").trim();
     const correctOptionId = Number(formData.get("correctOptionId") ?? 0);
+    const difficulty = String(formData.get("difficulty") ?? "medium");
 
     const options = optionsCsv
       .split(",")
@@ -86,6 +88,7 @@ export default function QuestionTableManager({ levels }: Props) {
               options,
               correctOptionId: normalizedCorrectOptionId,
               explanation,
+              difficulty,
               status: "published",
             },
           }),
@@ -105,6 +108,7 @@ export default function QuestionTableManager({ levels }: Props) {
               options,
               correctOptionId: normalizedCorrectOptionId,
               explanation,
+              difficulty,
             },
           }),
         });
@@ -149,6 +153,7 @@ export default function QuestionTableManager({ levels }: Props) {
                     <th className="px-3 py-2 text-left">Prompt</th>
                     <th className="px-3 py-2 text-left">Options</th>
                     <th className="px-3 py-2 text-left">Correct</th>
+                    <th className="px-3 py-2 text-left">Difficulty</th>
                     <th className="px-3 py-2 text-left">Actions</th>
                   </tr>
                 </thead>
@@ -162,6 +167,17 @@ export default function QuestionTableManager({ levels }: Props) {
                       </td>
                       <td className="px-3 py-2 text-secondary/70">
                         {question.options.find((option) => option.id === question.correctOptionId)?.text ?? "-"}
+                      </td>
+                      <td className="px-3 py-2">
+                        <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ring-1 ring-inset ${
+                          question.difficulty === "easy"
+                            ? "bg-emerald-50 text-emerald-700 ring-emerald-600/20"
+                            : question.difficulty === "hard"
+                              ? "bg-rose-50 text-rose-700 ring-rose-600/20"
+                              : "bg-amber-50 text-amber-700 ring-amber-600/20"
+                        }`}>
+                          {(question.difficulty ?? "medium").toUpperCase()}
+                        </span>
                       </td>
                       <td className="px-3 py-2">
                         <div className="flex gap-2">
@@ -192,7 +208,7 @@ export default function QuestionTableManager({ levels }: Props) {
                   ))}
                   {level.questions.length === 0 ? (
                     <tr>
-                      <td className="px-3 py-4 text-secondary/60" colSpan={5}>
+                      <td className="px-3 py-4 text-secondary/60" colSpan={6}>
                         No questions added yet.
                       </td>
                     </tr>
@@ -221,44 +237,77 @@ export default function QuestionTableManager({ levels }: Props) {
             </div>
 
             <form onSubmit={onSubmit} className="space-y-3">
-              <input
-                name="externalId"
-                required
-                defaultValue={modalState.mode === "edit" ? modalState.question.externalId : ""}
-                placeholder="Question ID"
-                className="w-full rounded-lg border border-primary/20 px-3 py-2 text-sm text-secondary"
-              />
-              <textarea
-                name="prompt"
-                required
-                defaultValue={modalState.mode === "edit" ? modalState.question.prompt : ""}
-                placeholder="Question prompt"
-                className="h-20 w-full rounded-lg border border-primary/20 px-3 py-2 text-sm text-secondary"
-              />
-              <input
-                name="options"
-                required
-                defaultValue={
-                  modalState.mode === "edit"
-                    ? modalState.question.options.map((item) => item.text).join(", ")
-                    : ""
-                }
-                placeholder="Option A, Option B, Option C, Option D"
-                className="w-full rounded-lg border border-primary/20 px-3 py-2 text-sm text-secondary"
-              />
-              <input
-                name="correctOptionId"
-                type="number"
-                min="0"
-                defaultValue={modalState.mode === "edit" ? Number(modalState.question.correctOptionId) : 0}
-                className="w-full rounded-lg border border-primary/20 px-3 py-2 text-sm text-secondary"
-              />
-              <textarea
-                name="explanation"
-                defaultValue={modalState.mode === "edit" ? modalState.question.explanation : ""}
-                placeholder="Explanation"
-                className="h-20 w-full rounded-lg border border-primary/20 px-3 py-2 text-sm text-secondary"
-              />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-secondary/70 mb-1">Question ID</label>
+                  <input
+                    name="externalId"
+                    required
+                    defaultValue={modalState.mode === "edit" ? modalState.question.externalId : ""}
+                    placeholder="Question ID"
+                    className="w-full rounded-lg border border-primary/20 px-3 py-2 text-sm text-secondary"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-secondary/70 mb-1">Difficulty</label>
+                  <select
+                    name="difficulty"
+                    defaultValue={modalState.mode === "edit" ? modalState.question.difficulty ?? "medium" : "medium"}
+                    className="w-full rounded-lg border border-primary/20 px-3 py-2 text-sm text-secondary bg-white"
+                  >
+                    <option value="easy">Easy</option>
+                    <option value="medium">Medium</option>
+                    <option value="hard">Hard</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-secondary/70 mb-1">Prompt</label>
+                <textarea
+                  name="prompt"
+                  required
+                  defaultValue={modalState.mode === "edit" ? modalState.question.prompt : ""}
+                  placeholder="Question prompt"
+                  className="h-20 w-full rounded-lg border border-primary/20 px-3 py-2 text-sm text-secondary"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-secondary/70 mb-1">Options (Comma separated)</label>
+                <input
+                  name="options"
+                  required
+                  defaultValue={
+                    modalState.mode === "edit"
+                      ? modalState.question.options.map((item) => item.text).join(", ")
+                      : ""
+                  }
+                  placeholder="Option A, Option B, Option C, Option D"
+                  className="w-full rounded-lg border border-primary/20 px-3 py-2 text-sm text-secondary"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-secondary/70 mb-1">Correct Option Index (0-based)</label>
+                <input
+                  name="correctOptionId"
+                  type="number"
+                  min="0"
+                  defaultValue={modalState.mode === "edit" ? Number(modalState.question.correctOptionId) : 0}
+                  className="w-full rounded-lg border border-primary/20 px-3 py-2 text-sm text-secondary"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-secondary/70 mb-1">Explanation</label>
+                <textarea
+                  name="explanation"
+                  defaultValue={modalState.mode === "edit" ? modalState.question.explanation : ""}
+                  placeholder="Explanation"
+                  className="h-20 w-full rounded-lg border border-primary/20 px-3 py-2 text-sm text-secondary"
+                />
+              </div>
 
               <button
                 disabled={saving}

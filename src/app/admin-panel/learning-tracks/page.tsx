@@ -145,13 +145,13 @@ export default async function LearningTracksPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-semibold text-secondary">Learning Tracks</h2>
-        <p className="mt-1 text-sm text-secondary/70">Manage all track pages and content.</p>
+        <h2 className="text-2xl font-semibold text-secondary">Practice Problems</h2>
+        <p className="mt-1 text-sm text-secondary/70">Manage all practice problem sheets and questions.</p>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <form action={addTrackAction} className="rounded-xl border border-primary/20 bg-white p-4">
-          <p className="mb-3 text-sm font-semibold text-secondary">Add New Track</p>
+          <p className="mb-3 text-sm font-semibold text-secondary">Add New Practice Sheet</p>
           <div className="space-y-2">
             <input name="title" required placeholder="Track title" className="w-full rounded-lg border border-primary/20 bg-white px-3 py-2 text-sm text-secondary" />
             <input name="slug" required placeholder="track-slug" className="w-full rounded-lg border border-primary/20 bg-white px-3 py-2 text-sm text-secondary" />

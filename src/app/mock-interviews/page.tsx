@@ -79,8 +79,13 @@ const aiHighlights = [
 
 export default function MockInterviewPage() {
   return (
-    <div className="min-h-screen bg-slate-50/50 p-6 md:p-12 font-sans text-slate-900 selection:bg-indigo-100 selection:text-primary">
-      <div className="lg:container mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-pink-50 p-6 md:p-12 font-sans text-slate-900 overflow-hidden relative">
+      {/* Background Glowing Orbs */}
+      <div className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] bg-gradient-to-tr from-sky-300/30 to-pink-300/30 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute top-[40%] left-[-10%] w-[500px] h-[500px] bg-gradient-to-tr from-pink-300/30 to-purple-300/30 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[10%] w-[700px] h-[700px] bg-gradient-to-tr from-sky-300/30 to-emerald-300/20 blur-[120px] rounded-full pointer-events-none" />
+      
+      <div className="lg:container mx-auto relative z-10">
         <header className="relative mb-16 md:mb-20">
           <div className="flex flex-col lg:flex-row lg:items-stretch justify-between gap-10">
             <div className="space-y-6 max-w-3xl">
@@ -98,13 +103,13 @@ export default function MockInterviewPage() {
                 </span>
               </div>
 
-              <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-slate-900 leading-[1.1]">
-                <span className="">AI Mock</span>
-              <br />
+              <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-slate-900 leading-[1.1]">
+                <span className="">AI Mock </span>
+                 
                 Interview
               </h1>
 
-              <p className="text-slate-600 text-lg md:text-xl font-normal leading-relaxed max-w-2xl">
+              <p className="text-slate-400 text-lg md:text-md font-normal leading-relaxed max-w-2xl">
                 Practice full technical loops with an AI that asks follow-ups,
                 enforces time boxes, and delivers a clear scorecard so you walk
                 into human panels prepared, not guessing.
@@ -113,17 +118,12 @@ export default function MockInterviewPage() {
               <div className="flex flex-col sm:flex-row flex-wrap gap-4 pt-4">
                 <Link
                   href="/mock-interviews/ai-mock"
-                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-slate-900 text-white font-semibold text-sm rounded-2xl shadow-md hover:bg-slate-800 hover:-translate-y-0.5 transition-all active:scale-95"
+                  className="inline-flex items-center justify-center gap-2 px-10 py-4 bg-white text-sky-500 border border-slate-100 font-bold text-sm rounded-full shadow-xl shadow-sky-200/40 hover:border-sky-300 hover:shadow-sky-300/50 transition-all hover:scale-[1.02] active:scale-95"
                 >
                   Start AI session
                   <ChevronRight className="w-4 h-4" />
                 </Link>
-                <Link
-                  href="/practice"
-                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white border border-slate-200 text-slate-700 font-semibold text-sm rounded-2xl shadow-sm hover:border-slate-300 hover:bg-slate-50 transition-all"
-                >
-                  Browse practice hub
-                </Link>
+             
               </div>
             </div>
 
@@ -295,7 +295,7 @@ export default function MockInterviewPage() {
                     {step.title}
                   </h3>
                   <p className="text-slate-600 text-base leading-relaxed flex-1">
-                    {step.description}
+                {step.description}
                   </p>
                 </div>
               );
@@ -304,26 +304,29 @@ export default function MockInterviewPage() {
         </section>
 
         {/* CTA SECTION */}
-        <section className="pt-8 pb-4 max-w-5xl mx-auto">
-          <div className="relative overflow-hidden rounded-[2.5rem] bg-slate-900 px-8 py-14 md:px-16 md:py-20 flex flex-col items-center justify-center gap-10 text-center shadow-2xl">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-transparent opacity-50" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full bg-primary/10 blur-[100px] pointer-events-none" />
+        <section className="pt-8 pb-4 max-w-5xl mx-auto mb-10">
+          <div className="relative overflow-hidden rounded-[3rem] bg-white border border-slate-100 px-8 py-16 md:px-20 md:py-24 flex flex-col items-center justify-center gap-10 text-center shadow-2xl shadow-sky-100/60">
+            <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
+              <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-sky-200/40 blur-[120px] rounded-full" />
+              <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-pink-200/40 blur-[120px] rounded-full" />
+            </div>
 
             <div className="relative z-10 max-w-2xl flex flex-col items-center">
-              <h3 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight leading-tight">
-                Ready for your next AI mock loop?
+              <h3 className="text-3xl md:text-5xl font-black text-slate-800 tracking-tight leading-tight mb-6">
+                Ready for your next <br />
+                <span className="bg-gradient-to-r from-sky-400 to-pink-400 bg-clip-text text-transparent">AI mock loop?</span>
               </h3>
-              <p className="text-slate-300 text-base md:text-xl font-normal mt-5 leading-relaxed max-w-xl">
+              <p className="text-slate-500 text-lg md:text-xl font-normal leading-relaxed max-w-xl">
                 Create a free account, pick a track, and debrief with a
                 scorecard in under an hour.
               </p>
             </div>
             <Link
               href="/signup"
-              className="relative z-10 shrink-0 inline-flex items-center gap-2 bg-white text-slate-900 px-10 py-5 rounded-2xl font-semibold text-sm shadow-xl hover:bg-slate-50 hover:-translate-y-0.5 transition-all"
+              className="relative z-10 shrink-0 inline-flex items-center gap-3 bg-gradient-to-r from-sky-400 to-pink-400 hover:from-sky-500 hover:to-pink-500 text-white px-10 py-5 rounded-full font-bold text-sm shadow-xl shadow-pink-200/50 hover:scale-[1.02] transition-all"
             >
               Get started free
-              <ChevronRight className="w-4 h-4" />
+              <ArrowRight className="w-5 h-5 text-white" />
             </Link>
           </div>
         </section>
