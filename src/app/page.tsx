@@ -15,6 +15,7 @@ import PracticeProblems, {
 } from "@/components/home/Practiceproblems"
 
 import CareerGuidanceBanner from "@/components/home/CareerGuidanceBanner"
+import CrackedInterviewsSection from "@/components/home/CrackedInterviewsSection"
 import MustExplore from "@/components/home/MustExplore"
 import ExploreTopics from "@/components/home/ExploreTopics"
 
@@ -28,6 +29,7 @@ const Home = () => {
 
       <div className="section-soft">
         <LearningSection />
+        <CrackedInterviewsSection />
         <CareerGuidanceBanner />
         <MustExplore />
         <ExploreTopics />
