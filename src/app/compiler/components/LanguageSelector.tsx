@@ -29,7 +29,7 @@ export default function LanguageSelector({ language, onSelect }: LanguageSelecto
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg text-slate-700 text-sm font-medium transition-all"
       >
-        <Code2 className="w-4 h-4 text-indigo-400" />
+        <Code2 className="w-4 h-4 text-sky-400" />
         <span className="capitalize">{language}</span>
         <span className="text-slate-500 text-xs ml-1">({LANGUAGE_VERSIONS[language as keyof typeof LANGUAGE_VERSIONS]})</span>
         <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ml-2 ${isOpen ? "rotate-180" : ""}`} />
@@ -46,7 +46,7 @@ export default function LanguageSelector({ language, onSelect }: LanguageSelecto
               }}
               className={`w-full text-left px-4 py-3 text-sm transition-colors flex justify-between items-center ${
                 language === lang 
-                  ? "bg-indigo-500/10 text-indigo-400 font-bold" 
+                  ? "bg-sky-500/10 text-sky-400 font-bold" 
                   : "text-slate-600 hover:bg-slate-50"
               }`}
             >

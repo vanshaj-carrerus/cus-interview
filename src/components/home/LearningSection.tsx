@@ -67,26 +67,28 @@ export default function FeatureCards() {
 
   return (
     <section className="max-w-7xl mx-auto px-6 py-10">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12 text-center">
-        <div className="ms-5 ps-5 transition-all">
-          <h4 className="text-5xl font-extrabold text-sky-400">
-            <Counter end={35000} suffix="+" />
-          </h4>
-          <p className="text-slate-600 mt-2">Practice Questions</p>
-        </div>
+      <div className="rounded-3xl py-12 px-6  ">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+          <div className="md:ms-5 md:ps-5 transition-all">
+            <h4 className="text-5xl font-extrabold text-[#111827]">
+              <Counter end={35000} suffix="+" />
+            </h4>
+            <p className="text-slate-400 mt-2 font-medium">Practice Questions</p>
+          </div>
 
-        <div className="ms-5 ps-5 transition-all">
-          <h4 className="text-5xl font-extrabold text-indigo-400">
-            <Counter end={10000} suffix="+" />
-          </h4>
-          <p className="text-slate-600 mt-2">Mock Interviews</p>
-        </div>
+          <div className="md:ms-5 md:ps-5 transition-all">
+            <h4 className="text-5xl font-extrabold text-[#111827]">
+              <Counter end={10000} suffix="+" />
+            </h4>
+            <p className="text-slate-400 mt-2 font-medium">Mock Interviews</p>
+          </div>
 
-        <div className="ms-5 ps-5 transition-all">
-          <h4 className="text-5xl font-extrabold text-amber-400">
-            <Counter end={500} suffix="+" />
-          </h4>
-          <p className="text-slate-600 mt-2">Learning Paths</p>
+          <div className="md:ms-5 md:ps-5 transition-all">
+            <h4 className="text-5xl font-extrabold text-[#111827]">
+              <Counter end={500} suffix="+" />
+            </h4>
+            <p className="text-slate-400 mt-2 font-medium">Learning Paths</p>
+          </div>
         </div>
       </div>
     </section>

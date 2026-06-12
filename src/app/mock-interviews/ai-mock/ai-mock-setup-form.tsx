@@ -281,23 +281,23 @@ export function AiMockSetupForm() {
   };
 
   return (
-    <div className="min-h-screen bg-[#fcfcfd] p-6 md:p-12 font-sans text-slate-900 selection:bg-indigo-100 selection:text-primary">
+    <div className="min-h-screen mb-10 bg-[#fcfcfd] p-6 md:p-12 font-sans text-slate-900 selection:bg-sky-100 selection:text-sky-600">
       <div className="max-w-5xl mx-auto">
         <Link
           href="/mock-interviews"
-          className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-primary transition-colors mb-10"
+          className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-sky-500 transition-colors mb-10"
         >
           <ArrowLeft className="w-4 h-4" />
           AI mock interviews
         </Link>
 
         <header className="mb-10 md:mb-12">
-          <p className="text-primary font-black text-xs uppercase tracking-[0.3em] mb-3">
+          <p className="text-sky-500 font-black text-xs uppercase tracking-[0.3em] mb-3">
             Session setup
           </p>
-          <h1 className="text-4xl md:text-5xl font-black text-secondary tracking-tight leading-[1.1] mb-4">
+          <h1 className="text-4xl md:text-5xl font-black text-slate-800 tracking-tight leading-[1.1] mb-4">
             Tune your{" "}
-            <span className="premium-text-gradient">AI interviewer</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-sky-600">AI interviewer</span>
           </h1>
           <p className="text-slate-500 text-lg font-light leading-relaxed">
             We use this profile to pick question depth, examples, and time
@@ -334,7 +334,7 @@ export function AiMockSetupForm() {
                       href={`/mock-interviews/ai-mock/${item.id}`}
                       className="min-w-0 flex-1 hover:opacity-85 transition-opacity"
                     >
-                      <p className="text-sm font-bold text-secondary truncate">
+                      <p className="text-sm font-bold text-slate-800 truncate">
                         {item.role || item.framework || "General AI mock"}
                       </p>
                       <p className="mt-1 text-[11px] font-semibold text-slate-500">
@@ -374,50 +374,44 @@ export function AiMockSetupForm() {
           className="space-y-10 rounded-4xl border border-slate-100 bg-white p-6 md:p-10 shadow-[0_24px_48px_-12px_rgba(0,0,0,0.06)]"
         >
           <fieldset className="space-y-4">
-            <legend className="flex items-center gap-2 text-sm font-black text-secondary uppercase tracking-widest mb-1">
-              <Code2 className="w-4 h-4 text-primary" />
+            <legend className="flex items-center gap-2 text-sm font-black text-slate-800 uppercase tracking-widest mb-1">
+              <Code2 className="w-4 h-4  text-sky-500" />
               Languages you want to use
             </legend>
             <p className="text-xs text-slate-500 font-medium -mt-1 mb-3">
-              Pick every language you&apos;re comfortable being questioned in.
+              Pick the language you&apos;re comfortable being questioned in.
             </p>
             <p className="text-[11px] text-slate-400 font-semibold -mt-2 mb-3">
               {LANGUAGES.length} language options
             </p>
-            <div className="flex flex-wrap gap-2">
-              {LANGUAGES.map((lang) => {
-                const on = languages.includes(lang);
-                return (
-                  <button
-                    key={lang}
-                    type="button"
-                    onClick={() => toggleLanguage(lang)}
-                    className={`rounded-full px-4 py-2 text-[11px] font-black uppercase tracking-widest transition-all border ${
-                      on
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-slate-200 bg-slate-50 text-slate-500 hover:border-slate-300"
-                    }`}
-                  >
-                    {lang}
-                  </button>
-                );
-              })}
-            </div>
+            <select
+              id="languages"
+              value={languages[0] || ""}
+              onChange={(e) => setLanguages(e.target.value ? [e.target.value] : [])}
+              className="w-full cursor-pointer rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3.5 text-sm font-medium text-slate-800 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20"
+            >
+              <option value="">Select language</option>
+              {LANGUAGES.map((lang) => (
+                <option key={lang} value={lang}>
+                  {lang}
+                </option>
+              ))}
+            </select>
           </fieldset>
 
           <div className="space-y-2">
             <label
               htmlFor="framework"
-              className="flex items-center gap-2 text-sm font-black text-secondary uppercase tracking-widest"
+              className="flex items-center gap-2 text-sm font-black text-slate-800 uppercase tracking-widest"
             >
-              <Layers className="w-4 h-4 text-primary" />
+              <Layers className="w-4 h-4 text-sky-500" />
               Primary framework / runtime
             </label>
             <select
               id="framework"
               value={framework}
               onChange={(e) => setFramework(e.target.value)}
-              className="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3.5 text-sm font-medium text-secondary outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="w-full cursor-pointer rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3.5 text-sm font-medium text-slate-800 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20"
             >
               <option value="">Select framework / runtime (optional)</option>
               {FRAMEWORKS.map((f) => (
@@ -435,16 +429,16 @@ export function AiMockSetupForm() {
             <div className="space-y-2">
               <label
                 htmlFor="role"
-                className="flex items-center gap-2 text-sm font-black text-secondary uppercase tracking-widest"
+                className="flex items-center gap-2 text-sm font-black text-slate-800 uppercase tracking-widest"
               >
-                <Briefcase className="w-4 h-4 text-primary" />
+                <Briefcase className="w-4 h-4 text-sky-500" />
                 Expected role
               </label>
               <select
                 id="role"
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3.5 text-sm font-medium text-secondary outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3.5 text-sm font-medium text-slate-800 cursor-pointer outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20"
               >
                 <option value="">Select expected role (optional)</option>
                 {ROLES.map((r) => (
@@ -460,16 +454,16 @@ export function AiMockSetupForm() {
             <div className="space-y-2">
               <label
                 htmlFor="seniority"
-                className="flex items-center gap-2 text-sm font-black text-secondary uppercase tracking-widest"
+                className="flex items-center gap-2 text-sm font-black text-slate-800 uppercase tracking-widest"
               >
-                <GraduationCap className="w-4 h-4 text-primary" />
+                <GraduationCap className="w-4 h-4 text-sky-500" />
                 Seniority
               </label>
               <select
                 id="seniority"
                 value={seniority}
                 onChange={(e) => setSeniority(e.target.value)}
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3.5 text-sm font-medium text-secondary outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3.5 text-sm font-medium text-slate-800 cursor-pointer outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20"
               >
                 <option value="">Select seniority</option>
                 {LEVELS.map((l) => (
@@ -487,8 +481,8 @@ export function AiMockSetupForm() {
           </div>
 
           <fieldset className="space-y-4">
-            <legend className="flex items-center gap-2 text-sm font-black text-secondary uppercase tracking-widest mb-1">
-              <Target className="w-4 h-4 text-primary" />
+            <legend className="flex items-center gap-2 text-sm font-black text-slate-800 uppercase tracking-widest mb-1">
+              <Target className="w-4 h-4 text-sky-500" />
               Interview focus
             </legend>
             <p className="text-xs text-slate-500 font-medium -mt-1 mb-3">
@@ -502,7 +496,7 @@ export function AiMockSetupForm() {
                     key={f}
                     className={`flex cursor-pointer items-center gap-3 rounded-2xl border px-4 py-3 transition-colors ${
                       on
-                        ? "border-primary/40 bg-primary/5"
+                        ? "border-sky-500/40 bg-sky-50"
                         : "border-slate-100 hover:border-slate-200"
                     }`}
                   >
@@ -510,9 +504,9 @@ export function AiMockSetupForm() {
                       type="checkbox"
                       checked={on}
                       onChange={() => toggleFocus(f)}
-                      className="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary"
+                      className="h-4 w-4 rounded border-slate-300 text-sky-500 focus:ring-sky-500"
                     />
-                    <span className="text-sm font-bold text-secondary">
+                    <span className="text-sm font-bold text-slate-800">
                       {f}
                     </span>
                   </label>
@@ -529,7 +523,7 @@ export function AiMockSetupForm() {
           <div className="space-y-2">
             <label
               htmlFor="notes"
-              className="text-sm font-black text-secondary uppercase tracking-widest"
+              className="text-sm font-black text-slate-800 uppercase tracking-widest"
             >
               Optional context
             </label>
@@ -542,7 +536,7 @@ export function AiMockSetupForm() {
               maxLength={NOTE_MAX_LENGTH}
               rows={3}
               placeholder="e.g. Targeting FAANG backend loop, weak on graphs, prefer async-style questions…"
-              className="w-full resize-y rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm font-medium text-secondary placeholder:text-slate-400 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="w-full resize-y rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm font-medium text-slate-800 placeholder:text-slate-400 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20"
             />
             <p className="text-[11px] text-slate-400 font-semibold text-right">
               {notes.length}/{NOTE_MAX_LENGTH}
@@ -563,7 +557,7 @@ export function AiMockSetupForm() {
               <button
                 type="submit"
                 disabled={!isFormValid || isSubmitting}
-                className="inline-flex items-center justify-center gap-2 shrink-0 px-8 py-4 bg-secondary text-white font-black text-xs uppercase tracking-[0.15em] rounded-2xl shadow-xl hover:-translate-y-0.5 transition-all active:scale-95 disabled:opacity-40 disabled:pointer-events-none"
+                className="inline-flex items-center justify-center gap-2 shrink-0 px-8 py-4 bg-sky-500 text-white font-black text-xs uppercase tracking-[0.15em] rounded-2xl shadow-xl hover:-translate-y-0.5 transition-all active:scale-95 disabled:opacity-40 disabled:pointer-events-none"
               >
                 {isSubmitting ? "Creating..." : "Save and continue"}
                 <ChevronRight className="w-4 h-4" />

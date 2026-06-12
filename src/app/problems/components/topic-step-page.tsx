@@ -84,7 +84,7 @@ export default function TopicStepPage({
         setShowFeedback(false);
         setSubmitError(
           payload.error ??
-            "Answer verification failed. Please sign in and ensure tracking DB is configured.",
+          "Answer verification failed. Please sign in and ensure tracking DB is configured.",
         );
         return;
       }
@@ -226,7 +226,7 @@ export default function TopicStepPage({
               <ChevronLeft className="w-4 h-4 mr-1 group-hover:-translate-x-1 transition-transform" />
               {topic.title}
             </Link>
-            <h1 className="text-3xl font-bold tracking-tight">{level.title}</h1>
+            <h1 className="text-xl md:text-2xl font-bold tracking-tight">{level.title}</h1>
           </div>
 
           <div className="flex gap-4">
@@ -243,7 +243,7 @@ export default function TopicStepPage({
           </div>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-12 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-22 items-start">
           {/* Main Question Area */}
           <main>
             <AnimatePresence mode="wait">
@@ -255,10 +255,10 @@ export default function TopicStepPage({
                 className="space-y-8"
               >
                 <div className="space-y-4">
-                  <span className="text-sm font-bold text-primary px-3 py-1 bg-indigo-50 rounded-lg">
+                  <span className="inline-block text-base font-bold text-primary px-4 py-2 bg-indigo-50 rounded-xl">
                     Question {currentIndex + 1}
                   </span>
-                  <h2 className="text-2xl md:text-4xl font-semibold text-slate-800 leading-tight">
+                  <h2 className="text-3xl md:text-5xl font-semibold text-slate-800 leading-tight">
                     {question.question}
                   </h2>
                 </div>
@@ -280,14 +280,13 @@ export default function TopicStepPage({
                         onClick={() => onSelectAnswer(index)}
                         className={`
                           group relative w-full text-left p-6 rounded-3xl border-2 transition-all duration-200
-                          ${
-                            isCorrect
-                              ? "border-emerald-500 bg-emerald-50/50"
-                              : isWrong
-                                ? "border-rose-500 bg-rose-50/50"
-                                : isSelected
-                                  ? "border-primary bg-white shadow-md"
-                                  : "border-slate-100 bg-white hover:border-slate-200 hover:shadow-sm"
+                          ${isCorrect
+                            ? "border-emerald-500 bg-emerald-50/50"
+                            : isWrong
+                              ? "border-rose-500 bg-rose-50/50"
+                              : isSelected
+                                ? "border-primary bg-white shadow-md"
+                                : "border-slate-100 bg-white hover:border-slate-200 hover:shadow-sm"
                           }
                         `}
                       >

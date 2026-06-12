@@ -102,14 +102,14 @@ export default function CompilerPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-80px)] bg-[#f8fafc] text-slate-800 p-4 md:p-6 font-sans flex flex-col">
+    <div className="min-h-[calc(100vh-80px)] bg-[#f8fafc] mt-5 text-slate-800 p-4 md:p-6 font-sans flex flex-col">
       <div className="max-w-[1600px] mx-auto w-full flex-1 flex flex-col gap-4">
         
         {/* Header Actions */}
         <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center border border-indigo-100">
-              <Code className="w-5 h-5 text-indigo-600" />
+            <div className="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center border border-sky-100">
+              <Code className="w-5 h-5 text-sky-600" />
             </div>
             <div>
               <h1 className="text-xl font-extrabold text-slate-800 tracking-tight">Code Playground</h1>
@@ -136,9 +136,9 @@ export default function CompilerPage() {
           {/* Editor Area */}
           <div className="flex flex-col gap-5 h-[60vh] lg:h-auto">
             {questionText && (
-              <div className="bg-indigo-50/50 p-5 rounded-2xl border border-indigo-100 shadow-sm text-slate-800 relative overflow-hidden">
-                <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500" />
-                <h2 className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest mb-2">Problem Statement</h2>
+              <div className="bg-sky-50/50 p-5 rounded-2xl border border-sky-100 shadow-sm text-slate-800 relative overflow-hidden">
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-sky-500" />
+                <h2 className="text-[10px] font-bold text-sky-500 uppercase tracking-widest mb-2">Problem Statement</h2>
                 <p className="text-sm leading-relaxed text-slate-700">{questionText}</p>
               </div>
             )}

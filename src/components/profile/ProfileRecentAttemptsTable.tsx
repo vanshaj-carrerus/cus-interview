@@ -111,7 +111,7 @@ export function ProfileRecentAttemptsTable() {
   return (
     <section>
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-4">
-        <h2 className="text-lg font-black text-secondary">Recent attempts</h2>
+        <h2 className="text-base  font-bold text-slate-800 mb-4">Recent attempts</h2>
         <label className="block w-full sm:max-w-xs">
           <span className="sr-only">Search attempts</span>
           <input
@@ -119,52 +119,52 @@ export function ProfileRecentAttemptsTable() {
             value={qInput}
             onChange={(e) => setQInput(e.target.value)}
             placeholder="Search type, outcome, level, date…"
-            className="w-full rounded-xl border border-secondary/15 bg-white px-3 py-2 text-sm text-secondary placeholder:text-secondary/40 focus:outline-none focus:ring-2 focus:ring-primary/40"
+            className="w-full rounded-xl border border-slate-800/15 bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-800/40 focus:outline-none focus:ring-2 focus:ring-sky-500/40"
             autoComplete="off"
           />
         </label>
       </div>
 
       {error ? (
-        <p className="text-sm text-secondary rounded-2xl border border-secondary/10 bg-white p-6">{error}</p>
+        <p className="text-sm text-slate-800 rounded-2xl border border-slate-800/10 bg-white p-6">{error}</p>
       ) : (
-        <div className="rounded-2xl border border-secondary/10 bg-white shadow-sm overflow-hidden">
+        <div className="rounded-2xl border border-slate-800/10 bg-white shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-xs min-w-[520px]">
               <thead>
-                <tr className="text-secondary/45 font-black uppercase tracking-widest bg-primary/5 border-b border-secondary/10">
+                <tr className="text-slate-800/45 font-black uppercase tracking-widest bg-sky-500/5 border-b border-slate-800/10">
                   {COLUMNS.map(({ field, label }) => (
                     <th key={field} className="text-left py-3 px-4">
                       <button
                         type="button"
                         onClick={() => onHeaderClick(field)}
-                        className="inline-flex items-center gap-1.5 text-left font-black uppercase tracking-widest text-secondary/55 hover:text-secondary transition-colors"
+                        className="inline-flex items-center gap-1.5 text-left font-black uppercase tracking-widest text-slate-800/55 hover:text-slate-800 transition-colors"
                       >
                         {label}
                         {sort === field ? (
-                          <span className="text-primary tabular-nums">{dir === "asc" ? "↑" : "↓"}</span>
+                          <span className="text-sky-500 tabular-nums">{dir === "asc" ? "↑" : "↓"}</span>
                         ) : null}
                       </button>
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody>
-                {loading ? (
+              <tbody className={`transition-opacity duration-300 ${loading ? "opacity-50 pointer-events-none" : "opacity-100"}`}>
+                {items.length === 0 && loading ? (
                   <tr>
-                    <td colSpan={5} className="py-10 px-4 text-center text-secondary/50">
+                    <td colSpan={5} className="py-10 px-4 text-center text-slate-800/50">
                       Loading…
                     </td>
                   </tr>
                 ) : items.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="py-10 px-4 text-center text-secondary/55">
+                    <td colSpan={5} className="py-10 px-4 text-center text-slate-800/55">
                       No attempts match your filters.
                     </td>
                   </tr>
                 ) : (
                   items.map((row, i) => (
-                    <tr key={`${page}-${i}-${row.attemptedAt}`} className="border-b border-secondary/5 text-secondary">
+                    <tr key={`${page}-${i}-${row.attemptedAt}`} className="border-b border-slate-800/5 text-slate-800 hover:bg-slate-50 transition-colors">
                       <td className="py-2.5 px-4 whitespace-nowrap">{formatAttemptUtcLabel(row.attemptedAt)}</td>
                       <td className="py-2.5 px-4">{row.entityType}</td>
                       <td className="py-2.5 px-4 tabular-nums">{row.levelNumber}</td>
@@ -176,27 +176,27 @@ export function ProfileRecentAttemptsTable() {
               </tbody>
             </table>
           </div>
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-secondary/10 bg-secondary/3 px-4 py-3 text-xs text-secondary">
-            <p className="text-secondary/55">
-              <span className="font-bold text-secondary tabular-nums">{total}</span> total
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-800/10 bg-slate-800/3 px-4 py-3 text-xs text-slate-800">
+            <p className="text-slate-800/55">
+              <span className="font-bold text-slate-800 tabular-nums">{total}</span> total
             </p>
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 disabled={page <= 1 || loading}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
-                className="rounded-lg border border-secondary/15 px-3 py-1.5 font-bold text-secondary hover:bg-primary/10 disabled:opacity-40 disabled:pointer-events-none transition-colors"
+                className="rounded-lg border border-slate-800/15 px-3 py-1.5 font-bold text-slate-800 hover:bg-sky-500/10 disabled:opacity-40 disabled:pointer-events-none transition-colors"
               >
                 Previous
               </button>
-              <span className="tabular-nums text-secondary/70 px-1">
-                Page <span className="font-black text-secondary">{page}</span> / {totalPages}
+              <span className="tabular-nums text-slate-800/70 px-1">
+                Page <span className="font-black text-slate-800">{page}</span> / {totalPages}
               </span>
               <button
                 type="button"
                 disabled={page >= totalPages || loading}
                 onClick={() => setPage((p) => p + 1)}
-                className="rounded-lg border border-secondary/15 px-3 py-1.5 font-bold text-secondary hover:bg-primary/10 disabled:opacity-40 disabled:pointer-events-none transition-colors"
+                className="rounded-lg border border-slate-800/15 px-3 py-1.5 font-bold text-slate-800 hover:bg-sky-500/10 disabled:opacity-40 disabled:pointer-events-none transition-colors"
               >
                 Next
               </button>

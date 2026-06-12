@@ -28,7 +28,7 @@ export default async function Footer() {
               alt="CareerUs"
               width={200}
               height={200}
-              className="rounded-xl shadow-sm group-hover:opacity-90 transition-opacity"
+              className="rounded-xl  group-hover:opacity-90 transition-opacity"
               loading="lazy"
             />
             {/* <div className="flex flex-col leading-none">
@@ -45,18 +45,18 @@ export default async function Footer() {
             Empowering the next generation of tech talent with interactive courses, a premium online compiler, and AI-driven mock interviews. Learn, Practice, and Excel with us.
           </p>
 
-          <div className="flex items-center gap-3 mt-2">
+          <div className="flex flex-wrap items-center gap-3 mt-2">
             <Link href="" className="w-10 h-10 rounded-xl bg-white border border-slate-200 hover:border-sky-300 hover:shadow-md hover:shadow-sky-100 text-slate-500 hover:text-sky-500 flex items-center justify-center transition-all group">
               <LinkedinIcon />
             </Link>
-            <Link href="https://www.instagram.com/cus.tech_/" className="w-10 h-10 rounded-xl bg-white border border-slate-200 hover:border-pink-300 hover:shadow-md hover:shadow-pink-100 text-slate-500 hover:text-pink-500 flex items-center justify-center transition-all group">
+            <Link href="https://www.instagram.com/cus.tech_/" className="w-10 h-10 rounded-xl bg-white border border-slate-200 hover:border-sky-300 hover:shadow-md hover:shadow-sky-100 text-slate-500 hover:text-sky-500 flex items-center justify-center transition-all group">
               <InstagramIcon />
             </Link>
 
-            <Link href="https://www.linkedin.com/company/cus-tech/posts/?feedView=all" className="w-10 h-10 rounded-xl bg-white border border-slate-200 hover:border-blue-400 hover:shadow-md hover:shadow-blue-100 text-slate-500 hover:text-blue-600 flex items-center justify-center transition-all group">
+            <Link href="https://www.linkedin.com/company/cus-tech/posts/?feedView=all" className="w-10 h-10 rounded-xl bg-white border border-slate-200 hover:border-sky-300 hover:shadow-md hover:shadow-sky-100 text-slate-500 hover:text-sky-500 flex items-center justify-center transition-all group">
               <FacebookIcon />
             </Link>
-            <Link href="https://www.youtube.com/@Cus_Tech" className="w-10 h-10 rounded-xl bg-white border border-slate-200 hover:border-red-300 hover:shadow-md hover:shadow-red-100 text-slate-500 hover:text-red-500 flex items-center justify-center transition-all group">
+            <Link href="https://www.youtube.com/@Cus_Tech" className="w-10 h-10 rounded-xl bg-white border border-slate-200 hover:border-sky-300 hover:shadow-md hover:shadow-sky-100 text-slate-500 hover:text-sky-500 flex items-center justify-center transition-all group">
               <YoutubeIcon />
             </Link>
           </div>
@@ -64,7 +64,7 @@ export default async function Footer() {
 
         {/* Company Column */}
         <div className="flex flex-col gap-3 lg:col-span-1">
-          <h3 className="font-bold bg-gradient-to-r from-sky-400 to-pink-400 bg-clip-text text-transparent text-[15px] mb-2 inline-block">Company</h3>
+          <h3 className="font-bold text-sky-500 text-[15px] mb-2 inline-block">Company</h3>
           <Link href="/about" className="text-[13px] text-slate-500 hover:text-slate-900 transition-colors">About Us</Link>
 
           <Link href="/privacy" className="text-[13px] text-slate-500 hover:text-slate-900 transition-colors">Privacy Policy</Link>
@@ -75,7 +75,7 @@ export default async function Footer() {
 
         {/* Explore Column */}
         <div className="flex flex-col gap-3 lg:col-span-1">
-          <h3 className="font-bold bg-gradient-to-r from-sky-400 to-pink-400 bg-clip-text text-transparent text-[15px] mb-2 inline-block">Explore</h3>
+          <h3 className="font-bold text-sky-500 text-[15px] mb-2 inline-block">Explore</h3>
           <Link href="/problems" className="text-[13px] text-slate-500 hover:text-slate-900 transition-colors">Practice Problems</Link>
           <Link href="/problems/courses" className="text-[13px] text-slate-500 hover:text-slate-900 transition-colors">Languages</Link>
 
@@ -85,7 +85,7 @@ export default async function Footer() {
 
         {/* Tutorials Column */}
         <div className="flex flex-col gap-3 lg:col-span-1">
-          <h3 className="font-bold bg-gradient-to-r from-sky-400 to-pink-400 bg-clip-text text-transparent text-[15px] mb-2 inline-block">Tutorials</h3>
+          <h3 className="font-bold text-sky-500 text-[15px] mb-2 inline-block">Tutorials</h3>
           {tracks.slice(0, 7).map((track) => (
             <Link
               key={track.id}
@@ -95,12 +95,12 @@ export default async function Footer() {
               {track.title}
             </Link>
           ))}
-          <Link href="/problems" className="text-[13px] bg-gradient-to-r from-sky-400 to-pink-400 bg-clip-text text-transparent font-semibold hover:opacity-80 transition-opacity mt-1 inline-flex items-center">View All <span className="ml-1 text-[11px] text-pink-400">&rarr;</span></Link>
+          <Link href="/problems" className="text-[13px] text-slate-500 font-semibold hover:opacity-80 transition-opacity mt-1 inline-flex items-center">View All </Link>
         </div>
 
         {/* Courses Column */}
         <div className="flex flex-col gap-3 lg:col-span-1">
-          <h3 className="font-bold bg-gradient-to-r from-sky-400 to-pink-400 bg-clip-text text-transparent text-[15px] mb-2 inline-block">Courses</h3>
+          <h3 className="font-bold text-sky-500 text-[15px] mb-2 inline-block">Courses</h3>
           {courses.slice(0, 7).map((course) => (
             <Link
               key={course.id}
@@ -110,12 +110,12 @@ export default async function Footer() {
               {course.title}
             </Link>
           ))}
-          <Link href="/problems/courses" className="text-[13px] bg-gradient-to-r from-sky-400 to-pink-400 bg-clip-text text-transparent font-semibold hover:opacity-80 transition-opacity mt-1 inline-flex items-center">View All <span className="ml-1 text-[11px] text-pink-400">&rarr;</span></Link>
+          <Link href="/problems/courses" className="text-[13px] text-slate-500 font-semibold hover:opacity-80 transition-opacity mt-1 inline-flex items-center">View All </Link>
         </div>
 
         {/* Preparation Corner Column */}
         <div className="flex flex-col gap-3 lg:col-span-1">
-          <h3 className="font-bold bg-gradient-to-r from-sky-400 to-pink-400 bg-clip-text text-transparent text-[15px] mb-2 inline-block">Preparation Corner</h3>
+          <h3 className="font-bold text-sky-500 text-[15px] mb-2 inline-block">Preparation Corner</h3>
           <Link href="/mock-interviews" className="text-[13px] text-slate-500 hover:text-slate-900 transition-colors">Interview Corner</Link>
           <Link href="/mock-interviews/ai-mock" className="text-[13px] text-slate-500 hover:text-slate-900 transition-colors">AI Mock Interviews</Link>
           <Link href="/problems" className="text-[13px] text-slate-500 hover:text-slate-900 transition-colors">Aptitude & Puzzles</Link>

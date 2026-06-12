@@ -3,34 +3,29 @@
 import Link from "next/link";
 import { Network, Zap, Brain, Trophy, CheckCircle2, Mic } from "lucide-react";
 
-const interviewStats = [
-  { label: "Questions Asked", value: "10,000+", icon: <Brain size={16} className="text-purple-500" /> },
-  { label: "Avg. Score Improvement", value: "38%", icon: <Trophy size={16} className="text-orange-500" /> },
-  { label: "Mock Sessions Done", value: "25K+", icon: <Mic size={16} className="text-teal-500" /> },
-];
 
 
 
 const features = [
   {
-    icon: <Brain size={18} className="text-purple-500" />,
+    icon: <Brain size={18} className="text-sky-400" />,
     label: "AI-Powered Questions",
-    bg: "bg-purple-50",
+    bg: "bg-sky-500/10",
   },
   {
-    icon: <Mic size={18} className="text-pink-500" />,
+    icon: <Mic size={18} className="text-sky-400" />,
     label: "Voice Interviews",
-    bg: "bg-pink-50",
+    bg: "bg-sky-500/10",
   },
   {
-    icon: <Zap size={18} className="text-teal-500" />,
+    icon: <Zap size={18} className="text-sky-400" />,
     label: "Instant Feedback",
-    bg: "bg-teal-50",
+    bg: "bg-sky-500/10",
   },
   {
-    icon: <Trophy size={18} className="text-orange-500" />,
+    icon: <Trophy size={18} className="text-sky-400" />,
     label: "Performance Tracking",
-    bg: "bg-orange-50",
+    bg: "bg-sky-500/10",
   },
 ];
 
@@ -45,7 +40,7 @@ export default function CareerGuidanceBanner() {
           {/* ── Left: Text ── */}
           <div className="flex flex-col justify-center px-10 py-14">
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 bg-purple-50 text-purple-600 text-xs font-semibold px-3 py-1.5 rounded-full w-fit mb-5">
+            <div className="inline-flex items-center gap-2 bg-sky-50 text-sky-600 text-xs font-semibold px-3 py-1.5 rounded-full w-fit mb-5">
               <Zap size={12} />
               AI-Powered Platform
             </div>
@@ -54,8 +49,7 @@ export default function CareerGuidanceBanner() {
               Ace your next
             </h2>
             <h2
-              className="text-4xl font-extrabold leading-tight mb-5"
-              style={{ color: "#6c5ce7" }}
+              className="text-4xl font-extrabold leading-tight mb-5 text-sky-500"
             >
               AI Mock Interview
             </h2>
@@ -68,7 +62,7 @@ export default function CareerGuidanceBanner() {
             <ul className="space-y-2 mb-8">
               {["Real company interview patterns", "Instant AI scoring & feedback", "Track progress over time"].map((pt, i) => (
                 <li key={i} className="flex items-center gap-2 text-sm text-slate-600">
-                  <CheckCircle2 size={15} className="text-purple-500 flex-shrink-0" />
+                  <CheckCircle2 size={15} className="text-sky-500 flex-shrink-0" />
                   {pt}
                 </li>
               ))}
@@ -77,64 +71,28 @@ export default function CareerGuidanceBanner() {
             <div className="flex items-center gap-4">
               <Link
                 href="/mock-interviews"
-                className="inline-block px-7 py-3 rounded-xl text-white font-semibold text-sm transition-all duration-300 hover:opacity-90 hover:shadow-lg hover:-translate-y-0.5"
-                style={{
-                  background: "#6c5ce7",
-                }}
+                className="inline-block px-7 py-3 rounded-xl text-white font-semibold text-sm transition-all duration-300  bg-sky-500"
               >
-                Start Interview →
+                Start Interview 
               </Link>
-              <Link
-                href="/mock-interviews"
-                className="text-sm font-medium text-slate-400 hover:text-slate-700 transition-colors"
-              >
-                View sample
-              </Link>
+
             </div>
           </div>
 
           {/* ── Right: Stats Panel ── */}
-          <div className="flex flex-col justify-center items-center gap-6 px-10 py-14 bg-gradient-to-br from-slate-50 to-purple-50/30">
+          <div className="flex flex-col justify-center items-center gap-6 px-10 py-14 bg-gradient-to-br from-slate-50 to-sky-50/50 border-l border-slate-100">
 
             <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
               Platform at a Glance
             </p>
 
-            {/* Stats cards — stacked vertically, large & prominent */}
-            <div className="flex flex-col gap-4 w-full max-w-xs">
-              {interviewStats.map((stat, i) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-5 bg-white rounded-2xl px-6 py-5 shadow-sm border border-slate-100 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
-                >
-                  <div className="p-3 rounded-xl bg-slate-50 flex-shrink-0">
-                    {stat.icon}
-                  </div>
-                  <div>
-                    <p className="text-2xl font-extrabold text-slate-800 leading-none mb-1">{stat.value}</p>
-                    <p className="text-xs text-slate-400">{stat.label}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+       
 
           </div>
         </div>
 
         {/* ── Bottom feature row ── */}
-        <div className="border-t border-slate-100 grid grid-cols-2 md:grid-cols-4 divide-x divide-slate-100">
-          {features.map((f, i) => (
-            <div
-              key={i}
-              className="flex items-center gap-3 px-6 py-4 hover:bg-slate-50 transition-colors duration-200 cursor-pointer group"
-            >
-              <div className={`p-2 rounded-xl ${f.bg} group-hover:scale-110 transition-transform duration-200`}>
-                {f.icon}
-              </div>
-              <span className="text-sm font-medium text-slate-700">{f.label}</span>
-            </div>
-          ))}
-        </div>
+
 
       </div>
     </section>

@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import {
   ArrowRight,
   Bot,
@@ -79,103 +82,73 @@ const aiHighlights = [
 
 export default function MockInterviewPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-pink-50 p-6 md:p-12 font-sans text-slate-900 overflow-hidden relative">
-      {/* Background Glowing Orbs */}
-      <div className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] bg-gradient-to-tr from-sky-300/30 to-pink-300/30 blur-[120px] rounded-full pointer-events-none" />
-      <div className="absolute top-[40%] left-[-10%] w-[500px] h-[500px] bg-gradient-to-tr from-pink-300/30 to-purple-300/30 blur-[120px] rounded-full pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[10%] w-[700px] h-[700px] bg-gradient-to-tr from-sky-300/30 to-emerald-300/20 blur-[120px] rounded-full pointer-events-none" />
-      
-      <div className="lg:container mx-auto relative z-10">
+    <div className="min-h-screen bg-white  p-6 md:p-12 font-sans text-slate-900 overflow-hidden relative">
+
+      <div className="lg:container mx-auto mt-10 relative z-10">
         <header className="relative mb-16 md:mb-20">
-          <div className="flex flex-col lg:flex-row lg:items-stretch justify-between gap-10">
-            <div className="space-y-6 max-w-3xl">
-              <div className="flex flex-wrap items-center gap-3">
-                <span className="text-xs font-semibold uppercase tracking-widest text-primary bg-indigo-50/80 border border-indigo-100 px-3 py-1.5 rounded-full inline-flex items-center gap-2">
-                  <span className="relative flex h-2 w-2">
+          <div className="flex flex-col items-center justify-center text-center gap-10">
+            <div className="space-y-6 max-w-3xl flex  flex-col items-center">
+              <div className="flex flex-wrap justify-center items-center gap-3">
+                <span className="text-sm font-semibold uppercase tracking-widest text-primary bg-indigo-50/80 border border-indigo-100 px-4 py-2 rounded-full inline-flex items-center gap-2">
+                  <span className="relative flex h-2.5 w-2.5">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-40" />
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary" />
                   </span>
                   AI interviewer online
                 </span>
                 <span className="hidden sm:inline w-12 h-px bg-slate-200" />
-                <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">
+                <span className="text-sm font-semibold uppercase tracking-widest text-slate-400">
                   24/7 · Private · Adaptive
                 </span>
               </div>
 
-              <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-slate-900 leading-[1.1]">
+              <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-slate-900 leading-[1.1]">
                 <span className="">AI Mock </span>
-                 
+
                 Interview
               </h1>
 
-              <p className="text-slate-400 text-lg md:text-md font-normal leading-relaxed max-w-2xl">
+              <p className="text-slate-400 text-xl md:text-2xl font-normal leading-relaxed max-w-3xl mx-auto">
                 Practice full technical loops with an AI that asks follow-ups,
                 enforces time boxes, and delivers a clear scorecard so you walk
                 into human panels prepared, not guessing.
               </p>
 
-              <div className="flex flex-col sm:flex-row flex-wrap gap-4 pt-4">
-                <Link
-                  href="/mock-interviews/ai-mock"
-                  className="inline-flex items-center justify-center gap-2 px-10 py-4 bg-white text-sky-500 border border-slate-100 font-bold text-sm rounded-full shadow-xl shadow-sky-200/40 hover:border-sky-300 hover:shadow-sky-300/50 transition-all hover:scale-[1.02] active:scale-95"
-                >
-                  Start AI session
-                  <ChevronRight className="w-4 h-4" />
+              <div className="flex flex-col sm:flex-row items-center gap-3 justify-center mb-5 w-full px-4">
+                <Link href="/mock-interviews/ai-mock" className="w-full sm:w-auto">
+                  <button className="flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-4 bg-[#18181b] hover:bg-black text-white text-lg font-semibold rounded-full cursor-pointer active:scale-95 transition-all">
+                    Get Started Free
+
+                  </button>
                 </Link>
-             
+
               </div>
             </div>
 
-            <aside className="w-full max-w-xl lg:self-stretch shrink-0">
-              <div className="h-full rounded-3xl border border-slate-200/60 bg-white p-6 md:p-8 shadow-xl shadow-slate-200/40 flex flex-col">
-                <Link
-                  href="/mock-interviews/ai-mock"
-                  className="group block rounded-2xl border border-slate-100 bg-slate-50 p-5 transition-all hover:border-primary/30 hover:bg-white hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-0.5"
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-indigo-50/80 text-primary">
-                      <ClipboardList className="h-6 w-6" aria-hidden />
-                    </div>
-                    <div className="min-w-0 flex-1 text-left">
-                      <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-1">
-                        Session setup
-                      </p>
-                      <p className="font-bold text-slate-900 text-base leading-snug">
-                        Languages, framework, role and focus
-                      </p>
-                      <p className="mt-1.5 text-sm text-slate-500 leading-relaxed font-normal">
-                        Takes about 2 minutes and personalizes the interview flow
-                        before the AI starts.
-                      </p>
-                      <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-primary group-hover:gap-2.5 transition-all">
-                        Configure now
-                        <ArrowRight className="h-4 w-4" aria-hidden />
-                      </span>
-                    </div>
-                  </div>
-                </Link>
+            <aside className="w-full max-w-4xl shrink-0 mt-12 mx-auto">
 
-                <div className="mt-6 border-t border-slate-100 pt-6 md:mt-8 md:pt-8">
-                  <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-5">
-                    Live AI performance
-                  </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    {stats.map((s) => (
-                      <div
-                        key={s.label}
-                        className="rounded-2xl border border-slate-100 bg-slate-50/50 px-4 py-3.5"
-                      >
-                        <HeaderStat
-                          label={s.label}
-                          value={s.value}
-                          icon={<s.icon className="w-4 h-4" />}
-                        />
-                      </div>
-                    ))}
-                  </div>
+
+
+              <div className="text-center">
+                <p className="text-lg md:text-xl font-bold uppercase tracking-widest text-slate-600 mb-8">
+                  Live AI performance
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                  {stats.map((s) => (
+                    <div
+                      key={s.label}
+                      className="rounded-2xl border border-slate-100 bg-slate-50/50 px-4 py-3.5"
+                    >
+                      <HeaderStat
+                        label={s.label}
+                        value={s.value}
+                        
+                      />
+                    </div>
+                  ))}
                 </div>
               </div>
+
             </aside>
           </div>
 
@@ -183,9 +156,8 @@ export default function MockInterviewPage() {
         </header>
 
         {/* AI session preview card */}
-        <section className="mb-20 md:mb-24">
+        <section className="mb-30 md:mb-34">
           <div className="relative overflow-hidden rounded-[2.5rem] md:rounded-[3rem] border border-slate-200/60 bg-white p-8 md:p-14 shadow-xl shadow-slate-200/40">
-            <div className="absolute top-0 right-0 w-1/2 h-full bg-primary/5 -skew-x-12 translate-x-16 md:translate-x-24 pointer-events-none" />
             <div className="grid lg:grid-cols-2 gap-10 lg:gap-14 items-center relative z-10">
               <div className="flex flex-col gap-5">
                 <div className="space-y-4">
@@ -195,9 +167,10 @@ export default function MockInterviewPage() {
                   <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight leading-[1.15]">
                     Feels like a{" "}
                     <span className="text-primary">live panel</span>
-                    —without the calendar Tetris.
+                    <br />
+                    without the calendar tetris.
                   </h2>
-                  <p className="text-slate-600 text-lg md:text-xl leading-relaxed max-w-2xl">
+                  <p className="text-[#4E6F80] text-sm md:text-md leading-relaxed max-w-2xl">
                     The model tracks your thread, probes weak spots, and
                     summarizes what to fix before your next attempt. Use it for
                     warm-ups before peer mocks or as your default nightly drill.
@@ -221,8 +194,8 @@ export default function MockInterviewPage() {
                 </ul>
               </div>
 
-              <div className="relative group">
-                <div className="relative bg-white rounded-3xl p-4 border border-slate-200 shadow-2xl  ">
+              <div className="relative group w-full max-w-md mx-auto lg:max-w-[550px] lg:ml-auto lg:mr-0">
+                <div className="relative bg-white rounded-[1.25rem] p-2 border border-slate-100 shadow-sm  ">
                   <div className="aspect-4/3 md:aspect-video bg-[#0A0A0B] rounded-2xl overflow-hidden border border-slate-800 shadow-inner flex flex-col">
                     <div className="h-10 shrink-0 bg-white/5 border-b border-white/10 flex items-center px-4 gap-2">
                       <span className="w-2.5 h-2.5 rounded-full bg-red-500/80" />
@@ -264,7 +237,7 @@ export default function MockInterviewPage() {
         </section>
 
         {/* HOW IT WORKS SECTION */}
-        <section className="mb-20 md:mb-28">
+        <section className="mb-10  md:mb-18">
           <div className="mb-14 space-y-4 flex flex-col items-center text-center">
             <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">
               How your AI session works
@@ -295,7 +268,7 @@ export default function MockInterviewPage() {
                     {step.title}
                   </h3>
                   <p className="text-slate-600 text-base leading-relaxed flex-1">
-                {step.description}
+                    {step.description}
                   </p>
                 </div>
               );
@@ -304,30 +277,26 @@ export default function MockInterviewPage() {
         </section>
 
         {/* CTA SECTION */}
-        <section className="pt-8 pb-4 max-w-5xl mx-auto mb-10">
-          <div className="relative overflow-hidden rounded-[3rem] bg-white border border-slate-100 px-8 py-16 md:px-20 md:py-24 flex flex-col items-center justify-center gap-10 text-center shadow-2xl shadow-sky-100/60">
-            <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
-              <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-sky-200/40 blur-[120px] rounded-full" />
-              <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-pink-200/40 blur-[120px] rounded-full" />
-            </div>
+        <section className="pt-8 pb-4 max-w-5xl mx-auto mb-10 px-4">
+          <div className="relative overflow-hidden rounded-[2.5rem] bg-[#0a0a0b] border border-white/10 px-8 py-12 md:p-14 flex flex-col md:flex-row items-center justify-between gap-10 shadow-2xl">
+            {/* Subtle glow effect */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-32 bg-sky-500/20 blur-[100px] pointer-events-none" />
 
-            <div className="relative z-10 max-w-2xl flex flex-col items-center">
-              <h3 className="text-3xl md:text-5xl font-black text-slate-800 tracking-tight leading-tight mb-6">
-                Ready for your next <br />
-                <span className="bg-gradient-to-r from-sky-400 to-pink-400 bg-clip-text text-transparent">AI mock loop?</span>
+            <div className="relative z-10 flex-1 text-center md:text-left">
+              <h3 className="text-3xl md:text-4xl font-bold text-white tracking-tight leading-tight mb-4">
+                Ready for your next AI mock loop?
               </h3>
-              <p className="text-slate-500 text-lg md:text-xl font-normal leading-relaxed max-w-xl">
-                Create a free account, pick a track, and debrief with a
-                scorecard in under an hour.
+              <p className="text-slate-400 text-base md:text-lg font-normal leading-relaxed max-w-lg mx-auto md:mx-0">
+                Create a free account, pick a track, and debrief with a scorecard in under an hour. No scheduling required.
               </p>
             </div>
-            <Link
-              href="/signup"
-              className="relative z-10 shrink-0 inline-flex items-center gap-3 bg-gradient-to-r from-sky-400 to-pink-400 hover:from-sky-500 hover:to-pink-500 text-white px-10 py-5 rounded-full font-bold text-sm shadow-xl shadow-pink-200/50 hover:scale-[1.02] transition-all"
-            >
-              Get started free
-              <ArrowRight className="w-5 h-5 text-white" />
-            </Link>
+            <div className="relative z-10 shrink-0 w-full sm:w-auto">
+              <Link href="/mock-interviews/ai-mock" className="block w-full">
+                <button className="flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-3.5 bg-white hover:bg-slate-100 text-black text-[15px] font-semibold rounded-full cursor-pointer active:scale-95 transition-all">
+                  Get Started
+                </button>
+              </Link>
+            </div>
           </div>
         </section>
       </div>
@@ -338,22 +307,55 @@ export default function MockInterviewPage() {
 function HeaderStat({
   label,
   value,
-  icon,
 }: {
   label: string;
   value: string;
-  icon: React.ReactNode;
 }) {
+  const [displayValue, setDisplayValue] = useState("0");
+
+  useEffect(() => {
+    const match = value.match(/([\d.]+)(.*)/);
+    if (!match) {
+      setDisplayValue(value);
+      return;
+    }
+    
+    const target = parseFloat(match[1]);
+    const suffix = match[2];
+    const isFloat = match[1].includes(".");
+    
+    let start = 0;
+    const duration = 1000;
+    const frameRate = 1000 / 60;
+    const totalFrames = Math.round(duration / frameRate);
+    let frame = 0;
+    
+    const timer = setInterval(() => {
+      frame++;
+      const progress = frame / totalFrames;
+      const easeProgress = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+      const current = start + (target - start) * easeProgress;
+      
+      if (frame >= totalFrames) {
+        clearInterval(timer);
+        setDisplayValue(value);
+      } else {
+        setDisplayValue((isFloat ? current.toFixed(1) : Math.floor(current)) + suffix);
+      }
+    }, frameRate);
+    
+    return () => clearInterval(timer);
+  }, [value]);
+
   return (
-    <div className="group flex flex-col gap-1.5">
-      <div className="flex items-center gap-2 text-slate-500 group-hover:text-primary transition-colors">
-        {icon}
+    <div className="group flex flex-col items-center justify-center gap-1.5 text-center">
+      <div className="flex items-center justify-center gap-2 text-slate-500 ">
         <span className="text-xs font-semibold uppercase tracking-widest">
           {label}
         </span>
       </div>
       <span className="text-2xl font-extrabold text-slate-900 tracking-tight">
-        {value}
+        {displayValue}
       </span>
     </div>
   );

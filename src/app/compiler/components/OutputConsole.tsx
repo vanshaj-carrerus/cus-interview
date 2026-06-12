@@ -69,7 +69,7 @@ export default function OutputConsole({ isError, outputDetails, isLoading }: Pro
       <div className="flex-1 w-full bg-slate-50/50 border border-slate-200 rounded-xl p-4 text-sm font-mono overflow-y-auto shadow-sm">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center h-full text-slate-400 gap-3">
-            <Loader2 className="w-6 h-6 animate-spin text-indigo-500" />
+            <Loader2 className="w-6 h-6 animate-spin text-sky-500" />
             <span className="text-[10px] uppercase tracking-widest font-bold">Executing Code...</span>
           </div>
         ) : outputDetails ? (

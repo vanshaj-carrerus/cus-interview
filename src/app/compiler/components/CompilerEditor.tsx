@@ -29,7 +29,7 @@ export default function CompilerEditor({ language, code, onChange }: Props) {
 
   return (
     <div className="w-full h-full rounded-xl overflow-hidden border border-slate-200 shadow-sm relative group">
-      <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/5 to-teal-500/5 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-tr from-sky-500/5 to-teal-500/5 pointer-events-none" />
       <Editor
         height="100%"
         language={language === "cpp" ? "cpp" : language}

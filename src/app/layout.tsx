@@ -5,6 +5,8 @@ import NextTopLoader from "nextjs-toploader";
 import Footer from "@/components/global/Footer";
 import Header from "@/components/global/Header";
 import { AppProviders } from "@/components/providers/app-providers";
+import ConditionalLayout from "@/components/global/ConditionalLayout";
+// Trigger hot reload
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -43,11 +45,9 @@ export default function RootLayout({
           speed={200}
         />
         <AppProviders>
-          <Header />
-          <div className="flex pt-20 min-h-screen flex-col">
-            <main className="flex-1">{children}</main>
-            <Footer />
-          </div>
+          <ConditionalLayout header={<Header />} footer={<Footer />}>
+            {children}
+          </ConditionalLayout>
         </AppProviders>
       </body>
     </html>

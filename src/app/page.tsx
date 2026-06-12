@@ -29,15 +29,9 @@ const Home = () => {
 
       <div className="section-soft">
         <LearningSection />
-        <CrackedInterviewsSection />
         <CareerGuidanceBanner />
         <MustExplore />
-        <ExploreTopics />
-   
-        {/* <WebinarsSection /> */}
-
-        {/* <MockInterviewBanner /> */}
-
+        <ExploreTopics /> 
       </div>
 
       {/* <div className="section-surface">
@@ -47,19 +41,6 @@ const Home = () => {
         <Suspense fallback={<FastTrackCoursesSkeleton />}>
           <FastTrackCoursesSection />
         </Suspense>
-      </div> */}
-
-      {/* <div className="section-soft">
-        <VideoExplanations />
-        <CodingEnvironment />
-      </div> */}
-{/* 
-      <div className="section-surface">
-        <CompaniesAndTestimonials />
-      </div>
-
-      <div className="section-surface">
-        <NewsLetter />
       </div> */}
     </>
   );

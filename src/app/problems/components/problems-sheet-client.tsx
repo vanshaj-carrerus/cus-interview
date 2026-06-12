@@ -69,6 +69,11 @@ export default function ProblemsSheetClient({ tracks, initialSolvedQuestionIds, 
   const [difficultyFilter, setDifficultyFilter] = useState<"all" | "easy" | "medium" | "hard">("all");
   const [topicFilter, setTopicFilter] = useState<string>("all");
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const [visibleCount, setVisibleCount] = useState(10);
+
+  useEffect(() => {
+    setVisibleCount(10);
+  }, [searchQuery, difficultyFilter, topicFilter, selectedCategoryId]);
 
   useEffect(() => {
     const localChecked = localStorage.getItem("cus_solved_questions");
@@ -149,7 +154,7 @@ export default function ProblemsSheetClient({ tracks, initialSolvedQuestionIds, 
   }, [allQuestions, searchQuery, difficultyFilter, topicFilter, selectedCategoryId]);
 
   return (
-    <div className="min-h-screen bg-slate-50/50 font-sans p-4 md:p-8 text-slate-900">
+    <div className="min-h-screen mt-5 bg-slate-50/50 font-sans p-4 md:p-8 text-slate-900">
       <div className="max-w-[1400px] mx-auto space-y-6">
 
         {/* Top Header Card */}
@@ -188,15 +193,15 @@ export default function ProblemsSheetClient({ tracks, initialSolvedQuestionIds, 
                   key={cat.id}
                   onClick={() => setSelectedCategoryId(isSelected ? null : cat.id)}
                   className={`flex items-center gap-2 whitespace-nowrap px-4 py-2 rounded-full border text-sm font-medium transition-all shrink-0 ${isSelected
-                      ? "border-indigo-500 bg-indigo-50 text-indigo-700 shadow-sm"
-                      : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
+                    ? "border-sky-500 bg-sky-50 text-sky-700 shadow-sm"
+                    : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
                     }`}
                 >
-                  <span className={`flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold ${isSelected ? "bg-indigo-100 text-indigo-700" : "bg-slate-100 text-slate-500"}`}>
+                  <span className={`flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold ${isSelected ? "bg-sky-100 text-sky-700" : "bg-slate-100 text-slate-500"}`}>
                     {cat.number}
                   </span>
                   <span>{cat.name}</span>
-                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${isSelected ? "bg-indigo-100/50" : "text-slate-400 bg-slate-50"}`}>
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${isSelected ? "bg-sky-100/50" : "text-slate-400 bg-slate-50"}`}>
                     {cat.solved}/{cat.total}
                   </span>
                 </button>
@@ -214,7 +219,7 @@ export default function ProblemsSheetClient({ tracks, initialSolvedQuestionIds, 
               placeholder="Search problems..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all placeholder:text-slate-400"
+              className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:border--500 focus:ring-1 focus:ring-sky-500 transition-all placeholder:text-slate-400"
             />
           </div>
 
@@ -223,7 +228,7 @@ export default function ProblemsSheetClient({ tracks, initialSolvedQuestionIds, 
               <select
                 value={difficultyFilter}
                 onChange={(e) => setDifficultyFilter(e.target.value as any)}
-                className="appearance-none bg-white border border-slate-200 rounded-lg pl-3 pr-8 py-2 text-sm text-slate-700 focus:outline-none focus:border-indigo-500 cursor-pointer"
+                className="appearance-none bg-white border border-slate-200 rounded-lg pl-3 pr-8 py-2 text-sm text-slate-700 focus:outline-none cursor-pointer"
               >
                 <option value="all">Difficulty</option>
                 <option value="easy">Easy</option>
@@ -237,7 +242,7 @@ export default function ProblemsSheetClient({ tracks, initialSolvedQuestionIds, 
               <select
                 value={topicFilter}
                 onChange={(e) => setTopicFilter(e.target.value)}
-                className="appearance-none bg-white border border-slate-200 rounded-lg pl-3 pr-8 py-2 text-sm text-slate-700 focus:outline-none focus:border-indigo-500 cursor-pointer max-w-[150px] truncate"
+                className="appearance-none bg-white border border-slate-200 rounded-lg pl-3 pr-8 py-2 text-sm text-slate-700  cursor-pointer max-w-[150px] truncate"
               >
                 <option value="all">Topics</option>
                 {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -257,7 +262,7 @@ export default function ProblemsSheetClient({ tracks, initialSolvedQuestionIds, 
                   <th className="py-3 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">Problem</th>
                   <th className="py-3 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider w-40">Category</th>
                   <th className="py-3 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider w-32">Difficulty</th>
-                  <th className="py-3 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider w-32">Asked In</th>
+             
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -268,7 +273,7 @@ export default function ProblemsSheetClient({ tracks, initialSolvedQuestionIds, 
                     </td>
                   </tr>
                 ) : (
-                  filteredQuestions.map((q) => {
+                  filteredQuestions.slice(0, visibleCount).map((q) => {
                     const isSolved = checkedQuestions.has(q.id);
                     return (
                       <tr key={q.id} className="hover:bg-slate-50/50 transition-colors group">
@@ -277,8 +282,8 @@ export default function ProblemsSheetClient({ tracks, initialSolvedQuestionIds, 
                           <button
                             onClick={() => toggleSolved(q.id)}
                             className={`mx-auto w-4 h-4 rounded-[4px] border flex items-center justify-center transition-all ${isSolved
-                                ? "bg-emerald-500 border-emerald-500 text-white"
-                                : "bg-white border-slate-300 text-transparent group-hover:border-slate-400"
+                              ? "bg-emerald-500 border-emerald-500 text-white"
+                              : "bg-white border-slate-300 text-transparent group-hover:border-slate-400"
                               }`}
                           >
                             <Check className="w-3 h-3 stroke-[3]" />
@@ -287,7 +292,7 @@ export default function ProblemsSheetClient({ tracks, initialSolvedQuestionIds, 
 
                         {/* Problem */}
                         <td className="py-4 px-6 text-slate-700 font-medium whitespace-normal min-w-[250px]">
-                          <Link href={`/compiler?question=${encodeURIComponent(q.prompt)}`} className="hover:text-indigo-600 transition-colors line-clamp-1">
+                          <Link href={`/compiler?question=${encodeURIComponent(q.prompt)}`} className="hover:text-sky-600 transition-colors line-clamp-1">
                             {q.prompt}
                           </Link>
                         </td>
@@ -307,13 +312,7 @@ export default function ProblemsSheetClient({ tracks, initialSolvedQuestionIds, 
                         </td>
 
                         {/* Asked In (Icons) */}
-                        <td className="py-4 px-6">
-                          <div className="flex items-center gap-1.5 opacity-80">
-                            {q.companies.map((icon, i) => (
-                              <img key={i} src={icon} alt="Company" className="w-3.5 h-3.5 object-contain grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all" />
-                            ))}
-                          </div>
-                        </td>
+                        
                       </tr>
                     );
                   })
@@ -321,6 +320,16 @@ export default function ProblemsSheetClient({ tracks, initialSolvedQuestionIds, 
               </tbody>
             </table>
           </div>
+          {visibleCount < filteredQuestions.length && (
+            <div className="p-4 border-t border-slate-100 flex justify-center bg-slate-50/30">
+              <button
+                onClick={() => setVisibleCount((prev) => prev + 10)}
+                className="px-6 py-2 text-sm font-semibold text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-colors shadow-sm"
+              >
+                Show More
+              </button>
+            </div>
+          )}
         </div>
 
       </div>
