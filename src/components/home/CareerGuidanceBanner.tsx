@@ -81,21 +81,16 @@ export default function CareerGuidanceBanner() {
           </div>
 
           {/* ── Right: Stats Panel ── */}
-          <div className="flex flex-col justify-center items-center gap-6 px-10 py-14 bg-gradient-to-br from-slate-50 to-sky-50/50 border-l border-slate-100">
-
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
-              Platform at a Glance
-            </p>
-            <div className="w-full relative mt-4">
+          <div className="flex flex-col justify-center items-center p-8 md:p-10 bg-gradient-to-br from-slate-50 to-sky-50/50 border-l border-slate-100">
+            <div className="w-full relative">
               <Image 
                 src="/img-inter.png" 
-                alt="Platform at a Glance" 
+                alt="AI Mock Interview Interface" 
                 width={800} 
                 height={600} 
                 className="w-full h-auto rounded-xl shadow-lg border border-slate-200"
               />
             </div>
-
           </div>
         </div>
 
