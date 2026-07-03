@@ -89,10 +89,10 @@ export default function MockInterviewPage() {
           <div className="flex flex-col items-center justify-center text-center gap-10">
             <div className="space-y-6 max-w-3xl flex  flex-col items-center">
               <div className="flex flex-wrap justify-center items-center gap-3">
-                <span className="text-sm font-semibold uppercase tracking-widest text-primary bg-indigo-50/80 border border-indigo-100 px-4 py-2 rounded-full inline-flex items-center gap-2">
+                <span className="text-sm font-semibold uppercase tracking-widest text-sky-500 bg-sky-50/80 border border-sky-100 px-4 py-2 rounded-full inline-flex items-center gap-2">
                   <span className="relative flex h-2.5 w-2.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-40" />
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary" />
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-40" />
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-sky-500" />
                   </span>
                   AI interviewer online
                 </span>
@@ -102,13 +102,11 @@ export default function MockInterviewPage() {
                 </span>
               </div>
 
-              <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-slate-900 leading-[1.1]">
-                <span className="">AI Mock </span>
-
-                Interview
+              <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-slate-900 leading-[1.1]">
+                AI Mock Interview
               </h1>
 
-              <p className="text-slate-400 text-xl md:text-2xl font-normal leading-relaxed max-w-3xl mx-auto">
+              <p className="text-[#4E6F80] text-sm sm:text-md font-medium leading-relaxed max-w-3xl mx-auto">
                 Practice full technical loops with an AI that asks follow-ups,
                 enforces time boxes, and delivers a clear scorecard so you walk
                 into human panels prepared, not guessing.
@@ -116,43 +114,13 @@ export default function MockInterviewPage() {
 
               <div className="flex flex-col sm:flex-row items-center gap-3 justify-center mb-5 w-full px-4">
                 <Link href="/mock-interviews/ai-mock" className="w-full sm:w-auto">
-                  <button className="flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-4 bg-[#18181b] hover:bg-black text-white text-lg font-semibold rounded-full cursor-pointer active:scale-95 transition-all">
+                  <button className="flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-3 bg-sky-500 hover:bg-sky-600 text-white text-md font-semibold rounded-full cursor-pointer active:scale-95 transition-all">
                     Get Started Free
-
                   </button>
                 </Link>
-
               </div>
             </div>
-
-            <aside className="w-full max-w-4xl shrink-0 mt-12 mx-auto">
-
-
-
-              <div className="text-center">
-                <p className="text-lg md:text-xl font-bold uppercase tracking-widest text-slate-600 mb-8">
-                  Live AI performance
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                  {stats.map((s) => (
-                    <div
-                      key={s.label}
-                      className="rounded-2xl border border-slate-100 bg-slate-50/50 px-4 py-3.5"
-                    >
-                      <HeaderStat
-                        label={s.label}
-                        value={s.value}
-                        
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-            </aside>
           </div>
-
-          <div className="mt-16 md:mt-20 h-px w-full bg-linear-to-r from-transparent via-slate-200 to-transparent" />
         </header>
 
         {/* AI session preview card */}
@@ -161,12 +129,12 @@ export default function MockInterviewPage() {
             <div className="grid lg:grid-cols-2 gap-10 lg:gap-14 items-center relative z-10">
               <div className="flex flex-col gap-5">
                 <div className="space-y-4">
-                  <p className="text-primary font-semibold text-sm tracking-widest uppercase">
+                  <p className="text-sky-500 font-semibold text-sm tracking-widest uppercase">
                     Inside the session
                   </p>
                   <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight leading-[1.15]">
                     Feels like a{" "}
-                    <span className="text-primary">live panel</span>
+                    <span className="text-sky-500">live panel</span>
                     <br />
                     without the calendar tetris.
                   </h2>
@@ -319,23 +287,23 @@ function HeaderStat({
       setDisplayValue(value);
       return;
     }
-    
+
     const target = parseFloat(match[1]);
     const suffix = match[2];
     const isFloat = match[1].includes(".");
-    
+
     let start = 0;
     const duration = 1000;
     const frameRate = 1000 / 60;
     const totalFrames = Math.round(duration / frameRate);
     let frame = 0;
-    
+
     const timer = setInterval(() => {
       frame++;
       const progress = frame / totalFrames;
       const easeProgress = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
       const current = start + (target - start) * easeProgress;
-      
+
       if (frame >= totalFrames) {
         clearInterval(timer);
         setDisplayValue(value);
@@ -343,7 +311,7 @@ function HeaderStat({
         setDisplayValue((isFloat ? current.toFixed(1) : Math.floor(current)) + suffix);
       }
     }, frameRate);
-    
+
     return () => clearInterval(timer);
   }, [value]);
 

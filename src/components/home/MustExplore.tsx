@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 
 const exploreItems = [
@@ -10,6 +11,7 @@ const exploreItems = [
     bg: "#FFFFFF",
     arrowBg: "#0EA5E9",
     border: "#E5E7EB",
+    image: "/Practice Problems.png"
   },
   {
     title: "Programming Languages",
@@ -17,6 +19,7 @@ const exploreItems = [
     bg: "#FFFFFF",
     arrowBg: "#0EA5E9",
     border: "#E5E7EB",
+    image: "/Programming Languages.png"
   },
   {
     title: "Compiler",
@@ -24,6 +27,7 @@ const exploreItems = [
     bg: "#FFFFFF",
     arrowBg: "#0EA5E9",
     border: "#E5E7EB",
+    image: "/Compiler.png"
   },
   {
     title: " Interviews",
@@ -31,6 +35,7 @@ const exploreItems = [
     bg: "#FFFFFF",
     arrowBg: "#0EA5E9",
     border: "#E5E7EB",
+    image: "/Interviews.png"
   },
 ];
 
@@ -46,16 +51,27 @@ export default function MustExplore() {
           <Link
             key={i}
             href={item.href}
-            className="group relative flex flex-col justify-between rounded-2xl p-6 min-h-[130px]"
+            className="group relative flex flex-col justify-between rounded-2xl p-3  min-h-[130px]"
             style={{
               background: item.bg,
               border: `1px solid ${item.border}`,
             }}
           >
-            {/* Title */}
-            <span className="text-slate-800 font-semibold text-[15px] leading-snug pr-4">
-              {item.title}
-            </span>
+            {/* Icon and Title */}
+            <div>
+              <div className="mb-2">
+                <Image 
+                  src={item.image} 
+                  alt={item.title.trim()} 
+                  width={36} 
+                  height={36} 
+                  className="object-contain"
+                />
+              </div>
+              <span className="text-slate-800 ms-2 font-semibold text-[15px] leading-snug pr-4 block">
+                {item.title}
+              </span>
+            </div>
 
             {/* Arrow bottom-right */}
             <div className="flex justify-end mt-4">

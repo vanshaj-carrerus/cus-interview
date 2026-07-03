@@ -49,7 +49,7 @@ export default function CusInterviewHero() {
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row items-center gap-3 justify-center mb-16 w-full px-4">
             <Link href="https://www.custech.co/" target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
-              <button className="flex items-center justify-center gap-1.5 w-full sm:w-auto px-5 py-2.5 bg-[#18181b] hover:bg-black text-white text-[15px] font-semibold rounded-full cursor-pointer active:scale-95 transition-all">
+              <button className="flex items-center justify-center gap-1.5 w-full sm:w-auto px-5 py-2.5 bg-sky-500 hover:bg-sky-600 text-white text-[15px] font-semibold rounded-full cursor-pointer active:scale-95 transition-all">
                 Get Started Free
 
               </button>
@@ -57,8 +57,11 @@ export default function CusInterviewHero() {
 
           </div>
 
+          {/* Company Slider Title */}
+          <p className="text-center text-sm font-semibold text-slate-500 uppercase tracking-widest mb-6">Our candidates work at</p>
+
           {/* Company Slider */}
-          <div className="w-full max-w-5xl mx-auto mt- overflow-hidden relative pb-10">
+          <div className="w-full max-w-5xl mx-auto overflow-hidden relative pb-10">
             {/* Gradient Masks */}
             <div className="absolute top-0 bottom-0 left-0 w-24 bg-gradient-to-r from-white to-transparent z-10" />
             <div className="absolute top-0 bottom-0 right-0 w-24 bg-gradient-to-l from-white to-transparent z-10" />
@@ -97,7 +100,7 @@ export default function CusInterviewHero() {
           {/* Dashboard Preview Image */}
           <div className="w-full max-w-6xl mx-auto mt-2 px-4 relative z-10 pb-16">
             <Image
-              src="/dashboard-preview.png"
+              src="/home-hero.png"
               alt="Dashboard Preview"
               width={1600}
               height={1100}

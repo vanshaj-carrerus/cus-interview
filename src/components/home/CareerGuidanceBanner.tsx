@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Network, Zap, Brain, Trophy, CheckCircle2, Mic } from "lucide-react";
 
 
@@ -85,8 +86,15 @@ export default function CareerGuidanceBanner() {
             <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
               Platform at a Glance
             </p>
-
-       
+            <div className="w-full relative mt-4">
+              <Image 
+                src="/img-inter.png" 
+                alt="Platform at a Glance" 
+                width={800} 
+                height={600} 
+                className="w-full h-auto rounded-xl shadow-lg border border-slate-200"
+              />
+            </div>
 
           </div>
         </div>

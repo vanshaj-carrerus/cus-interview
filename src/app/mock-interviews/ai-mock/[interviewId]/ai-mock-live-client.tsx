@@ -1,7 +1,7 @@
 "use client";
 
 
-
+import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 type Question = {
@@ -570,15 +570,13 @@ export function AiMockLiveClient({ interview }: Props) {
             <div className="grid gap-4 lg:grid-cols-2">
               {/* AI Interviewer */}
               <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-black">
-                <video
-                  ref={interviewerVideoRef}
-                  muted
-                  playsInline
-                  preload="auto"
-                  className="h-[260px] w-full object-cover"
-                >
-                  <source src="/videos/interviewer.mp4" type="video/mp4" />
-                </video>
+                <Image
+                  src="/Ai-interview.png"
+                  alt="AI Interviewer"
+                  width={800}
+                  height={600}
+                  className="h-[310px] w-full object-cover"
+                />
 
                 <div className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-xs font-bold">
                   👩 AI Interviewer
@@ -598,7 +596,7 @@ export function AiMockLiveClient({ interview }: Props) {
                   autoPlay
                   muted
                   playsInline
-                  className="h-[260px] w-full object-cover"
+                  className="h-[310px] w-full object-cover"
                 />
 
                 <div className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-xs font-bold">

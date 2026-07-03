@@ -323,7 +323,6 @@ export default function TopicRoadmapPage({
           </div>
         </div>
 
-        {/* Footer CTA */}
         
       </div>
     </div>
