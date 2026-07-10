@@ -120,12 +120,20 @@ function LoginPageContent() {
               </div>
 
               <div>
-                <label
-                  htmlFor="login-password"
-                  className="block text-xs font-black uppercase tracking-widest text-secondary/80 mb-2"
-                >
-                  Password
-                </label>
+                <div className="flex items-center justify-between mb-2">
+                  <label
+                    htmlFor="login-password"
+                    className="block text-xs font-black uppercase tracking-widest text-secondary/80"
+                  >
+                    Password
+                  </label>
+                  <Link
+                    href="/forgot-password"
+                    className="text-xs font-bold text-primary hover:underline"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
                 <input
                   id="login-password"
                   name="password"

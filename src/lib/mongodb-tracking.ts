@@ -1,6 +1,7 @@
 import mongoose, { Connection } from "mongoose";
 
 import { connectDB } from "@/lib/mongodb";
+import { resolveMongoUri } from "@/lib/mongo-uri";
 import { learningProgressDebugEnabled, logLearningProgress } from "@/lib/learning-progress-debug";
 
 /**
@@ -70,9 +71,22 @@ export async function connectTrackingDB(): Promise<Connection> {
         },
       );
     }
-    cached.promise = mongoose.createConnection(trackingUri).asPromise();
+    cached.promise = (async () => {
+      const uri = await resolveMongoUri(trackingUri);
+      return mongoose
+        .createConnection(uri, { serverSelectionTimeoutMS: 10_000 })
+        .asPromise();
+    })();
   }
-  cached.conn = await cached.promise;
-  globalForTracking.trackingMongoose = cached;
-  return cached.conn;
+
+  try {
+    cached.conn = await cached.promise;
+    globalForTracking.trackingMongoose = cached;
+    return cached.conn;
+  } catch (err) {
+    cached.conn = null;
+    cached.promise = null;
+    globalForTracking.trackingMongoose = cached;
+    throw err;
+  }
 }

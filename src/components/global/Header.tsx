@@ -42,6 +42,10 @@ export default function Header() {
       label: "Compiler",
       href: "/compiler",
     },
+    {
+      label: "Pricing",
+      href: "/pricing",
+    },
   ];
 
   useEffect(() => {

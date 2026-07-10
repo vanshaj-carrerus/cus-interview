@@ -9,7 +9,7 @@ function matchesPrefix(pathname: string, prefixes: readonly string[]): boolean {
   return prefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
 }
 
-const GUEST_ONLY_PATHS = ["/login", "/signup"] as const;
+const GUEST_ONLY_PATHS = ["/login", "/signup", "/forgot-password"] as const;
 
 function isGuestOnlyPath(pathname: string): boolean {
   return (GUEST_ONLY_PATHS as readonly string[]).includes(pathname);
@@ -86,6 +86,7 @@ export const config = {
   matcher: [
     "/login",
     "/signup",
+    "/forgot-password",
     "/practice/:path*",
     "/problems/:path*",
     "/mock-interviews/:path*",

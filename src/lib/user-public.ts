@@ -1,4 +1,5 @@
-import type { PublicUser } from "@/types/auth";
+import { hasSubscriptionAccess } from "@/lib/billing/access";
+import type { PublicSubscription, PublicUser, SubscriptionStatus } from "@/types/auth";
 
 type UserLike = {
   _id: { toString(): string };
@@ -6,7 +7,31 @@ type UserLike = {
   name?: string;
   role?: "User" | "SuperAdmin";
   createdAt?: Date | string;
+  subscriptionStatus?: SubscriptionStatus;
+  trialEndsAt?: Date | string | null;
+  currentPeriodEnd?: Date | string | null;
+  cancelAtPeriodEnd?: boolean;
 };
+
+function toIsoDate(value?: Date | string | null): string | null {
+  if (!value) return null;
+  if (value instanceof Date) return value.toISOString();
+  return value;
+}
+
+function toPublicSubscription(user: UserLike): PublicSubscription {
+  const status = user.subscriptionStatus ?? "none";
+  const trialEndsAt = toIsoDate(user.trialEndsAt);
+  const currentPeriodEnd = toIsoDate(user.currentPeriodEnd);
+
+  return {
+    status,
+    trialEndsAt,
+    currentPeriodEnd,
+    cancelAtPeriodEnd: user.cancelAtPeriodEnd ?? false,
+    hasAccess: hasSubscriptionAccess(status, trialEndsAt, currentPeriodEnd),
+  };
+}
 
 export function toPublicUser(user: UserLike): PublicUser {
   const createdAt =
@@ -22,5 +47,6 @@ export function toPublicUser(user: UserLike): PublicUser {
     name: user.name ?? "",
     role: user.role === "SuperAdmin" ? "SuperAdmin" : "User",
     createdAt,
+    subscription: toPublicSubscription(user),
   };
 }

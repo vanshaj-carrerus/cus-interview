@@ -5,6 +5,8 @@ export type SendSignupVerificationOutcome =
   | { channel: "remote"; provider: "gmail" | "smtp" }
   | { channel: "dev_console" };
 
+export type SendPasswordResetOutcome = SendSignupVerificationOutcome;
+
 function getTransporter(): {
   transporter: nodemailer.Transporter | null;
   provider: "gmail" | "smtp" | null;
@@ -57,25 +59,32 @@ function getTransporter(): {
   return { transporter: null, provider: null };
 }
 
-function createVerificationEmailHtml(code: string): string {
+function createVerificationEmailHtml(code: string, purpose: "signup" | "reset"): string {
+  const title =
+    purpose === "signup" ? "Verification Code" : "Password Reset Code";
+  const intro =
+    purpose === "signup"
+      ? "Your unique verification code is:"
+      : "Use this code to reset your password:";
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Verification Email</title>
+  <title>${title}</title>
 </head>
 <body style="margin:0;padding:20px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;background-color:#f4f4f4;color:#333333;">
   <table role="presentation" style="border-collapse:collapse;width:100%;max-width:600px;margin:20px auto;background-color:#ffffff;border-radius:8px;">
     <tr>
       <td style="background-color:#007bff;color:#ffffff;padding:20px;text-align:center;border-top-left-radius:8px;border-top-right-radius:8px;">
-        <h1 style="margin:0;">Verification Code</h1>
+        <h1 style="margin:0;">${title}</h1>
       </td>
     </tr>
     <tr>
       <td style="padding:30px;text-align:center;">
         <p>Hello User,</p>
-        <p>Your unique verification code is:</p>
+        <p>${intro}</p>
         <div style="font-size:24px;font-weight:bold;color:#007bff;margin:20px 0;padding:10px;background-color:#f0f6ff;border-radius:4px;display:inline-block;letter-spacing:0.18em;">${code}</div>
         <p>It expires in 15 minutes.</p>
       </td>
@@ -90,15 +99,17 @@ function createVerificationEmailHtml(code: string): string {
 </html>`;
 }
 
-export async function sendSignupVerificationEmail(
+async function sendCodeEmail(
   to: string,
-  code: string
+  code: string,
+  purpose: "signup" | "reset"
 ): Promise<SendSignupVerificationOutcome> {
   const { transporter, provider } = getTransporter();
 
   if (!transporter || !provider) {
     if (process.env.NODE_ENV === "development") {
-      console.info(`[email] Signup verification for ${to}: ${code}`);
+      const label = purpose === "signup" ? "Signup verification" : "Password reset";
+      console.info(`[email] ${label} for ${to}: ${code}`);
       return { channel: "dev_console" };
     }
     throw new Error(
@@ -112,13 +123,36 @@ export async function sendSignupVerificationEmail(
       ? `"CareerUs Interview" <${process.env.EMAIL_USER}>`
       : '"CareerUs Interview" <noreply@localhost>');
 
+  const subject =
+    purpose === "signup"
+      ? "Signup Verification Code"
+      : "Password Reset Code";
+  const text =
+    purpose === "signup"
+      ? `Your verification code is ${code}. It expires in 15 minutes.`
+      : `Your password reset code is ${code}. It expires in 15 minutes.`;
+
   await transporter.sendMail({
     from,
     to,
-    subject: "Signup Verification Code",
-    text: `Your verification code is ${code}. It expires in 15 minutes.`,
-    html: createVerificationEmailHtml(code),
+    subject,
+    text,
+    html: createVerificationEmailHtml(code, purpose),
   });
 
   return { channel: "remote", provider };
+}
+
+export async function sendSignupVerificationEmail(
+  to: string,
+  code: string
+): Promise<SendSignupVerificationOutcome> {
+  return sendCodeEmail(to, code, "signup");
+}
+
+export async function sendPasswordResetEmail(
+  to: string,
+  code: string
+): Promise<SendPasswordResetOutcome> {
+  return sendCodeEmail(to, code, "reset");
 }
