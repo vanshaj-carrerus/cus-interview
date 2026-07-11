@@ -1,4 +1,6 @@
-import { hasSubscriptionAccess } from "@/lib/billing/access";
+import { hasPlatformPlanAccess, hasSubscriptionAccess } from "@/lib/billing/access";
+import { getMockInterviewDailyLimit, isTrialingSubscription } from "@/lib/billing/trial-limits";
+import { isBillingPlanId } from "@/lib/billing/plan";
 import type { PublicSubscription, PublicUser, SubscriptionStatus } from "@/types/auth";
 
 type UserLike = {
@@ -7,6 +9,7 @@ type UserLike = {
   name?: string;
   role?: "User" | "SuperAdmin";
   createdAt?: Date | string;
+  billingPlanId?: string | null;
   subscriptionStatus?: SubscriptionStatus;
   trialEndsAt?: Date | string | null;
   currentPeriodEnd?: Date | string | null;
@@ -23,13 +26,26 @@ function toPublicSubscription(user: UserLike): PublicSubscription {
   const status = user.subscriptionStatus ?? "none";
   const trialEndsAt = toIsoDate(user.trialEndsAt);
   const currentPeriodEnd = toIsoDate(user.currentPeriodEnd);
+  const planId = isBillingPlanId(user.billingPlanId) ? user.billingPlanId : null;
+  const hasAccess = hasSubscriptionAccess(status, trialEndsAt, currentPeriodEnd);
+  const hasPlatformAccess = hasPlatformPlanAccess({
+    status,
+    billingPlanId: planId,
+    trialEndsAt,
+    currentPeriodEnd,
+  });
+  const limitInput = { status, hasPlatformAccess };
 
   return {
     status,
     trialEndsAt,
     currentPeriodEnd,
     cancelAtPeriodEnd: user.cancelAtPeriodEnd ?? false,
-    hasAccess: hasSubscriptionAccess(status, trialEndsAt, currentPeriodEnd),
+    hasAccess,
+    hasPlatformAccess,
+    planId,
+    isTrialing: isTrialingSubscription(limitInput),
+    mockInterviewsDailyLimit: getMockInterviewDailyLimit(limitInput),
   };
 }
 

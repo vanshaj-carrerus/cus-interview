@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import SubscriptionPaywallModal from "@/components/billing/SubscriptionPaywallModal";
+import { useSubscriptionGate } from "@/hooks/use-subscription-gate";
 import {
   ArrowRight,
   Bot,
@@ -81,6 +83,8 @@ const aiHighlights = [
 ];
 
 export default function MockInterviewPage() {
+  const { gatedNavigate, paywallOpen, closePaywall } = useSubscriptionGate();
+
   return (
     <div className="min-h-screen bg-white  p-6 md:p-12 font-sans text-slate-900 overflow-hidden relative">
 
@@ -113,11 +117,13 @@ export default function MockInterviewPage() {
               </p>
 
               <div className="flex flex-col sm:flex-row items-center gap-3 justify-center mb-5 w-full px-4">
-                <Link href="/mock-interviews/ai-mock" className="w-full sm:w-auto">
-                  <button className="flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-3 bg-sky-500 hover:bg-sky-600 text-white text-md font-semibold rounded-full cursor-pointer active:scale-95 transition-all">
-                    Get Started Free
-                  </button>
-                </Link>
+                <button
+                  type="button"
+                  onClick={() => gatedNavigate("/mock-interviews/ai-mock")}
+                  className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-sky-500 px-6 py-3 text-md font-semibold text-white transition-all hover:bg-sky-600 active:scale-95 sm:w-auto"
+                >
+                  Get Started Free
+                </button>
               </div>
             </div>
           </div>
@@ -259,15 +265,19 @@ export default function MockInterviewPage() {
               </p>
             </div>
             <div className="relative z-10 shrink-0 w-full sm:w-auto">
-              <Link href="/mock-interviews/ai-mock" className="block w-full">
-                <button className="flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-3.5 bg-white hover:bg-slate-100 text-black text-[15px] font-semibold rounded-full cursor-pointer active:scale-95 transition-all">
-                  Get Started
-                </button>
-              </Link>
+              <button
+                type="button"
+                onClick={() => gatedNavigate("/mock-interviews/ai-mock")}
+                className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-white px-8 py-3.5 text-[15px] font-semibold text-black transition-all hover:bg-slate-100 active:scale-95 sm:w-auto"
+              >
+                Get Started
+              </button>
             </div>
           </div>
         </section>
       </div>
+
+      <SubscriptionPaywallModal open={paywallOpen} onClose={closePaywall} />
     </div>
   );
 }

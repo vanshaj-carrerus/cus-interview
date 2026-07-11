@@ -10,7 +10,8 @@ type Props = {
 
 export default function SidebarLink({ href, label }: Props) {
   const pathname = usePathname();
-  const active = pathname === href;
+  const active =
+    pathname === href || (href !== "/admin-panel" && pathname.startsWith(`${href}/`));
 
   return (
     <Link

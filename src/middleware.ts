@@ -2,7 +2,12 @@ import { NextResponse, type NextRequest } from "next/server";
 import { AUTH_COOKIE_NAME } from "@/lib/auth-cookie";
 import { verifySessionToken } from "@/lib/auth-token";
 
-const AUTH_REQUIRED_PREFIXES = ["/practice", "/problems", "/mock-interviews"];
+const AUTH_REQUIRED_PREFIXES = [
+  "/practice",
+  "/problems",
+  "/mock-interviews",
+  "/compiler",
+];
 const ADMIN_REQUIRED_PREFIXES = ["/admin-panel", "/api/admin-panel", "/api/learning/admin"];
 
 function matchesPrefix(pathname: string, prefixes: readonly string[]): boolean {
@@ -90,6 +95,7 @@ export const config = {
     "/practice/:path*",
     "/problems/:path*",
     "/mock-interviews/:path*",
+    "/compiler/:path*",
     "/admin-panel/:path*",
     "/api/admin-panel/:path*",
     "/api/learning/admin/:path*",

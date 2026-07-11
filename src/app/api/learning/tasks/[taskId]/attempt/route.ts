@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { attemptTask } from "@/lib/learning/service";
-import { getSessionPublicUser } from "@/lib/get-session-user";
+import { getPlatformAccessSession } from "@/lib/billing/require-platform-access";
 
 type Props = {
   params: Promise<{ taskId: string }>;
@@ -8,10 +8,11 @@ type Props = {
 
 export async function POST(request: Request, { params }: Props) {
   try {
-    const sessionUser = await getSessionPublicUser();
-    if (!sessionUser) {
-      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+    const access = await getPlatformAccessSession();
+    if ("error" in access) {
+      return access.error;
     }
+    const sessionUser = access.user;
 
     const { taskId } = await params;
     const body = (await request.json()) as Record<string, unknown>;

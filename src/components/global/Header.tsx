@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { UserRound, Search, ChevronDown } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
-import Image from "next/image";
+import Logo from "@/components/global/Logo";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -26,7 +26,7 @@ export default function Header() {
       href: "/problems/courses",
       accent: "#22c55e",
       items: [
-        { label: "Python Mastery", href: "problems/courses/python-mastery" },
+        { label: "Python Mastery", href: "/problems/courses/python-mastery" },
         { label: "HTML Mastery", href: "/problems/courses/html-mastery" },
         { label: "CSS Mastery", href: "/problems/courses/css-mastery" },
         { label: "Java Mastery", href: "/problems/courses/java-mastery" },
@@ -41,6 +41,10 @@ export default function Header() {
     {
       label: "Compiler",
       href: "/compiler",
+    },
+    {
+      label: "Resume Analyzer",
+      href: "/resume-analyzer",
     },
     {
       label: "Pricing",
@@ -89,22 +93,10 @@ export default function Header() {
         className={`fixed top-4 left-0 right-0 z-50 px-4 sm:px-8 lg:px-12 flex justify-center pointer-events-none transition-all duration-300 ${scrolled ? "top-2" : "top-4"}`}
       >
         <div
-          className={`pointer-events-auto w-full flex items-center justify-between px-6 py-5 rounded-full border border-slate-100 bg-white transition-all duration-300 ${scrolled ? "shadow-md bg-white/95 backdrop-blur-xl" : "shadow-sm"}`}
+          className={`pointer-events-auto w-full flex items-center justify-between gap-4 px-6 py-3 sm:py-4 rounded-full border border-slate-100 bg-white transition-all duration-300 ${scrolled ? "shadow-md bg-white/95 backdrop-blur-xl" : "shadow-sm"}`}
         >
-          <div className="flex items-center">
-            {/* LOGO */}
-            <Link href={"/"}>
-              <div className="flex items-center gap-2 group cursor-pointer shrink-0">
-                <Image
-                  src="/cus-logo-1.png"
-                  alt="CUS"
-                  width={180}
-                  height={50}
-                  className="h-12 w-auto object-contain"
-                  loading="lazy"
-                />
-              </div>
-            </Link>
+          <div className="flex shrink-0 items-center">
+            <Logo priority />
           </div>
 
           {/* NAVIGATION */}

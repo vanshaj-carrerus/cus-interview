@@ -6,6 +6,7 @@ import { SignupVerification } from "@/models/SignupVerification";
 import { setAuthCookieFromUser } from "@/lib/auth-cookie";
 import { toPublicUser } from "@/lib/user-public";
 import { EMAIL_RE, normalizeEmail } from "@/lib/email-validation";
+import { splitFullName } from "@/lib/billing/checkout-details";
 import { normalizeVerificationCode } from "@/lib/signup-code";
 
 export async function POST(request: Request) {
@@ -90,9 +91,16 @@ export async function POST(request: Request) {
     await SignupVerification.deleteOne({ _id: pending._id });
 
     const passwordHash = await bcrypt.hash(password, 12);
+    const { firstName, lastName } = splitFullName(name);
     let user;
     try {
-      user = await User.create({ email, passwordHash, name });
+      user = await User.create({
+        email,
+        passwordHash,
+        name,
+        firstName,
+        lastName,
+      });
     } catch (createErr: unknown) {
       if (
         typeof createErr === "object" &&

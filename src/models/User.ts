@@ -24,9 +24,18 @@ const userSchema = new Schema(
     },
     passwordHash: { type: String, required: true, select: false },
     name: { type: String, default: "", trim: true },
+    firstName: { type: String, default: "", trim: true },
+    lastName: { type: String, default: "", trim: true },
+    phone: { type: String, default: "", trim: true },
     role: { type: String, enum: USER_ROLES, default: "User" },
     razorpayCustomerId: { type: String, index: true, sparse: true },
     razorpaySubscriptionId: { type: String, sparse: true },
+    billingPlanId: {
+      type: String,
+      enum: ["monthly", "quarterly"],
+      sparse: true,
+    },
+    subscribedAt: { type: Date },
     subscriptionStatus: {
       type: String,
       enum: SUBSCRIPTION_STATUSES,

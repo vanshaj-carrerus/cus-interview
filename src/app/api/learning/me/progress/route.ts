@@ -1,17 +1,18 @@
 import { NextResponse } from "next/server";
 import { logLearningProgress } from "@/lib/learning-progress-debug";
-import { getSessionPublicUser } from "@/lib/get-session-user";
+import { getPlatformAccessSession } from "@/lib/billing/require-platform-access";
 import { getUserLearningProfile } from "@/lib/learning/service";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const sessionUser = await getSessionPublicUser();
-    if (!sessionUser) {
+    const access = await getPlatformAccessSession();
+    if ("error" in access) {
       logLearningProgress("me-progress", "GET unauthorized (no session)");
-      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+      return access.error;
     }
+    const sessionUser = access.user;
     const profile = await getUserLearningProfile(sessionUser.id, sessionUser.name || sessionUser.email);
     console.info("[cus-learning:api/me/progress]", {
       userIdSnippet: `${sessionUser.id.slice(0, 8)}…`,

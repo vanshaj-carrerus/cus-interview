@@ -1,5 +1,10 @@
+import { Suspense } from "react";
 import PricingSection from "@/components/pricing/PricingSection";
 
 export default function PricingPage() {
-  return <PricingSection />;
+  return (
+    <Suspense fallback={null}>
+      <PricingSection />
+    </Suspense>
+  );
 }

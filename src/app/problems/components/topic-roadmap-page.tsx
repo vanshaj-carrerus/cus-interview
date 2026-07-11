@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 
 import { TopicData } from "../../practice/data/types";
+import SubscriptionPaywallModal from "@/components/billing/SubscriptionPaywallModal";
+import { useSubscriptionGate } from "@/hooks/use-subscription-gate";
 import { logLearningProgress } from "@/lib/learning-progress-debug";
 
 type Props = {
@@ -25,6 +27,7 @@ export default function TopicRoadmapPage({
   topic,
   basePath = "/problems",
 }: Props) {
+  const { checkAccess, paywallOpen, closePaywall } = useSubscriptionGate();
   const [passedLevels, setPassedLevels] = useState<number[]>([]);
   const [progressLoadError, setProgressLoadError] = useState<string | null>(null);
 
@@ -276,12 +279,15 @@ export default function TopicRoadmapPage({
                         </div>
 
                         {isUnlocked ? (
-                          <Link
-                            href={nextPath}
-                            className="flex items-center gap-2 bg-slate-900 text-white px-5 py-2 rounded-xl text-sm font-bold hover:bg-primary transition-all active:scale-95 shadow-lg shadow-slate-900/10"
+                          <button
+                            type="button"
+                            onClick={() => checkAccess(() => {
+                              window.location.href = nextPath;
+                            })}
+                            className="flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-2 text-sm font-bold text-white shadow-lg shadow-slate-900/10 transition-all hover:bg-primary active:scale-95"
                           >
                             {isPassed ? "Review" : "Start"}
-                          </Link>
+                          </button>
                         ) : (
                           <div className="flex items-center gap-2 bg-slate-100 text-slate-400 px-5 py-2 rounded-xl text-sm font-bold cursor-not-allowed">
                             Locked
@@ -325,6 +331,8 @@ export default function TopicRoadmapPage({
 
         
       </div>
+
+      <SubscriptionPaywallModal open={paywallOpen} onClose={closePaywall} />
     </div>
   );
 }

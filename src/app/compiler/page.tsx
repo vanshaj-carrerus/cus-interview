@@ -7,8 +7,12 @@ import CustomInput from "./components/CustomInput";
 import OutputConsole from "./components/OutputConsole";
 import { CODE_SNIPPETS, LANGUAGE_IDS } from "./lib/constants";
 import { Play, Code } from "lucide-react";
+import SubscriptionPaywallModal from "@/components/billing/SubscriptionPaywallModal";
+import { useSubscriptionGate } from "@/hooks/use-subscription-gate";
 
 export default function CompilerPage() {
+  const { checkAccess, paywallOpen, closePaywall, openPaywall } =
+    useSubscriptionGate();
   const [language, setLanguage] = useState<string>("javascript");
   const [code, setCode] = useState<string>(CODE_SNIPPETS.javascript);
   const [customInput, setCustomInput] = useState<string>("");
@@ -50,7 +54,7 @@ export default function CompilerPage() {
     setCode(CODE_SNIPPETS[lang as keyof typeof CODE_SNIPPETS]);
   };
 
-  const handleCompile = async () => {
+  const runCompile = async () => {
     if (!code) return;
     setIsLoading(true);
     setIsError(false);
@@ -66,7 +70,12 @@ export default function CompilerPage() {
           stdin: customInput,
         }),
       });
-      
+
+      if (response.status === 403) {
+        openPaywall();
+        return;
+      }
+
       const data = await response.json();
       
       if (data.error) {
@@ -99,6 +108,12 @@ export default function CompilerPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleCompile = () => {
+    checkAccess(() => {
+      void runCompile();
+    });
   };
 
   return (
@@ -166,6 +181,8 @@ export default function CompilerPage() {
         </div>
 
       </div>
+
+      <SubscriptionPaywallModal open={paywallOpen} onClose={closePaywall} />
     </div>
   );
 }

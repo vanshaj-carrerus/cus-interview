@@ -1,3 +1,5 @@
+import { formatPhoneForRazorpayPrefill } from "@/lib/billing/phone";
+
 const RAZORPAY_SCRIPT_SRC = "https://checkout.razorpay.com/v1/checkout.js";
 
 export type RazorpayOrderCheckoutResponse = {
@@ -67,10 +69,33 @@ export async function loadRazorpayScript(): Promise<boolean> {
     const script = document.createElement("script");
     script.src = RAZORPAY_SCRIPT_SRC;
     script.async = true;
+    script.onerror = () => {
+      console.error("[razorpay] Failed to load checkout script.");
+    };
     document.body.appendChild(script);
   }
 
   return waitForRazorpay();
+}
+
+function buildRazorpayPrefill(prefill?: {
+  name?: string;
+  email?: string;
+  contact?: string;
+}) {
+  if (!prefill) {
+    return undefined;
+  }
+
+  const contact = prefill.contact
+    ? formatPhoneForRazorpayPrefill(prefill.contact)
+    : null;
+
+  return {
+    name: prefill.name,
+    email: prefill.email,
+    contact: contact ?? undefined,
+  };
 }
 
 export type OpenRazorpayOrderCheckoutOptions = {
@@ -96,6 +121,7 @@ export async function openRazorpayOrderCheckout(
   }
 
   try {
+    const prefill = buildRazorpayPrefill(options.prefill);
     const rzp = new window.Razorpay({
       key: options.keyId,
       amount: options.amount,
@@ -103,7 +129,7 @@ export async function openRazorpayOrderCheckout(
       order_id: options.orderId,
       name: options.name ?? "CareerUs Interview",
       description: options.description,
-      prefill: options.prefill,
+      prefill,
       theme: { color: options.themeColor ?? "#00a6f4" },
       retry: {
         enabled: true,
@@ -151,6 +177,7 @@ export type OpenRazorpaySubscriptionCheckoutOptions = {
   name?: string;
   description?: string;
   prefill?: { name?: string; email?: string; contact?: string };
+  callbackUrl?: string;
   themeColor?: string;
   onSuccess: (
     response: RazorpaySubscriptionCheckoutResponse
@@ -167,25 +194,30 @@ export async function openRazorpaySubscriptionCheckout(
     return { ok: false, error: "Could not load Razorpay checkout." };
   }
 
+  const prefill = buildRazorpayPrefill(options.prefill);
+  if (!prefill?.contact) {
+    return {
+      ok: false,
+      error: "Mobile number is required for subscription auto-payment.",
+    };
+  }
+
   try {
-    const rzp = new window.Razorpay({
+    const checkoutOptions: Record<string, unknown> = {
       key: options.keyId,
       subscription_id: options.subscriptionId,
       name: options.name ?? "CareerUs Interview",
       description: options.description,
-      prefill: options.prefill,
+      prefill,
       theme: { color: options.themeColor ?? "#00a6f4" },
       retry: {
         enabled: true,
         max_count: 4,
       },
-      config: {
-        display: {
-          sequence: ["card", "upi", "netbanking", "wallet"],
-          preferences: {
-            show_default_blocks: true,
-          },
-        },
+      readonly: {
+        contact: true,
+        email: Boolean(prefill.email),
+        name: Boolean(prefill.name),
       },
       handler: (response: RazorpaySubscriptionCheckoutResponse) => {
         void options.onSuccess(response);
@@ -197,7 +229,9 @@ export async function openRazorpaySubscriptionCheckout(
         escape: true,
         confirm_close: true,
       },
-    });
+    };
+
+    const rzp = new window.Razorpay(checkoutOptions);
 
     rzp.on("payment.failed", (response) => {
       options.onFailure?.(

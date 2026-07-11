@@ -22,7 +22,7 @@ export default function ConditionalLayout({
   return (
     <>
       {!isTestRoute && header}
-      <div className={`flex ${!isTestRoute ? 'pt-20' : ''} min-h-screen flex-col`}>
+      <div className={`flex ${!isTestRoute ? 'pt-24' : ''} min-h-screen flex-col`}>
         <main className="flex-1">{children}</main>
         {!isTestRoute && footer}
       </div>

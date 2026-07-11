@@ -2,8 +2,14 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import { User } from "@/models/User";
 import { getSessionPublicUser } from "@/lib/get-session-user";
-import { getRazorpay, getRazorpayPublicKey } from "@/lib/razorpay";
+import { getRazorpay, getAppOrigin, getRazorpayPublicKey } from "@/lib/razorpay";
+import { formatPhoneForRazorpayPrefill } from "@/lib/billing/phone";
 import { getBillingSetupError } from "@/lib/billing/config";
+import {
+  getCheckoutFullName,
+  parseCheckoutDetails,
+  type CheckoutDetailsInput,
+} from "@/lib/billing/checkout-details";
 import { getOrCreateRazorpayPlanId } from "@/lib/billing/ensure-plan";
 import {
   getSubscriptionAmounts,
@@ -21,6 +27,20 @@ import {
 
 export const dynamic = "force-dynamic";
 
+function parseCheckoutBody(body: Record<string, unknown>) {
+  return parseCheckoutDetails({
+    firstName: typeof body.firstName === "string" ? body.firstName : "",
+    lastName: typeof body.lastName === "string" ? body.lastName : "",
+    email: typeof body.email === "string" ? body.email : "",
+    contact:
+      typeof body.contact === "string"
+        ? body.contact
+        : typeof body.phone === "string"
+          ? body.phone
+          : "",
+  } satisfies CheckoutDetailsInput);
+}
+
 export async function POST(request: Request) {
   try {
     const setupError = getBillingSetupError();
@@ -35,6 +55,14 @@ export async function POST(request: Request) {
     const billingPlanId: BillingPlanId = isBillingPlanId(body.plan)
       ? body.plan
       : "monthly";
+
+    const checkoutParsed = parseCheckoutBody(body);
+    if (!checkoutParsed.ok) {
+      return NextResponse.json({ error: checkoutParsed.error }, { status: 400 });
+    }
+    const checkout = checkoutParsed.details;
+    const fullName = getCheckoutFullName(checkout);
+
     const selectedPlan = getPricingPlan(billingPlanId);
     const subscriptionAmounts = getSubscriptionAmounts(billingPlanId);
     const billedTotalDisplay = getSubscriptionTotalDisplay(billingPlanId);
@@ -57,6 +85,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "User not found." }, { status: 404 });
     }
 
+    if (!user.name?.trim()) {
+      user.name = fullName;
+    }
+    user.firstName = checkout.firstName;
+    user.lastName = checkout.lastName;
+    user.phone = checkout.contact;
+    user.billingPlanId = billingPlanId;
+    if (!user.subscribedAt) {
+      user.subscribedAt = new Date();
+    }
+    await user.save();
+
     const razorpay = getRazorpay();
     const startAt = getTrialStartAtUnix();
     const planId = await getOrCreateRazorpayPlanId(billingPlanId);
@@ -78,8 +118,11 @@ export async function POST(request: Request) {
       ],
       notes: {
         userId: user._id.toString(),
-        email: user.email,
+        email: checkout.email,
         billingPlanId,
+        firstName: checkout.firstName,
+        lastName: checkout.lastName,
+        contact: checkout.contact,
         baseAmountInr: String(subscriptionAmounts.baseAmount),
         gstAmountInr: String(subscriptionAmounts.gstAmount),
         totalAmountInr: String(subscriptionAmounts.totalAmount),
@@ -105,6 +148,7 @@ export async function POST(request: Request) {
       keyId: publicKey,
       name: "CareerUs Interview",
       description: `${selectedPlan.name} (${selectedPlan.periodLabel}) — ₹${SUBSCRIPTION_AUTH_AMOUNT_INR} auth now, ${TRIAL_DAYS}-day free trial, then ${selectedPlan.priceDisplay} + 18% GST (${billedTotalDisplay}) auto-billed`,
+      callbackUrl: `${getAppOrigin()}/pricing/success?type=plan&product=${billingPlanId}`,
       trialDays: TRIAL_DAYS,
       authAmountInr: SUBSCRIPTION_AUTH_AMOUNT_INR,
       baseAmountInr: subscriptionAmounts.baseAmount,
@@ -112,8 +156,9 @@ export async function POST(request: Request) {
       totalAmountInr: subscriptionAmounts.totalAmount,
       billedTotalDisplay,
       prefill: {
-        name: user.name || undefined,
-        email: user.email,
+        name: fullName,
+        email: checkout.email,
+        contact: formatPhoneForRazorpayPrefill(checkout.contact) ?? checkout.contact,
       },
     });
   } catch (err) {

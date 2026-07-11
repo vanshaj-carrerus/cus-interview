@@ -30,6 +30,9 @@ const paymentSchema = new Schema(
     userId: { type: Schema.Types.ObjectId, ref: "User", index: true },
     userEmail: { type: String, required: true },
     userName: { type: String, default: "" },
+    firstName: { type: String, default: "", trim: true },
+    lastName: { type: String, default: "", trim: true },
+    phone: { type: String, default: "", trim: true },
   },
   { timestamps: true }
 );

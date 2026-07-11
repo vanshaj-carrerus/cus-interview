@@ -1,0 +1,3 @@
+export const RESUME_ANALYZER_PRIMARY = "#00bcfe";
+export const RESUME_ANALYZER_PRIMARY_LIGHT = "#33d4ff";
+export const RESUME_ANALYZER_PRIMARY_RGB = "0,188,254";

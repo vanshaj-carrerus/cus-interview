@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
+import { getPlatformAccessSession } from "@/lib/billing/require-platform-access";
 
 export async function POST(req: Request) {
   try {
+    const access = await getPlatformAccessSession();
+    if ("error" in access) {
+      return access.error;
+    }
+
     const { source_code, language_id, stdin } = await req.json();
 
     if (!source_code || !language_id) {

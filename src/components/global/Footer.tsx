@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Logo from "@/components/global/Logo";
 import { getTrackCards } from "@/lib/learning/server";
 import { MapPin } from "lucide-react";
 
@@ -22,24 +23,7 @@ export default async function Footer() {
 
         {/* Brand & Details Column */}
         <div className="lg:col-span-3 flex flex-col gap-6 pr-4">
-          <Link href="/" className="inline-flex items-center gap-3 group mb-2">
-            <img
-              src="/cus-logo-1.png"
-              alt="CareerUs"
-              width={200}
-              height={200}
-              className="rounded-xl  group-hover:opacity-90 transition-opacity"
-              loading="lazy"
-            />
-            {/* <div className="flex flex-col leading-none">
-              <span className="font-bold text-slate-800 text-2xl tracking-tight">
-                Career<span className="text-sky-200">Us</span>
-              </span>
-              <span className="text-slate-500 text-[9px] font-bold tracking-[0.2em] uppercase mt-1">
-                Sanchhaya Education Pvt Ltd
-              </span>
-            </div> */}
-          </Link>
+          <Logo className="transition-opacity hover:opacity-90" />
 
           <p className="text-[14px] text-slate-500 leading-relaxed mb-2">
             Empowering the next generation of tech talent with interactive courses, a premium online compiler, and AI-driven mock interviews. Learn, Practice, and Excel with us.

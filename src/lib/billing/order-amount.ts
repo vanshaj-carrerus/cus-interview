@@ -38,6 +38,11 @@ export function getSubscriptionTotalDisplay(planId: BillingPlanId): string {
   return formatInrAmount(totalAmount);
 }
 
+export function getServiceTotalDisplay(serviceId: HumanServiceId): string {
+  const { totalAmount } = getServiceOrderAmounts(serviceId);
+  return formatInrAmount(totalAmount);
+}
+
 export function getServiceOrderAmounts(
   serviceId: HumanServiceId,
   currency = "INR"

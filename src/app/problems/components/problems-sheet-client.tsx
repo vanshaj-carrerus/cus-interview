@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
-import Link from "next/link";
-import { Search, Check, ChevronDown, Filter } from "lucide-react";
+import { Search, Check, ChevronDown } from "lucide-react";
 import Image from "next/image";
+import SubscriptionPaywallModal from "@/components/billing/SubscriptionPaywallModal";
+import { useSubscriptionGate } from "@/hooks/use-subscription-gate";
 
 type QuestionItem = {
   id: string;
@@ -63,6 +64,7 @@ function getRandomCompanies(seed: string) {
 }
 
 export default function ProblemsSheetClient({ tracks, initialSolvedQuestionIds, userSession }: Props) {
+  const { checkAccess, paywallOpen, closePaywall } = useSubscriptionGate();
   const [checkedQuestions, setCheckedQuestions] = useState<Set<string>>(new Set(initialSolvedQuestionIds));
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -292,9 +294,17 @@ export default function ProblemsSheetClient({ tracks, initialSolvedQuestionIds, 
 
                         {/* Problem */}
                         <td className="py-4 px-6 text-slate-700 font-medium whitespace-normal min-w-[250px]">
-                          <Link href={`/compiler?question=${encodeURIComponent(q.prompt)}`} className="hover:text-sky-600 transition-colors line-clamp-1">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              checkAccess(() => {
+                                window.location.href = `/compiler?question=${encodeURIComponent(q.prompt)}`;
+                              })
+                            }
+                            className="line-clamp-1 text-left font-medium text-slate-700 transition-colors hover:text-sky-600"
+                          >
                             {q.prompt}
-                          </Link>
+                          </button>
                         </td>
 
                         {/* Category */}
@@ -333,6 +343,8 @@ export default function ProblemsSheetClient({ tracks, initialSolvedQuestionIds, 
         </div>
 
       </div>
+
+      <SubscriptionPaywallModal open={paywallOpen} onClose={closePaywall} />
     </div>
   );
 }

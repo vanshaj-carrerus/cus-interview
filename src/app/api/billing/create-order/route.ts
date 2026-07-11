@@ -4,7 +4,13 @@ import { User } from "@/models/User";
 import { Payment } from "@/models/Payment";
 import { getSessionPublicUser } from "@/lib/get-session-user";
 import { getRazorpay, getRazorpayPublicKey } from "@/lib/razorpay";
+import { formatPhoneForRazorpayPrefill } from "@/lib/billing/phone";
 import { getBillingSetupError } from "@/lib/billing/config";
+import {
+  getCheckoutFullName,
+  parseCheckoutDetails,
+  type CheckoutDetailsInput,
+} from "@/lib/billing/checkout-details";
 import {
   getServiceOrderAmounts,
 } from "@/lib/billing/order-amount";
@@ -15,6 +21,20 @@ import {
 import { isBillingPlanId } from "@/lib/billing/plan";
 
 export const dynamic = "force-dynamic";
+
+function parseCheckoutBody(body: Record<string, unknown>) {
+  return parseCheckoutDetails({
+    firstName: typeof body.firstName === "string" ? body.firstName : "",
+    lastName: typeof body.lastName === "string" ? body.lastName : "",
+    email: typeof body.email === "string" ? body.email : "",
+    contact:
+      typeof body.contact === "string"
+        ? body.contact
+        : typeof body.phone === "string"
+          ? body.phone
+          : "",
+  } satisfies CheckoutDetailsInput);
+}
 
 export async function POST(request: Request) {
   try {
@@ -51,6 +71,13 @@ export async function POST(request: Request) {
       );
     }
 
+    const checkoutParsed = parseCheckoutBody(body);
+    if (!checkoutParsed.ok) {
+      return NextResponse.json({ error: checkoutParsed.error }, { status: 400 });
+    }
+    const checkout = checkoutParsed.details;
+    const fullName = getCheckoutFullName(checkout);
+
     const sessionUser = await getSessionPublicUser();
     if (!sessionUser) {
       return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
@@ -61,6 +88,14 @@ export async function POST(request: Request) {
     if (!user) {
       return NextResponse.json({ error: "User not found." }, { status: 404 });
     }
+
+    if (!user.name?.trim()) {
+      user.name = fullName;
+    }
+    user.firstName = checkout.firstName;
+    user.lastName = checkout.lastName;
+    user.phone = checkout.contact;
+    await user.save();
 
     const purchaseType = "service";
     const productId = serviceId;
@@ -81,10 +116,13 @@ export async function POST(request: Request) {
         receipt: `rcpt_${Date.now()}`,
         notes: {
           userId: user._id.toString(),
-          email: user.email,
+          email: checkout.email,
           purchaseType,
           productId,
           productName,
+          firstName: checkout.firstName,
+          lastName: checkout.lastName,
+          contact: checkout.contact,
         },
       });
     } catch (rzpError) {
@@ -101,8 +139,11 @@ export async function POST(request: Request) {
         productId,
         productName,
         userId: user._id,
-        userEmail: user.email,
-        userName: user.name ?? "",
+        userEmail: checkout.email,
+        userName: fullName,
+        firstName: checkout.firstName,
+        lastName: checkout.lastName,
+        phone: checkout.contact,
       });
 
       return NextResponse.json(
@@ -122,8 +163,11 @@ export async function POST(request: Request) {
       productId,
       productName,
       userId: user._id,
-      userEmail: user.email,
-      userName: user.name ?? "",
+      userEmail: checkout.email,
+      userName: fullName,
+      firstName: checkout.firstName,
+      lastName: checkout.lastName,
+      phone: checkout.contact,
     });
 
     const publicKey = getRazorpayPublicKey();
@@ -150,8 +194,9 @@ export async function POST(request: Request) {
       name: "CareerUs Interview",
       description,
       prefill: {
-        name: user.name || undefined,
-        email: user.email,
+        name: fullName,
+        email: checkout.email,
+        contact: formatPhoneForRazorpayPrefill(checkout.contact) ?? checkout.contact,
       },
     });
   } catch (error) {

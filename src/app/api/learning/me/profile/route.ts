@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
-import { getSessionPublicUser } from "@/lib/get-session-user";
+import { getPlatformAccessSession } from "@/lib/billing/require-platform-access";
 import { getUserLearningProfile } from "@/lib/learning/service";
 
 export async function GET() {
   try {
-    const sessionUser = await getSessionPublicUser();
-    if (!sessionUser) {
-      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+    const access = await getPlatformAccessSession();
+    if ("error" in access) {
+      return access.error;
     }
+    const sessionUser = access.user;
     const profile = await getUserLearningProfile(sessionUser.id, sessionUser.name || sessionUser.email);
     return NextResponse.json({ profile });
   } catch (error) {

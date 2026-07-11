@@ -12,6 +12,11 @@ export type PublicSubscription = {
   currentPeriodEnd: string | null;
   cancelAtPeriodEnd: boolean;
   hasAccess: boolean;
+  hasPlatformAccess: boolean;
+  planId: "monthly" | "quarterly" | null;
+  isTrialing: boolean;
+  /** `1` during trial, `null` when unlimited (active paid plan). */
+  mockInterviewsDailyLimit: number | null;
 };
 
 export type PublicUser = {

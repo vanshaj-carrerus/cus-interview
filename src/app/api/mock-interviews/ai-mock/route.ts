@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
-import { getSessionPublicUser } from "@/lib/get-session-user";
+import { assertCanCreateMockInterview } from "@/lib/billing/mock-interview-quota";
+import { getPlatformAccessSession } from "@/lib/billing/require-platform-access";
 import { AiMockInterview } from "@/models/AiMockInterview";
 
 type CreateAiMockInterviewBody = {
@@ -16,10 +17,11 @@ const NOTE_MAX_LENGTH = 100;
 
 export async function POST(request: Request) {
   try {
-    const sessionUser = await getSessionPublicUser();
-    if (!sessionUser) {
-      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+    const access = await getPlatformAccessSession();
+    if ("error" in access) {
+      return access.error;
     }
+    const sessionUser = access.user;
 
     const body = (await request.json()) as CreateAiMockInterviewBody;
     const languages = Array.isArray(body.languages) ? body.languages.filter((x): x is string => typeof x === "string" && x.trim().length > 0) : [];
@@ -42,6 +44,18 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: "Add at least one of role, language, or framework." },
         { status: 400 }
+      );
+    }
+
+    const createLimit = await assertCanCreateMockInterview(
+      sessionUser.subscription,
+      sessionUser.id,
+      sessionUser.role === "SuperAdmin"
+    );
+    if (!createLimit.allowed) {
+      return NextResponse.json(
+        { error: createLimit.message, code: createLimit.code },
+        { status: 429 }
       );
     }
 

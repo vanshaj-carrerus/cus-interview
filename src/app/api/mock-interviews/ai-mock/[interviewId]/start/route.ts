@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
-import { getSessionPublicUser } from "@/lib/get-session-user";
+import { getPlatformAccessSession } from "@/lib/billing/require-platform-access";
 import { AiMockInterview } from "@/models/AiMockInterview";
 import { runMockInterviewPrompt } from "@/lib/ai/mock-interview-engine";
 
@@ -38,10 +38,11 @@ Output:
 
 export async function POST(_: Request, context: Context) {
   try {
-    const sessionUser = await getSessionPublicUser();
-    if (!sessionUser) {
-      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+    const access = await getPlatformAccessSession();
+    if ("error" in access) {
+      return access.error;
     }
+    const sessionUser = access.user;
 
     const { interviewId } = await context.params;
     await connectDB();

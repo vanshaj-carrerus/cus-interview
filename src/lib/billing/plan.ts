@@ -12,9 +12,11 @@ export type PricingFeature = {
 export const PRICING_FEATURES: PricingFeature[] = [
   { label: "AI interview practice" },
   { label: "Interview question bank" },
-  { label: "Resume ATS analysis", isNew: true },
+  { label: "ATS Resume Analyzer — upload & instant score", isNew: true },
+  { label: "AI resume improve, edit & PDF download", isNew: true },
   { label: "Unlimited practice problems" },
-  { label: "AI-powered mock interviews" },
+  { label: "1 AI mock interview/day during trial" },
+  { label: "Unlimited mock interviews after trial" },
   { label: "Structured learning tracks" },
   { label: "Programming language courses" },
   { label: "Online compiler access" },

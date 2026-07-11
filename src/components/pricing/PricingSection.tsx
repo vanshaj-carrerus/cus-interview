@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Check } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
 import ManageBillingButton from "@/components/billing/ManageBillingButton";
+import CheckoutFormModal from "@/components/pricing/CheckoutFormModal";
 import { openRazorpayOrderCheckout, openRazorpaySubscriptionCheckout } from "@/lib/billing/razorpay-checkout-client";
+import type { CheckoutDetails } from "@/lib/billing/checkout-details";
 import {
   HUMAN_SERVICES,
   HUMAN_SERVICE_IDS,
@@ -23,6 +25,7 @@ import {
   type BillingPlanId,
   type PricingFeature,
 } from "@/lib/billing/plan";
+import { TRIAL_MOCK_INTERVIEWS_PER_DAY } from "@/lib/billing/trial-limits";
 
 const BRAND_BLUE = "#00a6f4";
 
@@ -213,30 +216,49 @@ function HumanServiceCard({
 
 export default function PricingSection() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const subscriptionRequired =
+    searchParams.get("reason") === "subscription-required";
   const { user, loading, refreshUser } = useAuth();
   const [submittingKey, setSubmittingKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [pendingCheckout, setPendingCheckout] = useState<CheckoutTarget | null>(
+    null
+  );
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
-  async function handlePlanCheckout(target: Extract<CheckoutTarget, { type: "plan" }>) {
+  async function handlePlanCheckout(
+    target: Extract<CheckoutTarget, { type: "plan" }>,
+    details: CheckoutDetails
+  ): Promise<boolean> {
     const res = await fetch("/api/billing/create-subscription", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "same-origin",
-      body: JSON.stringify({ plan: target.id }),
+      body: JSON.stringify({
+        plan: target.id,
+        firstName: details.firstName,
+        lastName: details.lastName,
+        email: details.email,
+        contact: details.contact,
+      }),
     });
     const data = (await res.json()) as {
       subscriptionId?: string;
       keyId?: string;
       name?: string;
       description?: string;
-      prefill?: { name?: string; email?: string };
+      callbackUrl?: string;
+      prefill?: { name?: string; email?: string; contact?: string };
       error?: string;
     };
 
     if (!res.ok || !data.subscriptionId || !data.keyId) {
-      setError(data.error ?? "Could not start subscription checkout.");
+      const message = data.error ?? "Could not start subscription checkout.";
+      setCheckoutError(message);
+      setError(message);
       setSubmittingKey(null);
-      return;
+      return false;
     }
 
     const checkout = await openRazorpaySubscriptionCheckout({
@@ -245,6 +267,7 @@ export default function PricingSection() {
       name: data.name,
       description: data.description,
       prefill: data.prefill,
+      callbackUrl: data.callbackUrl,
       themeColor: BRAND_BLUE,
       onSuccess: async () => {
         const verifyRes = await fetch("/api/billing/verify-subscription", {
@@ -270,19 +293,32 @@ export default function PricingSection() {
     });
 
     if (!checkout.ok) {
+      setCheckoutError(checkout.error);
       setError(checkout.error);
       setSubmittingKey(null);
+      return false;
     }
+
+    setCheckoutError(null);
+    return true;
   }
 
   async function handleServiceCheckout(
-    target: Extract<CheckoutTarget, { type: "service" }>
-  ) {
+    target: Extract<CheckoutTarget, { type: "service" }>,
+    details: CheckoutDetails
+  ): Promise<boolean> {
     const res = await fetch("/api/billing/create-order", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "same-origin",
-      body: JSON.stringify({ service: target.id, currency: "INR" }),
+      body: JSON.stringify({
+        service: target.id,
+        currency: "INR",
+        firstName: details.firstName,
+        lastName: details.lastName,
+        email: details.email,
+        contact: details.contact,
+      }),
     });
     const data = (await res.json()) as {
       orderId?: string;
@@ -291,14 +327,16 @@ export default function PricingSection() {
       keyId?: string;
       name?: string;
       description?: string;
-      prefill?: { name?: string; email?: string };
+      prefill?: { name?: string; email?: string; contact?: string };
       error?: string;
     };
 
     if (!res.ok || !data.orderId || !data.keyId || !data.amount) {
-      setError(data.error ?? "Could not start Razorpay checkout.");
+      const message = data.error ?? "Could not start Razorpay checkout.";
+      setCheckoutError(message);
+      setError(message);
       setSubmittingKey(null);
-      return;
+      return false;
     }
 
     const checkout = await openRazorpayOrderCheckout({
@@ -356,13 +394,19 @@ export default function PricingSection() {
     });
 
     if (!checkout.ok) {
+      setCheckoutError(checkout.error);
       setError(checkout.error);
       setSubmittingKey(null);
+      return false;
     }
+
+    setCheckoutError(null);
+    return true;
   }
 
   async function handleCheckout(target: CheckoutTarget) {
     setError(null);
+    setCheckoutError(null);
 
     if (!user) {
       setError("Please log in to continue with Razorpay checkout.");
@@ -375,29 +419,73 @@ export default function PricingSection() {
       return;
     }
 
-    const key = `${target.type}:${target.id}`;
+    setPendingCheckout(target);
+  }
+
+  async function confirmCheckout(details: CheckoutDetails) {
+    if (!pendingCheckout) {
+      return;
+    }
+
+    setError(null);
+    setCheckoutError(null);
+    const key = `${pendingCheckout.type}:${pendingCheckout.id}`;
     setSubmittingKey(key);
 
     try {
-      if (target.type === "plan") {
-        await handlePlanCheckout(target);
-      } else {
-        await handleServiceCheckout(target);
+      const opened =
+        pendingCheckout.type === "plan"
+          ? await handlePlanCheckout(pendingCheckout, details)
+          : await handleServiceCheckout(pendingCheckout, details);
+
+      if (opened) {
+        setPendingCheckout(null);
+        setCheckoutError(null);
       }
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Could not start Razorpay checkout."
-      );
+      const message =
+        err instanceof Error ? err.message : "Could not start Razorpay checkout.";
+      setCheckoutError(message);
+      setError(message);
       setSubmittingKey(null);
     }
   }
 
-  const hasAccess = user?.subscription.hasAccess;
-  const isBusy = submittingKey !== null;
+  function closeCheckoutModal() {
+    if (submittingKey) {
+      return;
+    }
+    setPendingCheckout(null);
+  }
+
+  const hasPlatformAccess = user?.subscription.hasPlatformAccess;
+  const isBusy = submittingKey !== null || pendingCheckout !== null;
+  const pendingSubmittingKey = pendingCheckout
+    ? `${pendingCheckout.type}:${pendingCheckout.id}`
+    : null;
 
   return (
     <section className="bg-[#f5f6f8] px-4 py-14 sm:px-6 sm:py-20">
+      {pendingCheckout ? (
+        <CheckoutFormModal
+          target={pendingCheckout}
+          submitting={submittingKey === pendingSubmittingKey}
+          checkoutError={checkoutError}
+          defaultEmail={user?.email}
+          defaultName={user?.name}
+          onClose={closeCheckoutModal}
+          onConfirm={confirmCheckout}
+        />
+      ) : null}
       <div className="mx-auto max-w-6xl">
+        {subscriptionRequired ? (
+          <div className="mx-auto mb-8 max-w-2xl rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-center text-sm text-amber-900">
+            Practice Problems, Programming Languages, Mock Interviews, ATS Resume
+            Analyzer, and Compiler are available with an active monthly (₹499) or
+            quarterly (₹1,299) plan.
+          </div>
+        ) : null}
+
         <header className="mx-auto max-w-3xl text-center">
           <SectionLabel label="Pricing Plans" />
 
@@ -408,8 +496,9 @@ export default function PricingSection() {
 
           <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-slate-500 sm:text-[15px]">
             Platform plans: pay ₹{SUBSCRIPTION_AUTH_AMOUNT_INR} now to save your
-            payment method, enjoy a {TRIAL_DAYS}-day free trial, then your plan
-            price + 18% GST auto-renews. Expert services are one-time payments.
+            payment method, enjoy a {TRIAL_DAYS}-day free trial (
+            {TRIAL_MOCK_INTERVIEWS_PER_DAY} mock interview/day), then your plan
+            price + 18% GST auto-renews for unlimited access.
           </p>
         </header>
 
@@ -417,7 +506,7 @@ export default function PricingSection() {
           <p className="mt-16 text-center text-sm text-slate-400">Loading…</p>
         ) : (
           <>
-            {hasAccess ? (
+            {hasPlatformAccess ? (
               <div className="mx-auto mt-8 max-w-md rounded-[28px] border border-slate-200/90 bg-white px-7 py-6 text-center">
                 <p className="text-sm font-semibold text-slate-900">
                   Your platform plan is active.
@@ -434,14 +523,14 @@ export default function PricingSection() {
                 onCheckout={handleCheckout}
                 submitting={submittingKey === "plan:monthly"}
                 disabled={isBusy}
-                planActive={Boolean(hasAccess)}
+                planActive={Boolean(hasPlatformAccess)}
               />
               <PricingCard
                 planId="quarterly"
                 onCheckout={handleCheckout}
                 submitting={submittingKey === "plan:quarterly"}
                 disabled={isBusy}
-                planActive={Boolean(hasAccess)}
+                planActive={Boolean(hasPlatformAccess)}
               />
             </div>
 
@@ -481,9 +570,13 @@ export default function PricingSection() {
         <footer className="mt-12 text-center">
           <p className="text-xs text-slate-400">
             * Platform plan prices are exclusive of 18% GST. ₹
-            {SUBSCRIPTION_AUTH_AMOUNT_INR} authorization is charged today. After
-            the {TRIAL_DAYS}-day trial, the plan amount + 18% GST is auto-billed
-            (e.g. ₹499 + GST = {getSubscriptionTotalDisplay("monthly")}/month).
+            {SUBSCRIPTION_AUTH_AMOUNT_INR} authorization is charged today. During
+            the {TRIAL_DAYS}-day trial you get full access to practice problems,
+            courses, compiler, and ATS Resume Analyzer, plus{" "}
+            {TRIAL_MOCK_INTERVIEWS_PER_DAY} AI mock interview per day. After the
+            trial, the plan amount + 18% GST is auto-billed and everything is
+            unlimited (e.g. ₹499 + GST = {getSubscriptionTotalDisplay("monthly")}
+            /month).
           </p>
           <p className="mt-2 text-xs text-slate-400">
             Secure payments powered by Razorpay.

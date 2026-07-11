@@ -3,7 +3,9 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
   reactCompiler: true,
-  
+
+  serverExternalPackages: ["pdf-parse", "mammoth", "unpdf", "pdfjs-dist"],
+
   images: {
     domains: ["res.cloudinary.com"],
   },

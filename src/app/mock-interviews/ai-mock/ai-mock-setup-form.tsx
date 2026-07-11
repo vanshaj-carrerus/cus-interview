@@ -2,6 +2,10 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import SubscriptionPaywallModal from "@/components/billing/SubscriptionPaywallModal";
+import TrialMockLimitModal from "@/components/billing/TrialMockLimitModal";
+import { buildTrialMockLimitMessage } from "@/lib/billing/trial-limits";
+import { useSubscriptionGate } from "@/hooks/use-subscription-gate";
 import {
   useCallback,
   useEffect,
@@ -126,8 +130,19 @@ type InterviewHistoryItem = {
   averageScoreOutOf10: number;
 };
 
+type MockInterviewQuota = {
+  dailyLimit: number | null;
+  usedToday: number;
+  remainingToday: number | null;
+  unlimited: boolean;
+};
+
 export function AiMockSetupForm() {
   const router = useRouter();
+  const { checkAccess, gatedNavigate, paywallOpen, closePaywall, openPaywall } =
+    useSubscriptionGate();
+  const [trialLimitOpen, setTrialLimitOpen] = useState(false);
+  const [mockQuota, setMockQuota] = useState<MockInterviewQuota | null>(null);
   const [languages, setLanguages] = useState<string[]>([]);
   const [framework, setFramework] = useState<string>("");
   const [role, setRole] = useState<string>("");
@@ -157,9 +172,11 @@ export function AiMockSetupForm() {
         }
         const data = (await response.json()) as {
           interviews?: InterviewHistoryItem[];
+          quota?: MockInterviewQuota;
         };
         if (mounted) {
           setHistory(data.interviews ?? []);
+          setMockQuota(data.quota ?? null);
         }
       } catch {
         if (mounted) setHistory([]);
@@ -240,44 +257,68 @@ export function AiMockSetupForm() {
     if (!hasRoleLanguageOrFramework) return;
     if (!seniority) return;
     if (focusAreas.length === 0) return;
-    setSubmitError("");
-    setIsSubmitting(true);
-    try {
-      sessionStorage.setItem(
-        AI_MOCK_SETUP_STORAGE_KEY,
-        JSON.stringify(payload),
-      );
-    } catch {
-      /* ignore quota / private mode */
-    }
-    try {
-      const response = await fetch("/api/mock-interviews/ai-mock", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const data = (await response.json()) as {
-        error?: string;
-        interview?: { id: string };
-      };
-      if (response.status === 401) {
-        router.push("/signup?intent=ai-mock");
+
+    checkAccess(async () => {
+      if (
+        mockQuota &&
+        !mockQuota.unlimited &&
+        (mockQuota.remainingToday ?? 0) <= 0
+      ) {
+        setTrialLimitOpen(true);
         return;
       }
-      if (!response.ok || !data.interview?.id) {
-        setSubmitError(
-          data.error || "Failed to create mock interview. Please try again.",
+
+      setSubmitError("");
+      setIsSubmitting(true);
+      try {
+        sessionStorage.setItem(
+          AI_MOCK_SETUP_STORAGE_KEY,
+          JSON.stringify(payload),
         );
-        return;
+      } catch {
+        /* ignore quota / private mode */
       }
-      router.push(`/mock-interviews/ai-mock/${data.interview.id}`);
-    } catch {
-      setSubmitError(
-        "Unable to create mock interview right now. Please try again.",
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
+      try {
+        const response = await fetch("/api/mock-interviews/ai-mock", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const data = (await response.json()) as {
+          error?: string;
+          code?: string;
+          interview?: { id: string };
+        };
+        if (response.status === 401) {
+          router.push("/signup?intent=ai-mock");
+          return;
+        }
+        if (response.status === 403) {
+          openPaywall();
+          return;
+        }
+        if (
+          response.status === 429 &&
+          data.code === "TRIAL_MOCK_DAILY_LIMIT"
+        ) {
+          setTrialLimitOpen(true);
+          return;
+        }
+        if (!response.ok || !data.interview?.id) {
+          setSubmitError(
+            data.error || "Failed to create mock interview. Please try again.",
+          );
+          return;
+        }
+        router.push(`/mock-interviews/ai-mock/${data.interview.id}`);
+      } catch {
+        setSubmitError(
+          "Unable to create mock interview right now. Please try again.",
+        );
+      } finally {
+        setIsSubmitting(false);
+      }
+    });
   };
 
   return (
@@ -303,6 +344,17 @@ export function AiMockSetupForm() {
             We use this profile to pick question depth, examples, and time
             boxes. You can change it anytime before a run.
           </p>
+          {mockQuota && !mockQuota.unlimited ? (
+            <div className="mt-5 rounded-2xl border border-sky-100 bg-sky-50/80 px-4 py-3 text-sm leading-relaxed text-sky-900">
+              <p className="font-semibold">Free trial mock interview limit</p>
+              <p className="mt-1 text-sky-800/90">
+                {buildTrialMockLimitMessage()}
+              </p>
+              <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-sky-700">
+                Today: {mockQuota.usedToday}/{mockQuota.dailyLimit} used
+              </p>
+            </div>
+          ) : null}
         </header>
 
         <section className="mb-8 rounded-3xl border border-slate-100 bg-white p-6 shadow-[0_24px_48px_-12px_rgba(0,0,0,0.06)]">
@@ -330,18 +382,21 @@ export function AiMockSetupForm() {
                   className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <Link
-                      href={`/mock-interviews/ai-mock/${item.id}`}
-                      className="min-w-0 flex-1 hover:opacity-85 transition-opacity"
+                    <button
+                      type="button"
+                      onClick={() =>
+                        gatedNavigate(`/mock-interviews/ai-mock/${item.id}`)
+                      }
+                      className="min-w-0 flex-1 text-left transition-opacity hover:opacity-85"
                     >
-                      <p className="text-sm font-bold text-slate-800 truncate">
+                      <p className="truncate text-sm font-bold text-slate-800">
                         {item.role || item.framework || "General AI mock"}
                       </p>
                       <p className="mt-1 text-[11px] font-semibold text-slate-500">
                         {item.answeredCount}/{item.questionsCount} answered |
                         Avg {item.averageScoreOutOf10}/10
                       </p>
-                    </Link>
+                    </button>
                     <div className="flex flex-col items-end gap-2 shrink-0">
                       <span className="text-[11px] font-black uppercase tracking-widest text-slate-500">
                         {item.status.replaceAll("_", " ")}
@@ -571,6 +626,12 @@ export function AiMockSetupForm() {
           </div>
         </form>
       </div>
+
+      <SubscriptionPaywallModal open={paywallOpen} onClose={closePaywall} />
+      <TrialMockLimitModal
+        open={trialLimitOpen}
+        onClose={() => setTrialLimitOpen(false)}
+      />
     </div>
   );
 }

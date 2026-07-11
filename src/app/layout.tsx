@@ -19,8 +19,15 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CareerUs Interview | Elevating Professional Journeys",
+  title: "CUS Interview | Elevating Professional Journeys",
   description: "Next-generation career coaching, staffing solutions, and interview preparation platform.",
+  icons: {
+    icon: [
+      { url: "/favicon.png", sizes: "192x192", type: "image/png" },
+    ],
+    shortcut: "/favicon.png",
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export default function RootLayout({

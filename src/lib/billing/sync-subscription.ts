@@ -1,6 +1,6 @@
 import { connectDB } from "@/lib/mongodb";
 import { User } from "@/models/User";
-import { TRIAL_DAYS } from "@/lib/billing/plan";
+import { TRIAL_DAYS, isBillingPlanId } from "@/lib/billing/plan";
 import type { RazorpaySubscriptionEntity } from "@/types/razorpay";
 import type { SubscriptionStatus } from "@/types/auth";
 
@@ -55,7 +55,7 @@ export async function syncRazorpaySubscriptionToUser(
     subscription.current_end ?? subscription.end_at ?? subscription.start_at
   );
 
-  const update = {
+  const update: Record<string, unknown> = {
     razorpayCustomerId: subscription.customer_id ?? undefined,
     razorpaySubscriptionId: subscription.id,
     subscriptionStatus: status,
@@ -63,6 +63,32 @@ export async function syncRazorpaySubscriptionToUser(
     currentPeriodEnd,
     cancelAtPeriodEnd: subscription.status === "cancelled",
   };
+
+  if (isBillingPlanId(subscription.notes?.billingPlanId)) {
+    update.billingPlanId = subscription.notes.billingPlanId;
+  }
+  if (typeof subscription.notes?.firstName === "string") {
+    update.firstName = subscription.notes.firstName;
+  }
+  if (typeof subscription.notes?.lastName === "string") {
+    update.lastName = subscription.notes.lastName;
+  }
+  if (typeof subscription.notes?.contact === "string") {
+    update.phone = subscription.notes.contact;
+  }
+  if (
+    (status === "trialing" || status === "active") &&
+    (resolvedUserId || subscription.notes?.userId)
+  ) {
+    const existing = resolvedUserId
+      ? await User.findById(resolvedUserId).select({ subscribedAt: 1 }).lean()
+      : await User.findOne({ razorpaySubscriptionId: subscription.id })
+          .select({ subscribedAt: 1 })
+          .lean();
+    if (!existing?.subscribedAt) {
+      update.subscribedAt = toDate(subscription.start_at) ?? new Date();
+    }
+  }
 
   if (resolvedUserId) {
     await User.findByIdAndUpdate(resolvedUserId, update);

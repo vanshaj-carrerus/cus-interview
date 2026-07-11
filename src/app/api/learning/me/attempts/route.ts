@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSessionPublicUser } from "@/lib/get-session-user";
+import { getPlatformAccessSession } from "@/lib/billing/require-platform-access";
 import { getUserAttemptsPage } from "@/lib/learning/service";
 import type { AttemptTableSortField } from "@/types/learning/progress";
 
@@ -15,10 +15,11 @@ const SORT_FIELDS: AttemptTableSortField[] = [
 
 export async function GET(request: Request) {
   try {
-    const sessionUser = await getSessionPublicUser();
-    if (!sessionUser) {
-      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+    const access = await getPlatformAccessSession();
+    if ("error" in access) {
+      return access.error;
     }
+    const sessionUser = access.user;
     const url = new URL(request.url);
     const sortRaw = url.searchParams.get("sort") ?? "attemptedAt";
     const sort: AttemptTableSortField = SORT_FIELDS.includes(sortRaw as AttemptTableSortField)

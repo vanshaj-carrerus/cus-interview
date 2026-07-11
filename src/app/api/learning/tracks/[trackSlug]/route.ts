@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getPlatformAccessSession } from "@/lib/billing/require-platform-access";
 import { getTrackBySlug } from "@/lib/learning/service";
 
 type Props = {
@@ -7,6 +8,11 @@ type Props = {
 
 export async function GET(_: Request, { params }: Props) {
   try {
+    const access = await getPlatformAccessSession();
+    if ("error" in access) {
+      return access.error;
+    }
+
     const { trackSlug } = await params;
     const result = await getTrackBySlug(trackSlug);
     if (!result) {
