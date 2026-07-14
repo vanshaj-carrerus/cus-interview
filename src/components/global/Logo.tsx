@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-export const LOGO_SRC = "/cus-interview-logo.png";
+export const LOGO_SRC = "/cus-interview-logo-cropped.png?v=20260714";
 export const LOGO_ALT = "CUS Interview";
 
 type LogoProps = {
@@ -14,8 +14,8 @@ type LogoProps = {
 export default function Logo({
   href = "/",
   className = "",
-  width = 160,
-  height = 70,
+  width = 140,
+  height = 62,
   priority = false,
 }: LogoProps) {
   const image = (

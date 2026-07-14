@@ -13,6 +13,11 @@ import {
   extractResumeText,
   type ResumeFileKind,
 } from "@/lib/resume-analyzer/extract-resume-text";
+import {
+  analyzeResumeFormat,
+  formattingChecklistPercent,
+  mergeFormattingChecks,
+} from "@/lib/resume-analyzer/analyze-resume-format";
 import { normalizeResumeReport } from "@/lib/resume-analyzer/normalize-report";
 import { validateReportAgainstSource } from "@/lib/resume-analyzer/validate-report-source";
 import type {
@@ -105,9 +110,10 @@ STRICT RULES:
 - missingKeywords: relevant role keywords NOT present in the resume (do not list words already in the resume).
 - compatibility labels exactly: ${COMPATIBILITY_LABELS.join(", ")}
 - formatting labels exactly: ${FORMATTING_LABELS.join(", ")}
+- For formatting: judge ATS-friendly layout from the text — section titles, bullets, date consistency, single-column vs multi-column, tables, decorative icons, contact header, line spacing / white space / text density, and overall file structure.
 - sectionScores labels exactly: ${SECTION_SCORE_LABELS.join(", ")}
 - Count grammar/spelling issues from the actual resume text only.
-- suggestions/strengths/improvements must reference this specific resume content.
+- suggestions/strengths/improvements must reference this specific resume content AND mention format/spacing issues when relevant.
 - File type: ${fileKind.toUpperCase()}
 
 EXTRACTED PROFILE (ground truth — do not contradict):
@@ -202,7 +208,70 @@ export async function analyzeResumeFile(
   >(buildAnalysisPrompt(resumeText, profile, fileKind));
 
   const merged = mergeProfileIntoReport(analysis, profile, deterministic);
-  const normalized = normalizeResumeReport(merged);
+  const deterministicFormatting = analyzeResumeFormat(resumeText, fileKind);
+  const formatting = mergeFormattingChecks(
+    deterministicFormatting,
+    Array.isArray(merged.formatting)
+      ? merged.formatting.filter(
+          (item): item is { label: string; passed: boolean } =>
+            typeof item?.label === "string"
+        )
+      : undefined
+  );
+  const formatScore = formattingChecklistPercent(formatting);
+
+  const withFormat: Partial<RawAiResumeAnalysis> = {
+    ...merged,
+    formatting,
+    sectionScores: (Array.isArray(merged.sectionScores)
+      ? merged.sectionScores
+      : []
+    )
+      .filter(
+        (item): item is { label: string; score: number } =>
+          typeof item?.label === "string" && typeof item?.score === "number"
+      )
+      .map((item) =>
+        item.label.trim().toLowerCase() === "formatting"
+          ? { ...item, score: formatScore }
+          : item
+      ),
+  };
+
+  // Ensure Formatting section exists even if AI omitted it.
+  if (
+    !withFormat.sectionScores?.some(
+      (item) => item.label.trim().toLowerCase() === "formatting"
+    )
+  ) {
+    withFormat.sectionScores = [
+      ...(withFormat.sectionScores ?? []),
+      { label: "Formatting", score: formatScore },
+    ];
+  }
+
+  const formatFailures = formatting
+    .filter((item) => !item.passed)
+    .map((item) => item.label);
+  if (formatFailures.length > 0) {
+    const formatTip = `Improve resume format & spacing: fix ${formatFailures
+      .slice(0, 4)
+      .join(", ")}${formatFailures.length > 4 ? ", and more" : ""}.`;
+    const existing = Array.isArray(withFormat.suggestions)
+      ? withFormat.suggestions.filter((s): s is string => typeof s === "string")
+      : [];
+    withFormat.suggestions = [formatTip, ...existing].slice(0, 8);
+
+    const existingImprovements = Array.isArray(withFormat.improvements)
+      ? withFormat.improvements.filter((s): s is string => typeof s === "string")
+      : [];
+    withFormat.improvements = [
+      `Format/spacing issues detected (${formatFailures.length} checks failed).`,
+      ...existingImprovements,
+    ].slice(0, 8);
+  }
+
+  const normalized = normalizeResumeReport(withFormat);
   const report = validateReportAgainstSource(
     normalized,
     resumeText,

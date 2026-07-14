@@ -106,7 +106,7 @@ export default async function Footer() {
 
       <div className="bg-slate-50 py-6 mt-12 border-t border-slate-200">
         <div className="max-w-[1400px] mx-auto px-6 flex items-center justify-start text-[13px] text-slate-500">
-          &copy; {new Date().getFullYear()} CareerUs. All rights reserved.
+          &copy; {new Date().getFullYear()} CUS Interview. All rights reserved.
         </div>
       </div>
     </footer>

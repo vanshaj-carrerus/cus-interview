@@ -38,6 +38,9 @@ export const FORMATTING_LABELS = [
   "Headers",
   "Footers",
   "File Structure",
+  "Line Spacing",
+  "White Space Balance",
+  "Text Density",
 ] as const;
 
 export const SECTION_SCORE_LABELS = [

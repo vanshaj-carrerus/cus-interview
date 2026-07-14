@@ -76,13 +76,14 @@ export function computeAtsScore(
   const keywordScore = report.keywordMatchPercent;
   const completenessScore = profileCompleteness(report.candidate);
 
-  const computed = Math.round(
-    compatibilityScore * 0.3 +
-      sectionAvg * 0.25 +
+  // Content (~70%) + format/spacing (~30%) so uploaded layout and text both matter.
+  const contentScore = Math.round(
+    compatibilityScore * 0.35 +
+      sectionAvg * 0.3 +
       keywordScore * 0.2 +
-      formattingScore * 0.15 +
-      completenessScore * 0.1
+      completenessScore * 0.15
   );
+  const computed = Math.round(contentScore * 0.7 + formattingScore * 0.3);
 
   const aiScore = report.atsScore;
   if (aiScore >= 15) {

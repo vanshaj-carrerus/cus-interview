@@ -335,12 +335,38 @@ export default function ResultsDashboard({
         </GlassCard>
 
         <GlassCard>
-          <div className="mb-5 flex items-center gap-2">
-            <FileText className="h-5 w-5 text-[#00bcfe]" />
-            <h3 className="text-lg font-semibold text-slate-900">
-              Formatting Analysis
-            </h3>
+          <div className="mb-5 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-[#00bcfe]" />
+              <h3 className="text-lg font-semibold text-slate-900">
+                Formatting & Spacing
+              </h3>
+            </div>
+            <span
+              className="text-sm font-bold"
+              style={{
+                color: getScoreColor(
+                  Math.round(
+                    (report.formatting.filter((item) => item.passed).length /
+                      Math.max(report.formatting.length, 1)) *
+                      100
+                  )
+                ),
+              }}
+            >
+              {Math.round(
+                (report.formatting.filter((item) => item.passed).length /
+                  Math.max(report.formatting.length, 1)) *
+                  100
+              )}
+              %
+            </span>
           </div>
+          <p className="mb-4 text-xs leading-relaxed text-slate-500">
+            Score includes layout checks from your uploaded file — text density,
+            line spacing, white space, sections, bullets, and ATS-safe structure —
+            plus content quality.
+          </p>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {report.formatting.map((item) => (
               <div
@@ -352,7 +378,7 @@ export default function ResultsDashboard({
                 </span>
                 <span
                   className={`h-2.5 w-2.5 rounded-full ${
-                    item.passed ? "bg-emerald-500" : "bg-[#00bcfe]"
+                    item.passed ? "bg-emerald-500" : "bg-red-400"
                   }`}
                 />
               </div>
