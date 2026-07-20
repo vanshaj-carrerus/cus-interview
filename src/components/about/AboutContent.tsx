@@ -10,13 +10,13 @@ export default function AboutContent() {
       <div className="text-center max-w-4xl mx-auto mb-20">
         
         <h1 className="text-4xl md:text-6xl font-black text-slate-800 mb-6 tracking-tight">
-          About <span className="bg-gradient-to-r from-sky-400 to-pink-400 bg-clip-text text-transparent">CUS Solution</span>
+          About <span className="bg-gradient-to-r from-sky-400 to-pink-400 bg-clip-text text-transparent">CUS Interview</span>
         </h1>
         <p className="text-xl text-slate-500 leading-relaxed font-medium">
           &quot;Learn, Practice, and Excel&quot;
         </p>
         <p className="mt-6 text-lg text-slate-600 leading-relaxed">
-          CUS Solution (CareerUs) is a comprehensive educational portal that empowers learners across multiple domains—spanning computer science, essential software tools, and top-tier interview preparation services.
+          CUS Interview is a comprehensive educational portal that empowers learners across multiple domains—spanning computer science, essential software tools, and top-tier interview preparation services.
         </p>
       </div>
 
@@ -26,7 +26,7 @@ export default function AboutContent() {
         <div className="relative z-10 space-y-6 text-slate-600 leading-relaxed text-lg">
           <h2 className="text-3xl font-bold text-slate-800 mb-8 border-b border-slate-100 pb-4">Company Profile & Brand</h2>
           <p>
-            With a growing community of registered users, CUS Solution provides a vast collection of tutorials, interview guides, concept explainers, coding challenges, and structured courses tailored for both academic success and professional growth.
+            With a growing community of registered users, CUS Interview provides a vast collection of tutorials, interview guides, concept explainers, coding challenges, and structured courses tailored for both academic success and professional growth.
           </p>
           <p>
             We are particularly recognized for our in-depth interview preparation resources, helping candidates secure roles at top tech companies through our curated content, AI mock interviews, and specialized tracks.
@@ -35,7 +35,7 @@ export default function AboutContent() {
             Our high-demand technology courses—such as Data Structures and Algorithms (DSA), System Design, Web Development, and Machine Learning—are crafted by industry experts. We ensure that every piece of content adds credibility and significantly enhances our learners&apos; career prospects.
           </p>
           <p className="font-semibold text-slate-800 text-xl pt-4">
-            At CUS Solution, we&apos;re more than just a platform—we&apos;re a community. A space to learn, grow, and stay ahead in the ever-evolving world of education and technology.
+            At CUS Interview, we&apos;re more than just a platform—we&apos;re a community. A space to learn, grow, and stay ahead in the ever-evolving world of education and technology.
           </p>
         </div>
       </div>
@@ -83,7 +83,7 @@ export default function AboutContent() {
             <h2 className="text-2xl font-bold text-slate-800">Corporate History</h2>
           </div>
           <p className="text-slate-600 leading-relaxed">
-            Founded with a vision to simplify complex coding concepts, CUS Solution began as a focused technical platform. Over the years, under the umbrella of Sanchhaya Education Pvt Ltd, it has evolved into a full-spectrum educational ecosystem—supporting learners in programming, corporate skill-building, and professional recruitment.
+            Founded with a vision to simplify complex coding concepts, CUS Interview began as a focused technical platform. Over the years, under the umbrella of Sanchhaya Education Pvt Ltd, it has evolved into a full-spectrum educational ecosystem—supporting learners in programming, corporate skill-building, and professional recruitment.
           </p>
         </div>
 
@@ -97,7 +97,7 @@ export default function AboutContent() {
               <h2 className="text-2xl font-bold text-white">Leadership</h2>
             </div>
             <p className="text-slate-300 leading-relaxed">
-              Fueled by an unwavering passion for education and technology, our leadership team laid the bedrock upon which CUS Solution stands today. Their indomitable spirit has been instrumental in our remarkable growth. As the steadfast driving force behind the company, they remain a beacon of guidance, propelling the team to craft transformative learning experiences.
+              Fueled by an unwavering passion for education and technology, our leadership team laid the bedrock upon which CUS Interview stands today. Their indomitable spirit has been instrumental in our remarkable growth. As the steadfast driving force behind the company, they remain a beacon of guidance, propelling the team to craft transformative learning experiences.
             </p>
           </div>
         </div>

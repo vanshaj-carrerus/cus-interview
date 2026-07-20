@@ -1,8 +1,9 @@
 import AboutContent from "@/components/about/AboutContent";
 
 export const metadata = {
-  title: "About Us | CareerUs",
-  description: "Learn more about CareerUs and Sanchhaya Education Pvt Ltd.",
+  title: "About Us | CUS Interview",
+  description:
+    "Learn more about CUS Interview and our mission to help candidates learn, practice, and excel.",
 };
 
 export default function AboutPage() {
