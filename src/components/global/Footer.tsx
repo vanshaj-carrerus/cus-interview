@@ -30,10 +30,10 @@ export default async function Footer() {
           </p>
 
           <div className="flex flex-wrap items-center gap-3 mt-2">
-            <Link target="_blank" href="https://www.linkedin.com/company/cus-solution/" className="w-10 h-10 rounded-xl bg-white border border-slate-200 text-slate-500 hover:text-sky-500 flex items-center justify-center transition-all group">
+            <Link target="_blank" href="https://www.linkedin.com/company/cus-tech/posts/?feedView=all" className="w-10 h-10 rounded-xl bg-white border border-slate-200 text-slate-500 hover:text-sky-500 flex items-center justify-center transition-all group">
               <LinkedinIcon />
             </Link>
-            <Link  target="_blank" href="https://www.instagram.com/cus_solution/" className="w-10 h-10 rounded-xl bg-white border border-slate-200 text-slate-500 hover:text-sky-500 flex items-center justify-center transition-all group">
+            <Link  target="_blank" href="https://www.instagram.com/cus.tech_/" className="w-10 h-10 rounded-xl bg-white border border-slate-200 text-slate-500 hover:text-sky-500 flex items-center justify-center transition-all group">
               <InstagramIcon />
             </Link>
 
