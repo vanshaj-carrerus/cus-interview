@@ -1,133 +1,102 @@
-"use client";
-
-import { Shield, Lock, FileText, Database, Eye, Video, Server, CheckCircle2 } from "lucide-react";
+import React from "react";
 
 export default function PrivacyContent() {
   return (
-    <div className="max-w-7xl mx-auto px-6 py-20">
-      {/* Header Section */}
-      <div className="text-center max-w-3xl mx-auto mb-16">
-        <div className="w-20 h-20 bg-gradient-to-br from-sky-100 to-pink-100 rounded-3xl mx-auto flex items-center justify-center mb-8 shadow-sm">
-          <Shield className="w-10 h-10 text-sky-500" />
-        </div>
-        <h1 className="text-4xl md:text-5xl font-black text-slate-800 mb-6 tracking-tight">
-          Privacy <span className="bg-gradient-to-r from-sky-400 to-pink-400 bg-clip-text text-transparent">Policy</span>
-        </h1>
-        <p className="text-lg text-slate-500 leading-relaxed">
-          At CUS Solution, we are committed to safeguarding your privacy. This comprehensive policy details how we collect, use, and protect your data across our learning platform, compiler, and interview services.
-        </p>
-      
-      </div>
-
-      {/* Main Content Split */}
-      <div className="grid lg:grid-cols-3 gap-12 items-start">
+    <div className="min-h-screen bg-white text-slate-800 py-16 px-4 sm:px-6 lg:px-8 font-sans">
+      <div className="max-w-[1400px] mx-auto">
         
-        {/* Sticky Sidebar Navigation */}
-        <div className="lg:col-span-1 sticky top-24 hidden lg:block">
-          <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm">
-            <h3 className="font-bold text-slate-800 mb-4 text-lg">Contents</h3>
-            <nav className="space-y-3">
-              <a href="#data-collection" className="flex items-center gap-3 text-slate-500 hover:text-sky-500 transition-colors font-medium">
-                <Database className="w-4 h-4" /> Information Collection
-              </a>
-              <a href="#platform-usage" className="flex items-center gap-3 text-slate-500 hover:text-sky-500 transition-colors font-medium">
-                <Server className="w-4 h-4" /> Platform Usage Data
-              </a>
-              <a href="#mock-interviews" className="flex items-center gap-3 text-slate-500 hover:text-sky-500 transition-colors font-medium">
-                <Video className="w-4 h-4" /> Mock Interviews & AI
-              </a>
-              <a href="#data-sharing" className="flex items-center gap-3 text-slate-500 hover:text-sky-500 transition-colors font-medium">
-                <Eye className="w-4 h-4" /> Data Sharing & Privacy
-              </a>
-              <a href="#security" className="flex items-center gap-3 text-slate-500 hover:text-sky-500 transition-colors font-medium">
-                <Lock className="w-4 h-4" /> Security Measures
-              </a>
-            </nav>
-          </div>
-        </div>
+        {/* Header */}
+        <header className="pb-10 border-b border-slate-200 mb-10">
+          <h1 className="text-4xl font-bold text-slate-900 tracking-tight mb-3">Privacy Policy</h1>
+          <p className="text-slate-500 text-sm">
+            Last updated: {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+          </p>
+        </header>
 
-        {/* Policy Details */}
-        <div className="lg:col-span-2 space-y-8">
+        {/* Main Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-16 gap-y-12">
           
-          {/* Section 1 */}
-          <div id="data-collection" className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm relative overflow-hidden group hover:border-sky-100 transition-colors">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="p-3 bg-sky-50 text-sky-500 rounded-xl group-hover:scale-110 transition-transform">
-                <FileText className="w-6 h-6" />
-              </div>
-              <h2 className="text-2xl font-bold text-slate-800">1. Information We Collect</h2>
-            </div>
-            <div className="space-y-4 text-slate-600 leading-relaxed">
-              <p>When you register on CUS Solution, we collect essential information to provide you with a personalized learning experience.</p>
-              <ul className="space-y-3 mt-4">
-                <li className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
-                  <span><strong>Account Data:</strong> Full name, email address, phone number, and educational background.</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
-                  <span><strong>Payment Information:</strong> Handled securely via encrypted third-party gateways; we do not store raw credit card details.</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          {/* Section 2 */}
-          <div id="platform-usage" className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm relative overflow-hidden group hover:border-pink-100 transition-colors">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="p-3 bg-pink-50 text-pink-500 rounded-xl group-hover:scale-110 transition-transform">
-                <Server className="w-6 h-6" />
-              </div>
-              <h2 className="text-2xl font-bold text-slate-800">2. Code Compiler & Platform Usage</h2>
-            </div>
-            <div className="space-y-4 text-slate-600 leading-relaxed">
-              <p>Our interactive compiler and DSA practice tracks are core to the platform. To optimize these services, we log specific usage data:</p>
-              <ul className="list-disc pl-6 space-y-2 text-slate-600 mt-4">
-                <li><strong>Source Code Submissions:</strong> Code compiled on our servers is temporarily stored to evaluate accuracy and provide algorithmic feedback.</li>
-                <li><strong>Progress Tracking:</strong> We track your completion rates across courses (like System Design and Web Dev) to generate your performance certificates.</li>
-                <li><strong>Device Metrics:</strong> Browser type, IP address, and session duration to ensure security and prevent abuse of our computing resources.</li>
-              </ul>
-            </div>
-          </div>
-
-          {/* Section 3 */}
-          <div id="mock-interviews" className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm relative overflow-hidden group hover:border-indigo-100 transition-colors">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="p-3 bg-indigo-50 text-indigo-500 rounded-xl group-hover:scale-110 transition-transform">
-                <Video className="w-6 h-6" />
-              </div>
-              <h2 className="text-2xl font-bold text-slate-800">3. AI & Mock Interviews</h2>
-            </div>
-            <div className="space-y-4 text-slate-600 leading-relaxed">
-              <p>CUS Solution offers premium AI Mock Interviews and expert HR sessions. We handle this highly sensitive data with the utmost care:</p>
-              <ul className="list-disc pl-6 space-y-2 text-slate-600 mt-4">
-                <li><strong>Audio/Video Recordings:</strong> Sessions are recorded strictly for your personal review and AI-driven feedback generation. You retain the right to delete these recordings at any time.</li>
-                <li><strong>AI Processing:</strong> Transcripts are processed by our secure AI models to evaluate communication skills and technical accuracy. These transcripts are not used to train public AI models.</li>
-              </ul>
-            </div>
-          </div>
-
-          {/* Section 4 & 5 Combined */}
-          <div className="bg-slate-900 rounded-3xl p-8 md:p-10 text-white relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-sky-500/20 to-pink-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-            
-            <div id="data-sharing" className="relative z-10 mb-10">
-              <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-                <Eye className="w-6 h-6 text-sky-400" /> Data Sharing
+          <div className="space-y-12">
+            <section>
+              <h2 className="text-xl font-semibold text-slate-900 mb-4">
+                1. Overview & Information Collection
               </h2>
-              <p className="text-slate-300 leading-relaxed">
-                We never sell your personal data. We may share your profile and performance metrics with corporate recruiters <strong>only</strong> if you explicitly opt-in to our "Corporate Staffing" program. Otherwise, your data remains strictly confidential and is only shared with necessary third-party service providers (like AWS for hosting) under strict confidentiality agreements.
-              </p>
-            </div>
+              <div className="space-y-4 text-slate-600 leading-relaxed text-sm">
+                <p>
+                  At CUS Solution, we are strongly committed to protecting the privacy of our users. This Privacy Policy details the types of personal information we collect, how it is used, and the steps we take to ensure your personal information is handled appropriately.
+                </p>
+                <p>
+                  When you register for an account, subscribe to our services, or interact with our platform, we may collect identifiable information such as your full name, email address, phone number, and educational background. This data is essential for personalizing your learning experience and maintaining the security of your account.
+                </p>
+              </div>
+            </section>
 
-            <div id="security" className="relative z-10 pt-8 border-t border-white/10">
-              <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-                <Lock className="w-6 h-6 text-pink-400" /> Security
+            <section>
+              <h2 className="text-xl font-semibold text-slate-900 mb-4">
+                2. Platform Usage & Code Compilation Data
               </h2>
-              <p className="text-slate-300 leading-relaxed">
-                We employ industry-standard encryption protocols (TLS/SSL) for data transmission. All user passwords and sensitive API keys are securely hashed. While we strive for 100% security, we encourage users to maintain strong passwords and enable two-factor authentication if available.
+              <div className="space-y-4 text-slate-600 text-sm leading-relaxed">
+                <p>
+                  Our interactive compiler and Data Structures & Algorithms practice tracks are core features of the CUS Solution platform. To optimize these services and provide accurate feedback, we automatically log specific technical and usage data.
+                </p>
+                <p className="text-slate-600 text-sm leading-relaxed mt-2">
+                  When you submit code through our online compiler, the source code is temporarily transmitted to our secure servers for compilation and execution. We analyze the execution results to provide you with algorithmic feedback and track your progress across different problem sets. Additionally, we collect standard device metrics including your IP address, browser type, and session duration to monitor platform performance and prevent abuse of our computing resources.
+                </p>
+              </div>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-slate-900 mb-4">
+                3. AI Services & Mock Interviews
+              </h2>
+              <div className="space-y-4 text-slate-600 text-sm leading-relaxed">
+                <p>
+                  For users utilizing our premium AI Mock Interviews and expert HR sessions, we process highly sensitive conversational data with the utmost care and security.
+                </p>
+                <p className="text-slate-600 text-sm leading-relaxed mt-2">
+                  During an AI mock interview, audio and video data may be recorded exclusively for the purpose of providing you with personal review materials and generating AI-driven feedback on your performance. The transcripts and communication metrics are processed by secure AI models to evaluate your technical and soft skills. We strictly prohibit the use of your private interview data for training public AI models, and you retain full rights to delete your interview records at any time.
+                </p>
+              </div>
+            </section>
+          </div>
+
+          <div className="space-y-12">
+            <section>
+              <h2 className="text-xl font-semibold text-slate-900 mb-4">
+                4. Data Sharing & Third-Party Disclosure
+              </h2>
+              <p className="text-slate-600 leading-relaxed text-sm">
+                We do not sell, trade, or rent your personal identification information to others. We may share generic aggregated demographic information not linked to any personal identification information with our business partners and trusted affiliates. Your data remains strictly confidential and is only shared with necessary third-party service providers (such as cloud hosting providers and payment processors) under strict confidentiality agreements. If you explicitly opt-in to our "Corporate Staffing" program, we may share your profile and performance metrics with prospective employers.
               </p>
-            </div>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-slate-900 mb-4">
+                5. Data Security Measures
+              </h2>
+              <p className="text-slate-600 leading-relaxed text-sm">
+                We adopt appropriate data collection, storage, and processing practices and security measures to protect against unauthorized access, alteration, disclosure, or destruction of your personal information, username, password, transaction information, and data stored on our site. We employ industry-standard encryption protocols (TLS/SSL) for all sensitive data transmission.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-slate-900 mb-4">
+                6. Cookies & Tracking Technologies
+              </h2>
+              <p className="text-slate-600 leading-relaxed text-sm">
+                Our site may use "cookies" to enhance user experience. Your web browser places cookies on your hard drive for record-keeping purposes and sometimes to track information about you. You may choose to set your web browser to refuse cookies, or to alert you when cookies are being sent. If you do so, note that some parts of the site may not function properly. We use these technologies to remember your preferences and analyze how our platform is used.
+              </p>
+            </section>
+
+            <section className="pt-8 border-t border-slate-200">
+              <h2 className="text-lg font-semibold text-slate-900 mb-2">7. Contact Information</h2>
+              <p className="text-slate-600 text-sm leading-relaxed mb-4">
+                If you have any questions about this Privacy Policy, the practices of this site, or your dealings with this site, please contact our Data Protection Officer.
+              </p>
+              <p className="text-slate-900 font-medium text-sm">
+                Email: info@custech.co
+              </p>
+            </section>
           </div>
 
         </div>

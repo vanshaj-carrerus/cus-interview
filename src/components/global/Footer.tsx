@@ -48,6 +48,10 @@ export default async function Footer() {
 
           <Link href="/privacy" className="text-[13px] text-slate-500 hover:text-slate-900 transition-colors">Privacy Policy</Link>
 
+          <Link href="/refund-policy" className="text-[13px] text-slate-500 hover:text-slate-900 transition-colors">Refund Policy</Link>
+
+          <Link href="/terms" className="text-[13px] text-slate-500 hover:text-slate-900 transition-colors">Terms and Conditions</Link>
+
           <Link href="/contact" className="text-[13px] text-slate-500 hover:text-slate-900 transition-colors">Contact Us</Link>
 
         </div>
