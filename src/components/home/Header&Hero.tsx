@@ -9,8 +9,8 @@ import { motion, AnimatePresence, Variants } from "framer-motion";
 
 function CompanyLogo({ name, src }: { name: string; src: string }) {
   return (
-    <div className="relative w-28 h-10 mx-4 cursor-default flex items-center justify-center">
-      <Image src={src} alt={name} fill className="object-contain grayscale opacity-50" />
+    <div className="relative shrink-0 w-24 h-8 sm:w-28 sm:h-10 md:w-32 md:h-10 cursor-default flex items-center justify-center">
+      <Image src={src} alt={name} fill className="object-contain grayscale opacity-50 hover:opacity-100 transition-opacity" />
     </div>
   );
 }
@@ -25,7 +25,7 @@ export default function CusInterviewHero() {
 
 
       {/* ── HERO CONTENT (CENTERED) ── */}
-      <main className="relative md:pt-20 z-20">
+      <main className="relative pt-28 md:pt-32 z-20">
         <div className="max-w-7xl mx-auto px-6 flex flex-col items-center text-center">
 
           {/* Top Pill */}
@@ -37,7 +37,7 @@ export default function CusInterviewHero() {
           </div> */}
 
           {/* Main Headline */}
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-[#111827] mt-0 leading-[1.1] tracking-tight mb-3 max-w-none mx-auto whitespace-nowrap">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-[#111827] mt-0 leading-[1.1] tracking-tight mb-3 max-w-none mx-auto">
             Build Your Dream Career with CUS.
           </h1>
 
@@ -68,9 +68,9 @@ export default function CusInterviewHero() {
 
 
 
-            <div className="flex w-[200%] animate-[marquee_35s_linear_infinite]">
+            <div className="flex w-max animate-[marquee_35s_linear_infinite]">
               {/* First Set */}
-              <div className="flex w-1/2 justify-around items-center px-4">
+              <div className="flex items-center gap-8 sm:gap-12 md:gap-16 px-4 sm:px-6 md:px-8">
                 <CompanyLogo name="Amazon" src="/logos/amazon.png" />
                 <CompanyLogo name="Facebook" src="/logos/facebook.png" />
                 <CompanyLogo name="Goldman Sachs" src="/logos/goldman-sachs.png" />
@@ -79,7 +79,7 @@ export default function CusInterviewHero() {
                 <CompanyLogo name="HCL" src="/logos/HCL.png" />
               </div>
               {/* Second Set (Duplicate for seamless loop) */}
-              <div className="flex w-1/2 justify-around items-center px-4">
+              <div className="flex items-center gap-8 sm:gap-12 md:gap-16 px-4 sm:px-6 md:px-8">
                 <CompanyLogo name="Amazon" src="/logos/amazon.png" />
                 <CompanyLogo name="Facebook" src="/logos/facebook.png" />
                 <CompanyLogo name="Goldman Sachs" src="/logos/goldman-sachs.png" />
