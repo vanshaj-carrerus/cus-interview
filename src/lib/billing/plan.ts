@@ -1,6 +1,9 @@
-export type BillingPlanId = "monthly" | "quarterly";
+export type BillingPlanId = "test" | "monthly" | "quarterly";
 
-export const TRIAL_DAYS = 14;
+export const TRIAL_MINUTES = 10;
+export const TRIAL_HOURS = 10 / 60;
+export const TRIAL_DAYS = 10 / (24 * 60);
+export const TRIAL_LABEL = "10-minute";
 export const SUBSCRIPTION_AUTH_AMOUNT_INR = 2;
 export const SUBSCRIPTION_AUTH_AMOUNT_PAISE = SUBSCRIPTION_AUTH_AMOUNT_INR * 100;
 
@@ -27,6 +30,17 @@ export const PRICING_FEATURES: PricingFeature[] = [
 export const PRICING_FEATURES_VISIBLE = PRICING_FEATURES;
 
 export const PRICING_PLANS = {
+  test: {
+    id: "test" as const,
+    name: "Test Plan (₹10)",
+    priceDisplay: "₹10",
+    periodSuffix: " / Test",
+    periodLabel: "test purchase",
+    amountPaise: 1000,
+    razorpayPeriod: "monthly" as const,
+    razorpayInterval: 1,
+    envPlanId: "",
+  },
   monthly: {
     id: "monthly" as const,
     name: "Full Access",
@@ -57,9 +71,9 @@ export function getPricingPlan(planId: BillingPlanId) {
 }
 
 export function getTrialStartAtUnix(): number {
-  return Math.floor(Date.now() / 1000) + TRIAL_DAYS * 24 * 60 * 60;
+  return Math.floor(Date.now() / 1000) + TRIAL_MINUTES * 60;
 }
 
 export function isBillingPlanId(value: unknown): value is BillingPlanId {
-  return value === "monthly" || value === "quarterly";
+  return value === "test" || value === "monthly" || value === "quarterly";
 }

@@ -1,5 +1,5 @@
 import type { SubscriptionStatus } from "@/types/auth";
-import { TRIAL_DAYS } from "@/lib/billing/plan";
+import { TRIAL_LABEL } from "@/lib/billing/plan";
 
 export const TRIAL_MOCK_INTERVIEWS_PER_DAY = 1;
 
@@ -50,9 +50,9 @@ export function getMockInterviewDailyLimit(
 }
 
 export function buildTrialMockLimitMessage(): string {
-  return `Free trial (${TRIAL_DAYS} days): you can run ${TRIAL_MOCK_INTERVIEWS_PER_DAY} AI mock interview per day. Practice problems, courses, and the compiler are fully available. After your plan auto-renews, mock interviews are unlimited.`;
+  return `Free trial (${TRIAL_LABEL}): you can run ${TRIAL_MOCK_INTERVIEWS_PER_DAY} AI mock interview during your trial. Practice problems, courses, and the compiler are fully available. After your plan auto-renews, mock interviews are unlimited.`;
 }
 
 export function buildTrialMockLimitReachedMessage(): string {
-  return `You've used today's free trial mock interview. Come back tomorrow, or wait until your plan renews after the ${TRIAL_DAYS}-day trial for unlimited access.`;
+  return `You've used your free trial mock interview. Wait until your plan auto-renews after the ${TRIAL_LABEL} trial for unlimited access.`;
 }

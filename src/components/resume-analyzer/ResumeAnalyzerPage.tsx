@@ -221,7 +221,7 @@ export default function ResumeAnalyzerPage() {
                   <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
                     <button
                       type="button"
-                      onClick={scrollToUpload}
+                      onClick={() => checkAccess(() => scrollToUpload())}
                       className="inline-flex items-center gap-2 rounded-full bg-[#00bcfe] px-8 py-3.5 text-sm font-semibold text-white shadow-lg shadow-[#00bcfe]/25 transition hover:brightness-110 active:scale-[0.98]"
                     >
                       <Upload className="h-4 w-4" />
@@ -294,11 +294,11 @@ export default function ResumeAnalyzerPage() {
                           ? "border-[#00bcfe] bg-[#00bcfe]/5 scale-[1.01]"
                           : "border-slate-200 bg-slate-50/50 hover:border-[#00bcfe]/40 hover:bg-[#00bcfe]/[0.02]"
                       }`}
-                      onClick={() => fileInputRef.current?.click()}
+                      onClick={() => checkAccess(() => fileInputRef.current?.click())}
                       onKeyDown={(e) => {
                         if (e.key === "Enter" || e.key === " ") {
                           e.preventDefault();
-                          fileInputRef.current?.click();
+                          checkAccess(() => fileInputRef.current?.click());
                         }
                       }}
                       role="button"

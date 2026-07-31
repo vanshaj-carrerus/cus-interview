@@ -32,7 +32,6 @@ const userSchema = new Schema(
     razorpaySubscriptionId: { type: String, sparse: true },
     billingPlanId: {
       type: String,
-      enum: ["monthly", "quarterly"],
       sparse: true,
     },
     subscribedAt: { type: Date },
@@ -44,6 +43,9 @@ const userSchema = new Schema(
     trialEndsAt: { type: Date },
     currentPeriodEnd: { type: Date },
     cancelAtPeriodEnd: { type: Boolean, default: false },
+    payuAuthPayuId: { type: String, sparse: true },
+    payuFirstChargeAt: { type: Date },
+    payuLastRecurringTxnId: { type: String, sparse: true },
   },
   { timestamps: true }
 );
@@ -51,6 +53,11 @@ const userSchema = new Schema(
 export type UserDocument = InferSchemaType<typeof userSchema> & {
   _id: mongoose.Types.ObjectId;
 };
+
+// In Next.js dev server, delete cached model to prevent stale schema validation errors
+if (process.env.NODE_ENV !== "production" && mongoose.models.User) {
+  delete mongoose.models.User;
+}
 
 export const User: Model<UserDocument> =
   (mongoose.models.User as Model<UserDocument>) ||

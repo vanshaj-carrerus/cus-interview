@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/providers/auth-provider";
-import { openRazorpaySubscriptionCheckout } from "@/lib/billing/razorpay-checkout-client";
+import { submitPayUForm } from "@/lib/billing/payu-checkout-client";
 import {
   isValidIndianPhone,
   normalizeIndianPhone,
@@ -19,7 +19,7 @@ export default function SubscribeButton({
   className = "",
 }: SubscribeButtonProps) {
   const router = useRouter();
-  const { user, loading, refreshUser } = useAuth();
+  const { user, loading } = useAuth();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [phone, setPhone] = useState("");
@@ -28,61 +28,29 @@ export default function SubscribeButton({
   async function startCheckout(contact: string) {
     setSubmitting(true);
     try {
-      const res = await fetch("/api/billing/create-subscription", {
+      const res = await fetch("/api/billing/payu/initiate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "same-origin",
         body: JSON.stringify({ plan: "monthly", contact }),
       });
+
       const data = (await res.json()) as {
-        subscriptionId?: string;
-        keyId?: string;
-        name?: string;
-        description?: string;
-        callbackUrl?: string;
-        prefill?: { name?: string; email?: string; contact?: string };
+        actionUrl?: string;
+        params?: Record<string, string>;
         error?: string;
       };
 
-      if (!res.ok || !data.subscriptionId || !data.keyId) {
+      if (!res.ok || !data.actionUrl || !data.params) {
         setError(data.error ?? "Could not start checkout.");
         setSubmitting(false);
         return;
       }
 
-      const checkout = await openRazorpaySubscriptionCheckout({
-        keyId: data.keyId,
-        subscriptionId: data.subscriptionId,
-        name: data.name,
-        description: data.description,
-        prefill: data.prefill,
-        callbackUrl: data.callbackUrl,
-        onSuccess: async () => {
-          const verifyRes = await fetch("/api/billing/verify-subscription", {
-            method: "POST",
-            credentials: "same-origin",
-          });
-          if (!verifyRes.ok) {
-            setError("Subscription verification failed.");
-            setSubmitting(false);
-            return;
-          }
-          await refreshUser();
-          window.location.href = "/pricing/success?type=plan&product=monthly";
-        },
-        onFailure: (message) => {
-          setError(message);
-          setSubmitting(false);
-        },
-        onDismiss: () => {
-          setSubmitting(false);
-        },
+      submitPayUForm({
+        actionUrl: data.actionUrl,
+        params: data.params,
       });
-
-      if (!checkout.ok) {
-        setError(checkout.error);
-        setSubmitting(false);
-      }
     } catch {
       setError("Could not start checkout.");
       setSubmitting(false);
@@ -147,7 +115,7 @@ export default function SubscribeButton({
             onChange={(event) =>
               setPhone(event.target.value.replace(/\D/g, "").slice(0, 10))
             }
-            placeholder="Mobile for auto-payment"
+            placeholder="Mobile for payment"
             className="w-full px-3 py-2.5 text-sm outline-none"
           />
         </div>
@@ -165,7 +133,7 @@ export default function SubscribeButton({
             disabled={submitting}
             className={`rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-70 ${className}`}
           >
-            {submitting ? "Opening checkout..." : label}
+            {submitting ? "Opening PayU..." : label}
           </button>
         </div>
         {error ? <p className="text-sm text-red-600">{error}</p> : null}
@@ -181,7 +149,7 @@ export default function SubscribeButton({
         disabled={submitting}
         className={`rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white transition hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-70 ${className}`}
       >
-        {submitting ? "Opening checkout..." : label}
+        {submitting ? "Opening PayU..." : label}
       </button>
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
     </div>

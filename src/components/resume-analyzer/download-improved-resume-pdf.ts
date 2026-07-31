@@ -1,5 +1,4 @@
-import html2canvas from "html2canvas";
-import { jsPDF } from "jspdf";
+import type { jsPDF } from "jspdf";
 import type { ImprovedResume } from "@/lib/resume-analyzer/improved-resume-types";
 
 const A4_CAPTURE_WIDTH_PX = 794;
@@ -25,6 +24,7 @@ async function waitForFonts(maxWaitMs = 250): Promise<void> {
 
 async function captureElementToCanvas(element: HTMLElement): Promise<HTMLCanvasElement> {
   const captureRoot = findResumeRoot(element);
+  const html2canvas = (await import("html2canvas")).default;
 
   const canvas = await html2canvas(captureRoot, {
     scale: CAPTURE_SCALE,
@@ -48,8 +48,9 @@ async function captureElementToCanvas(element: HTMLElement): Promise<HTMLCanvasE
   return canvas;
 }
 
-function canvasToPagedPdf(canvas: HTMLCanvasElement, fileName: string): void {
-  const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+async function canvasToPagedPdf(canvas: HTMLCanvasElement, fileName: string): Promise<void> {
+  const { jsPDF: JsPdfConstructor } = await import("jspdf");
+  const pdf = new JsPdfConstructor({ unit: "mm", format: "a4", orientation: "portrait" });
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
   const pageHeightPx = (canvas.width * pageHeight) / pageWidth;
@@ -115,15 +116,16 @@ export async function downloadImprovedResumePdfFromPreview(
 
   await waitForFonts();
   const canvas = await captureElementToCanvas(element);
-  canvasToPagedPdf(canvas, fileName);
+  await canvasToPagedPdf(canvas, fileName);
 }
 
 /** Plain-text fallback only if visual export fails completely. */
-export function downloadImprovedResumePdf(
+export async function downloadImprovedResumePdf(
   resume: ImprovedResume,
   fileName = "improved-resume.pdf"
-): void {
-  const doc = new jsPDF({ unit: "mm", format: "a4" });
+): Promise<void> {
+  const { jsPDF: JsPdfConstructor } = await import("jspdf");
+  const doc = new JsPdfConstructor({ unit: "mm", format: "a4" });
   const margin = 14;
   const width = 182;
   let y = 18;

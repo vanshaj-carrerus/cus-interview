@@ -8,6 +8,15 @@ export const GST_RATE = 0.18;
 
 export function getOrderAmounts(planId: BillingPlanId, currency = "INR") {
   const plan = getPricingPlan(planId);
+  if (planId === "test") {
+    return {
+      baseAmount: 8,
+      gstAmount: 0,
+      totalAmount: 8,
+      amountPaise: 800,
+      currency,
+    };
+  }
   const baseAmount = plan.amountPaise / 100;
   const gstRate = currency === "INR" ? GST_RATE : 0;
   const gstAmount = baseAmount * gstRate;

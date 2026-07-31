@@ -45,10 +45,12 @@ function getProductSummary(target: CheckoutFormTarget) {
       subtitle:
         target.id === "monthly"
           ? "Monthly plan"
-          : "Quarterly plan",
+          : target.id === "quarterly"
+            ? "Quarterly plan"
+            : "Test plan",
       name: `${plan.name} (${plan.periodLabel})`,
       totalDisplay: getSubscriptionTotalDisplay(target.id),
-      note: `₹${SUBSCRIPTION_AUTH_AMOUNT_INR} charged today · ${TRIAL_DAYS}-day free trial · then auto-billed`,
+      note: `₹${SUBSCRIPTION_AUTH_AMOUNT_INR} charged today · 10-minute free trial · then auto-billed`,
     };
   }
 
@@ -295,7 +297,7 @@ export default function CheckoutFormModal({
             className="w-full rounded-full py-4 text-sm font-bold uppercase tracking-[0.12em] text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
             style={{ backgroundColor: BRAND_BLUE }}
           >
-            {submitting ? "Opening Razorpay…" : "Proceed to Secure Payment"}
+            {submitting ? "Opening PayU…" : "Proceed to Secure Payment"}
           </button>
         </form>
       </div>

@@ -58,7 +58,7 @@ export default function PricingSuccessContent() {
             </>
           ) : isPlan ? (
             <>
-              Your {TRIAL_DAYS}-day free trial is active. Full platform access
+              Your 10-minute free trial is active. Full platform access
               is unlocked now. After the trial,{" "}
               <span className="font-medium text-slate-700">
                 {planLabel} + 18% GST ({planTotalWithGst})

@@ -1,4 +1,4 @@
-import { jsPDF } from "jspdf";
+import type { jsPDF } from "jspdf";
 import type { ResumeAnalysisReport } from "@/lib/resume-analyzer/types";
 
 const MARGIN = 16;
@@ -38,11 +38,12 @@ function ensureSpace(doc: jsPDF, y: number, needed = 20): number {
   return y;
 }
 
-export function downloadResumeReportPdf(
+export async function downloadResumeReportPdf(
   report: ResumeAnalysisReport,
   fileName?: string
-): void {
-  const doc = new jsPDF({ unit: "mm", format: "a4" });
+): Promise<void> {
+  const { jsPDF: JsPdfConstructor } = await import("jspdf");
+  const doc = new JsPdfConstructor({ unit: "mm", format: "a4" });
   let y = MARGIN;
 
   doc.setFont("helvetica", "bold");

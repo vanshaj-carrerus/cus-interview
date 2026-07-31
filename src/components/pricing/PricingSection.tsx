@@ -6,7 +6,7 @@ import { Check } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
 import ManageBillingButton from "@/components/billing/ManageBillingButton";
 import CheckoutFormModal from "@/components/pricing/CheckoutFormModal";
-import { openRazorpayOrderCheckout, openRazorpaySubscriptionCheckout } from "@/lib/billing/razorpay-checkout-client";
+import { submitPayUForm } from "@/lib/billing/payu-checkout-client";
 import type { CheckoutDetails } from "@/lib/billing/checkout-details";
 import {
   HUMAN_SERVICES,
@@ -84,7 +84,7 @@ function SelectPlanButton({
       disabled={disabled || submitting}
       className="mt-6 w-full rounded-full bg-[#eef8fd] py-3.5 text-sm font-semibold text-[#00a6f4] transition hover:bg-[#00a6f4] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
     >
-      {submitting ? "Opening Razorpay…" : label}
+      {submitting ? "Opening PayU…" : label}
     </button>
   );
 }
@@ -132,10 +132,10 @@ function PricingCard({
       </div>
 
       <p className="mt-3 text-xs leading-relaxed text-slate-500">
-        ₹{SUBSCRIPTION_AUTH_AMOUNT_INR} today to save your card · {TRIAL_DAYS}-day
-        free trial · then {plan.priceDisplay} + {GST_RATE * 100}% GST (
-        {getSubscriptionTotalDisplay(planId)}
-        {plan.periodSuffix.toLowerCase()}) auto-billed
+        ₹{SUBSCRIPTION_AUTH_AMOUNT_INR} today to save your card · 10-minute free trial · then{" "}
+        {planId === "test"
+          ? "₹8 auto-billed (₹10 total)"
+          : `${plan.priceDisplay} + ${GST_RATE * 100}% GST (${getSubscriptionTotalDisplay(planId)}${plan.periodSuffix.toLowerCase()}) auto-billed`}
       </p>
 
       {planActive ? (
@@ -231,7 +231,7 @@ export default function PricingSection() {
     target: Extract<CheckoutTarget, { type: "plan" }>,
     details: CheckoutDetails
   ): Promise<boolean> {
-    const res = await fetch("/api/billing/create-subscription", {
+    const res = await fetch("/api/billing/payu/initiate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "same-origin",
@@ -244,60 +244,23 @@ export default function PricingSection() {
       }),
     });
     const data = (await res.json()) as {
-      subscriptionId?: string;
-      keyId?: string;
-      name?: string;
-      description?: string;
-      callbackUrl?: string;
-      prefill?: { name?: string; email?: string; contact?: string };
+      actionUrl?: string;
+      params?: Record<string, string>;
       error?: string;
     };
 
-    if (!res.ok || !data.subscriptionId || !data.keyId) {
-      const message = data.error ?? "Could not start subscription checkout.";
+    if (!res.ok || !data.actionUrl || !data.params) {
+      const message = data.error ?? "Could not start PayU checkout.";
       setCheckoutError(message);
       setError(message);
       setSubmittingKey(null);
       return false;
     }
 
-    const checkout = await openRazorpaySubscriptionCheckout({
-      keyId: data.keyId,
-      subscriptionId: data.subscriptionId,
-      name: data.name,
-      description: data.description,
-      prefill: data.prefill,
-      callbackUrl: data.callbackUrl,
-      themeColor: BRAND_BLUE,
-      onSuccess: async () => {
-        const verifyRes = await fetch("/api/billing/verify-subscription", {
-          method: "POST",
-          credentials: "same-origin",
-        });
-        const verifyData = (await verifyRes.json()) as { error?: string };
-        if (!verifyRes.ok) {
-          setError(verifyData.error ?? "Subscription verification failed.");
-          setSubmittingKey(null);
-          return;
-        }
-        await refreshUser();
-        window.location.href = `/pricing/success?type=plan&product=${target.id}`;
-      },
-      onFailure: (message) => {
-        setError(message);
-        setSubmittingKey(null);
-      },
-      onDismiss: () => {
-        setSubmittingKey(null);
-      },
+    submitPayUForm({
+      actionUrl: data.actionUrl,
+      params: data.params,
     });
-
-    if (!checkout.ok) {
-      setCheckoutError(checkout.error);
-      setError(checkout.error);
-      setSubmittingKey(null);
-      return false;
-    }
 
     setCheckoutError(null);
     return true;
@@ -307,13 +270,12 @@ export default function PricingSection() {
     target: Extract<CheckoutTarget, { type: "service" }>,
     details: CheckoutDetails
   ): Promise<boolean> {
-    const res = await fetch("/api/billing/create-order", {
+    const res = await fetch("/api/billing/payu/initiate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "same-origin",
       body: JSON.stringify({
         service: target.id,
-        currency: "INR",
         firstName: details.firstName,
         lastName: details.lastName,
         email: details.email,
@@ -321,84 +283,23 @@ export default function PricingSection() {
       }),
     });
     const data = (await res.json()) as {
-      orderId?: string;
-      amount?: number;
-      currency?: string;
-      keyId?: string;
-      name?: string;
-      description?: string;
-      prefill?: { name?: string; email?: string; contact?: string };
+      actionUrl?: string;
+      params?: Record<string, string>;
       error?: string;
     };
 
-    if (!res.ok || !data.orderId || !data.keyId || !data.amount) {
-      const message = data.error ?? "Could not start Razorpay checkout.";
+    if (!res.ok || !data.actionUrl || !data.params) {
+      const message = data.error ?? "Could not start PayU checkout.";
       setCheckoutError(message);
       setError(message);
       setSubmittingKey(null);
       return false;
     }
 
-    const checkout = await openRazorpayOrderCheckout({
-      keyId: data.keyId,
-      orderId: data.orderId,
-      amount: data.amount,
-      currency: data.currency ?? "INR",
-      name: data.name,
-      description: data.description,
-      prefill: data.prefill,
-      themeColor: BRAND_BLUE,
-      onSuccess: async (response) => {
-        const verifyRes = await fetch("/api/billing/verify-payment", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "same-origin",
-          body: JSON.stringify(response),
-        });
-        const verifyData = (await verifyRes.json()) as {
-          error?: string;
-          purchaseType?: string;
-          productId?: string;
-        };
-        if (!verifyRes.ok) {
-          setError(verifyData.error ?? "Payment verification failed.");
-          setSubmittingKey(null);
-          return;
-        }
-        await refreshUser();
-        const params = new URLSearchParams({
-          type: verifyData.purchaseType ?? "service",
-          product: verifyData.productId ?? target.id,
-        });
-        window.location.href = `/pricing/success?${params.toString()}`;
-      },
-      onFailure: async (message, orderId) => {
-        await fetch("/api/billing/payment-failed", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "same-origin",
-          body: JSON.stringify({ order_id: orderId }),
-        });
-        setError(message);
-        setSubmittingKey(null);
-      },
-      onDismiss: async (orderId) => {
-        await fetch("/api/billing/payment-failed", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "same-origin",
-          body: JSON.stringify({ order_id: orderId }),
-        });
-        setSubmittingKey(null);
-      },
+    submitPayUForm({
+      actionUrl: data.actionUrl,
+      params: data.params,
     });
-
-    if (!checkout.ok) {
-      setCheckoutError(checkout.error);
-      setError(checkout.error);
-      setSubmittingKey(null);
-      return false;
-    }
 
     setCheckoutError(null);
     return true;
@@ -409,7 +310,7 @@ export default function PricingSection() {
     setCheckoutError(null);
 
     if (!user) {
-      setError("Please log in to continue with Razorpay checkout.");
+      setError("Please log in to continue with PayU checkout.");
       router.push("/login?next=/pricing&reason=subscribe");
       return;
     }
@@ -444,7 +345,7 @@ export default function PricingSection() {
       }
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "Could not start Razorpay checkout.";
+        err instanceof Error ? err.message : "Could not start PayU checkout.";
       setCheckoutError(message);
       setError(message);
       setSubmittingKey(null);
@@ -496,7 +397,7 @@ export default function PricingSection() {
 
           <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-slate-500 sm:text-[15px]">
             Platform plans: pay ₹{SUBSCRIPTION_AUTH_AMOUNT_INR} now to save your
-            payment method, enjoy a {TRIAL_DAYS}-day free trial (
+            payment method, enjoy a 10-minute free trial (
             {TRIAL_MOCK_INTERVIEWS_PER_DAY} mock interview/day), then your plan
             price + 18% GST auto-renews for unlimited access.
           </p>
@@ -517,7 +418,14 @@ export default function PricingSection() {
               </div>
             ) : null}
 
-            <div className="mx-auto mt-12 grid max-w-4xl gap-5 sm:grid-cols-2 sm:gap-6">
+            <div className="mx-auto mt-12 grid max-w-5xl gap-5 sm:grid-cols-3 sm:gap-6">
+              <PricingCard
+                planId="test"
+                onCheckout={handleCheckout}
+                submitting={submittingKey === "plan:test"}
+                disabled={isBusy}
+                planActive={Boolean(hasPlatformAccess)}
+              />
               <PricingCard
                 planId="monthly"
                 onCheckout={handleCheckout}
@@ -542,7 +450,7 @@ export default function PricingSection() {
                 <span style={{ color: BRAND_BLUE }}>real experts</span>
               </h2>
               <p className="mx-auto mt-3 max-w-2xl text-center text-sm text-slate-500">
-                Select Plan to pay via Razorpay. Our team contacts you after
+                Select Plan to pay via PayU. Our team contacts you after
                 booking.
               </p>
 
@@ -571,7 +479,7 @@ export default function PricingSection() {
           <p className="text-xs text-slate-400">
             * Platform plan prices are exclusive of 18% GST. ₹
             {SUBSCRIPTION_AUTH_AMOUNT_INR} authorization is charged today. During
-            the {TRIAL_DAYS}-day trial you get full access to practice problems,
+            the 10-minute trial you get full access to practice problems,
             courses, compiler, and ATS Resume Analyzer, plus{" "}
             {TRIAL_MOCK_INTERVIEWS_PER_DAY} AI mock interview per day. After the
             trial, the plan amount + 18% GST is auto-billed and everything is
@@ -579,7 +487,7 @@ export default function PricingSection() {
             /month).
           </p>
           <p className="mt-2 text-xs text-slate-400">
-            Secure payments powered by Razorpay.
+            Secure payments powered by PayU.
           </p>
         </footer>
       </div>
