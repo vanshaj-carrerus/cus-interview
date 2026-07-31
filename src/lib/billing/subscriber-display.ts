@@ -7,16 +7,20 @@ import {
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
+const ADMIN_DATE_TIMEZONE = "Asia/Kolkata";
+
 export function formatAdminDate(value?: Date | string | null): string {
   if (!value) {
     return "—";
   }
   return new Date(value).toLocaleString("en-IN", {
+    timeZone: ADMIN_DATE_TIMEZONE,
     day: "2-digit",
     month: "short",
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
+    hour12: true,
   });
 }
 
@@ -95,7 +99,7 @@ export function getRenewalSummary(input: {
     (input.status === "active" || input.status === "past_due") &&
     input.currentPeriodEnd
   ) {
-    renewalLabel = `Renews ${formatAdminDate(input.currentPeriodEnd)}`;
+    renewalLabel = `Access until ${formatAdminDate(input.currentPeriodEnd)}`;
   } else if (input.status === "canceled") {
     renewalLabel = "No renewal";
   }

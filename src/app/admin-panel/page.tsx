@@ -1,5 +1,9 @@
-import { redirect } from "next/navigation";
+import { getAdminDashboardStats } from "@/lib/billing/admin-dashboard";
+import DashboardView from "./dashboard-view";
 
-export default function AdminPanelPage() {
-  redirect("/admin-panel/learning-tracks");
+export const dynamic = "force-dynamic";
+
+export default async function AdminPanelPage() {
+  const stats = await getAdminDashboardStats();
+  return <DashboardView stats={stats} />;
 }

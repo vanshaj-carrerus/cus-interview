@@ -20,16 +20,15 @@ import {
 import {
   PRICING_FEATURES,
   PRICING_PLANS,
-  SUBSCRIPTION_AUTH_AMOUNT_INR,
-  TRIAL_DAYS,
-  type BillingPlanId,
+  PUBLIC_BILLING_PLAN_IDS,
+  type PublicBillingPlanId,
   type PricingFeature,
 } from "@/lib/billing/plan";
 
 const BRAND_BLUE = "#00a6f4";
 
 type CheckoutTarget =
-  | { type: "plan"; id: BillingPlanId }
+  | { type: "plan"; id: PublicBillingPlanId }
   | { type: "service"; id: HumanServiceId };
 
 function SectionLabel({ label }: { label: string }) {
@@ -95,7 +94,7 @@ function PricingCard({
   disabled,
   planActive,
 }: {
-  planId: BillingPlanId;
+  planId: PublicBillingPlanId;
   onCheckout: (target: CheckoutTarget) => void;
   submitting: boolean;
   disabled: boolean;
@@ -131,10 +130,9 @@ function PricingCard({
       </div>
 
       <p className="mt-3 text-xs leading-relaxed text-slate-500">
-        ₹{SUBSCRIPTION_AUTH_AMOUNT_INR} today to register mandate · full access now · first auto-debit in 24h · then{" "}
-        {planId === "test"
-          ? "₹8 auto-billed (₹10 total)"
-          : `${plan.priceDisplay} + ${GST_RATE * 100}% GST (${getSubscriptionTotalDisplay(planId)}${plan.periodSuffix.toLowerCase()}) auto-billed`}
+        One-time payment: {plan.priceDisplay} + {GST_RATE * 100}% GST ={" "}
+        {getSubscriptionTotalDisplay(planId)}
+        {plan.periodSuffix.toLowerCase()}
       </p>
 
       {planActive ? (
@@ -395,9 +393,8 @@ export default function PricingSection() {
           </h1>
 
           <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-slate-500 sm:text-[15px]">
-            Platform plans: pay ₹{SUBSCRIPTION_AUTH_AMOUNT_INR} now to register your
-            UPI/card mandate, get immediate full access, then your plan price + 18% GST
-            auto-debits after 24 hours (RBI pre-debit rules).
+            Pay once for full platform access. Plan price + 18% GST is charged
+            upfront via PayU — no auto-debit or recurring mandate.
           </p>
         </header>
 
@@ -416,28 +413,17 @@ export default function PricingSection() {
               </div>
             ) : null}
 
-            <div className="mx-auto mt-12 grid max-w-5xl gap-5 sm:grid-cols-3 sm:gap-6">
-              <PricingCard
-                planId="test"
-                onCheckout={handleCheckout}
-                submitting={submittingKey === "plan:test"}
-                disabled={isBusy}
-                planActive={Boolean(hasPlatformAccess)}
-              />
-              <PricingCard
-                planId="monthly"
-                onCheckout={handleCheckout}
-                submitting={submittingKey === "plan:monthly"}
-                disabled={isBusy}
-                planActive={Boolean(hasPlatformAccess)}
-              />
-              <PricingCard
-                planId="quarterly"
-                onCheckout={handleCheckout}
-                submitting={submittingKey === "plan:quarterly"}
-                disabled={isBusy}
-                planActive={Boolean(hasPlatformAccess)}
-              />
+            <div className="mx-auto mt-12 grid max-w-3xl gap-5 sm:grid-cols-2 sm:gap-6">
+              {PUBLIC_BILLING_PLAN_IDS.map((planId) => (
+                <PricingCard
+                  key={planId}
+                  planId={planId}
+                  onCheckout={handleCheckout}
+                  submitting={submittingKey === `plan:${planId}`}
+                  disabled={isBusy}
+                  planActive={Boolean(hasPlatformAccess)}
+                />
+              ))}
             </div>
 
             <div className="mt-20">
@@ -475,12 +461,9 @@ export default function PricingSection() {
 
         <footer className="mt-12 text-center">
           <p className="text-xs text-slate-400">
-            * Platform plan prices are exclusive of 18% GST. ₹
-            {SUBSCRIPTION_AUTH_AMOUNT_INR} mandate registration is charged today. You
-            get immediate full access to practice problems, courses, compiler, and
-            ATS Resume Analyzer. The plan amount + 18% GST auto-debits after 24 hours
-            (pre-debit notification sent first), then renews each billing cycle
-            (e.g. ₹499 + GST = {getSubscriptionTotalDisplay("monthly")}/month).
+            * Prices exclude 18% GST. You pay the full amount (base + GST) once at
+            checkout — e.g. ₹499 + GST = {getSubscriptionTotalDisplay("monthly")}/month.
+            Access lasts for the plan period; renew manually when it ends.
           </p>
           <p className="mt-2 text-xs text-slate-400">
             Secure payments powered by PayU.

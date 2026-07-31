@@ -1,5 +1,10 @@
 export type BillingPlanId = "test" | "monthly" | "quarterly";
 
+/** Plans shown on the public pricing page (test plan is internal/legacy only). */
+export type PublicBillingPlanId = "monthly" | "quarterly";
+
+export const PUBLIC_BILLING_PLAN_IDS: PublicBillingPlanId[] = ["monthly", "quarterly"];
+
 export const TRIAL_MINUTES = 10;
 export const PRE_DEBIT_HOURS = 24;
 export const TRIAL_HOURS = 10 / 60;
@@ -20,8 +25,7 @@ export const PRICING_FEATURES: PricingFeature[] = [
   { label: "ATS Resume Analyzer — upload & instant score", isNew: true },
   { label: "AI resume improve, edit & PDF download", isNew: true },
   { label: "Unlimited practice problems" },
-  { label: "1 AI mock interview/day during trial" },
-  { label: "Unlimited mock interviews after trial" },
+  { label: "Unlimited AI mock interviews" },
   { label: "Structured learning tracks" },
   { label: "Programming language courses" },
   { label: "Online compiler access" },
@@ -78,4 +82,8 @@ export function getTrialStartAtUnix(): number {
 
 export function isBillingPlanId(value: unknown): value is BillingPlanId {
   return value === "test" || value === "monthly" || value === "quarterly";
+}
+
+export function isPublicBillingPlanId(value: unknown): value is PublicBillingPlanId {
+  return value === "monthly" || value === "quarterly";
 }

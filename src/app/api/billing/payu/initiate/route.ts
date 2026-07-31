@@ -1,15 +1,22 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import { User } from "@/models/User";
+import { Payment } from "@/models/Payment";
 import { getSessionPublicUser } from "@/lib/get-session-user";
 import { getBillingSetupError } from "@/lib/billing/config";
 import { generatePayUHash, getAppOrigin } from "@/lib/payu";
-import { getPlanRecurringAmount } from "@/lib/billing/payu-mandate";
-import { buildPayUSiDetails } from "@/lib/billing/payu-si-details";
+import {
+  getServiceOrderAmounts,
+  getSubscriptionAmounts,
+} from "@/lib/billing/order-amount";
+import {
+  getHumanService,
+  isHumanServiceId,
+  type HumanServiceId,
+} from "@/lib/billing/human-services";
 import {
   getPricingPlan,
-  isBillingPlanId,
-  SUBSCRIPTION_AUTH_AMOUNT_INR,
+  isPublicBillingPlanId,
   type BillingPlanId,
 } from "@/lib/billing/plan";
 import {
@@ -46,7 +53,15 @@ export async function POST(request: Request) {
     }
 
     const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
-    const billingPlanId: BillingPlanId = isBillingPlanId(body.plan) ? body.plan : "monthly";
+    const billingPlanId = isPublicBillingPlanId(body.plan) ? body.plan : null;
+    const serviceId = isHumanServiceId(body.service) ? body.service : null;
+
+    if (!billingPlanId && !serviceId) {
+      return NextResponse.json(
+        { error: "Invalid checkout. Select a platform plan or expert service." },
+        { status: 400 }
+      );
+    }
 
     const checkoutParsed = parseCheckoutDetails({
       firstName: typeof body.firstName === "string" ? body.firstName : "",
@@ -79,36 +94,68 @@ export async function POST(request: Request) {
     user.firstName = checkout.firstName;
     user.lastName = checkout.lastName;
     user.phone = checkout.contact;
-    user.billingPlanId = billingPlanId;
-    user.planAmount = getPlanRecurringAmount(billingPlanId);
-    user.subscriptionStatus = "pending";
-    await user.save();
 
-    const selectedPlan = getPricingPlan(billingPlanId);
     const txnid = `tx${Date.now()}${Math.floor(Math.random() * 1000)}`;
     const origin = getAppOrigin();
-
     const surl = `${origin}/api/billing/payu/callback`;
     const furl = `${origin}/api/billing/payu/callback`;
 
     const firstname = sanitizeString(checkout.firstName || user.name || "Customer", "Customer");
     const email = checkout.email || user.email || "customer@example.com";
     const phone = sanitizePhone(checkout.contact || user.phone || "");
-    const rawProductInfo = `${selectedPlan.name} ${billingPlanId}`;
-    const productinfo = sanitizeString(rawProductInfo, "Platform Access");
 
-    const isSubscription =
-      billingPlanId === "monthly" ||
-      billingPlanId === "quarterly" ||
-      billingPlanId === "test";
+    let totalAmount: number;
+    let productinfo: string;
+    let udf2: string;
+    let udf3: "plan" | "service";
 
-    // ₹2 mandate registration; full plan amount is auto-debited later via si_transaction.
-    const amountStr = SUBSCRIPTION_AUTH_AMOUNT_INR.toFixed(2);
-    const siDetails = isSubscription ? buildPayUSiDetails(billingPlanId) : undefined;
+    if (billingPlanId) {
+      const planId: BillingPlanId = billingPlanId;
+      const selectedPlan = getPricingPlan(planId);
+      const amounts = getSubscriptionAmounts(planId);
+
+      totalAmount = amounts.totalAmount;
+      productinfo = sanitizeString(`${selectedPlan.name} ${planId}`, "Platform Access");
+      udf2 = planId;
+      udf3 = "plan";
+
+      user.billingPlanId = planId;
+      user.planAmount = totalAmount;
+      user.subscriptionStatus = "pending";
+    } else {
+      const id: HumanServiceId = serviceId!;
+      const service = getHumanService(id);
+      const amounts = getServiceOrderAmounts(id);
+
+      totalAmount = amounts.totalAmount;
+      productinfo = sanitizeString(service.name, "Expert Service");
+      udf2 = id;
+      udf3 = "service";
+
+      await Payment.create({
+        orderId: txnid,
+        baseAmount: amounts.baseAmount,
+        gstAmount: amounts.gstAmount,
+        amount: amounts.totalAmount,
+        currency: amounts.currency,
+        status: "PENDING",
+        purchaseType: "service",
+        productId: id,
+        productName: service.name,
+        userId: user._id,
+        userEmail: email,
+        userName: fullName,
+        firstName: checkout.firstName,
+        lastName: checkout.lastName,
+        phone: checkout.contact,
+      });
+    }
+
+    await user.save();
 
     const payuParams = {
       txnid,
-      amount: amountStr,
+      amount: totalAmount.toFixed(2),
       productinfo,
       firstname,
       email,
@@ -116,35 +163,20 @@ export async function POST(request: Request) {
       surl,
       furl,
       udf1: user._id.toString(),
-      udf2: billingPlanId,
-      udf3: "plan",
-      ...(siDetails ? { siDetails } : {}),
+      udf2,
+      udf3,
     };
 
-    const { hash, key, actionUrl, apiVersion } = generatePayUHash(payuParams);
-
-    const formParams: Record<string, string> = {
-      ...payuParams,
-      key,
-      hash,
-      service_provider: "payu_paisa",
-    };
-
-    delete formParams.siDetails;
-
-    if (isSubscription) {
-      formParams.si = "1";
-      if (siDetails) {
-        formParams.si_details = siDetails;
-      }
-      if (apiVersion) {
-        formParams.api_version = apiVersion;
-      }
-    }
+    const { hash, key, actionUrl } = generatePayUHash(payuParams);
 
     return NextResponse.json({
       actionUrl,
-      params: formParams,
+      params: {
+        ...payuParams,
+        key,
+        hash,
+        service_provider: "payu_paisa",
+      },
     });
   } catch (err) {
     console.error("payu-initiate-error", err);

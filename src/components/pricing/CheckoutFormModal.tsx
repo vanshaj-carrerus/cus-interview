@@ -16,15 +16,13 @@ import {
 } from "@/lib/billing/order-amount";
 import {
   PRICING_PLANS,
-  SUBSCRIPTION_AUTH_AMOUNT_INR,
-  TRIAL_DAYS,
-  type BillingPlanId,
+  type PublicBillingPlanId,
 } from "@/lib/billing/plan";
 
 const BRAND_BLUE = "#00a6f4";
 
 export type CheckoutFormTarget =
-  | { type: "plan"; id: BillingPlanId }
+  | { type: "plan"; id: PublicBillingPlanId }
   | { type: "service"; id: HumanServiceId };
 
 type CheckoutFormModalProps = {
@@ -42,15 +40,10 @@ function getProductSummary(target: CheckoutFormTarget) {
     const plan = PRICING_PLANS[target.id];
     return {
       title: `Activate ${plan.name}`,
-      subtitle:
-        target.id === "monthly"
-          ? "Monthly plan"
-          : target.id === "quarterly"
-            ? "Quarterly plan"
-            : "Test plan",
+      subtitle: target.id === "monthly" ? "Monthly plan" : "Quarterly plan",
       name: `${plan.name} (${plan.periodLabel})`,
       totalDisplay: getSubscriptionTotalDisplay(target.id),
-      note: `₹${SUBSCRIPTION_AUTH_AMOUNT_INR} charged today · full access now · first auto-debit in 24 hours`,
+      note: `One-time payment · ${getSubscriptionTotalDisplay(target.id)} incl. 18% GST`,
     };
   }
 

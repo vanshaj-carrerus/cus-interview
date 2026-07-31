@@ -13,18 +13,18 @@ export default function ConditionalLayout({
 }) {
   const pathname = usePathname();
   
-  // Define routes where header and footer should be hidden
-  const isTestRoute = 
-    pathname?.includes("/ai-mock") || 
-    pathname?.includes("/step-") || 
+  const isFullPageRoute =
+    pathname?.startsWith("/admin-panel") ||
+    pathname?.includes("/ai-mock") ||
+    pathname?.includes("/step-") ||
     pathname?.includes("/interview-session");
 
   return (
     <>
-      {!isTestRoute && header}
-      <div className={`flex ${!isTestRoute ? 'pt-24' : ''} min-h-screen flex-col`}>
+      {!isFullPageRoute && header}
+      <div className={`flex ${!isFullPageRoute ? "pt-24" : ""} min-h-screen flex-col`}>
         <main className="flex-1">{children}</main>
-        {!isTestRoute && footer}
+        {!isFullPageRoute && footer}
       </div>
     </>
   );

@@ -10,7 +10,6 @@ import {
 } from "@/lib/billing/human-services";
 import {
   PRICING_PLANS,
-  TRIAL_DAYS,
   isBillingPlanId,
 } from "@/lib/billing/plan";
 import { getSubscriptionTotalDisplay } from "@/lib/billing/order-amount";
@@ -58,12 +57,12 @@ export default function PricingSuccessContent() {
             </>
           ) : isPlan ? (
             <>
-              Your subscription is active. Full platform access
-              is unlocked now. Your first auto-debit of{" "}
+              Payment received. Your plan is active with full platform access until
+              the end of your billing period. You paid{" "}
               <span className="font-medium text-slate-700">
                 {planLabel} + 18% GST ({planTotalWithGst})
               </span>{" "}
-              will run in 24 hours per RBI mandate rules (pre-debit notification sent first).
+              in one transaction.
             </>
           ) : (
             <>

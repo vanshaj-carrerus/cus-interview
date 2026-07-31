@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import { User } from "@/models/User";
+import { Payment } from "@/models/Payment";
 import { verifyPayUResponseHash, getAppOrigin } from "@/lib/payu";
 import { getPlanPeriodEnd } from "@/lib/billing/activate-plan";
-import { buildMandateUpdateFields } from "@/lib/billing/payu-mandate";
+import { getSubscriptionAmounts } from "@/lib/billing/order-amount";
+import { isHumanServiceId } from "@/lib/billing/human-services";
 import { isBillingPlanId, type BillingPlanId } from "@/lib/billing/plan";
 
 export const dynamic = "force-dynamic";
@@ -46,10 +48,7 @@ export async function GET(request: Request) {
   return handlePayUCallback(request);
 }
 
-/**
- * PayU success redirect / webhook handler.
- * Verifies reverse hash, saves mandate token (`mihpayid`), activates subscription.
- */
+/** PayU success redirect — activates platform plan or records expert service payment. */
 async function handlePayUCallback(request: Request) {
   const origin = getAppOrigin();
 
@@ -62,7 +61,7 @@ async function handlePayUCallback(request: Request) {
       txnid,
       mihpayid,
       udf1: userId,
-      udf2: rawPlanId,
+      udf2: productId,
       udf3: checkoutType = "plan",
       error_Message,
     } = params;
@@ -80,9 +79,16 @@ async function handlePayUCallback(request: Request) {
       console.warn("payu-callback-failed-status", { status, error_Message, txnid });
       const failureReason = error_Message || "Payment transaction was not successful.";
 
-      if (userId) {
+      if (userId && txnid) {
         await connectDB();
-        await User.findByIdAndUpdate(userId, { subscriptionStatus: "failed" });
+        if (checkoutType === "service") {
+          await Payment.findOneAndUpdate(
+            { orderId: txnid },
+            { status: "FAILED", ...(mihpayid?.trim() ? { paymentId: mihpayid.trim() } : {}) }
+          );
+        } else {
+          await User.findByIdAndUpdate(userId, { subscriptionStatus: "failed" });
+        }
       }
 
       return NextResponse.redirect(
@@ -99,18 +105,6 @@ async function handlePayUCallback(request: Request) {
       );
     }
 
-    if (!mihpayid?.trim()) {
-      console.error("payu-callback-missing-mihpayid", { txnid, userId });
-      return NextResponse.redirect(
-        `${origin}/pricing?error=${encodeURIComponent("Mandate token (mihpayid) missing from PayU response.")}`,
-        { status: 303 }
-      );
-    }
-
-    const planId: BillingPlanId = isBillingPlanId(rawPlanId) ? rawPlanId : "monthly";
-    const isSubscription =
-      planId === "monthly" || planId === "quarterly" || planId === "test";
-
     await connectDB();
     const user = await User.findById(userId);
     if (!user) {
@@ -121,41 +115,60 @@ async function handlePayUCallback(request: Request) {
       );
     }
 
+    if (checkoutType === "service" && isHumanServiceId(productId)) {
+      await Payment.findOneAndUpdate(
+        { orderId: txnid },
+        {
+          status: "SUCCESS",
+          ...(mihpayid?.trim() ? { paymentId: mihpayid.trim() } : {}),
+        },
+        { upsert: false }
+      );
+
+      console.log("payu-callback-service-success", {
+        userId: user._id.toString(),
+        serviceId: productId,
+        txnid,
+      });
+
+      return NextResponse.redirect(
+        `${origin}/pricing/success?type=service&product=${productId}`,
+        { status: 303 }
+      );
+    }
+
+    const planId: BillingPlanId = isBillingPlanId(productId) ? productId : "monthly";
+    const { totalAmount } = getSubscriptionAmounts(planId);
     const periodEnd = getPlanPeriodEnd(planId);
-    const mandateFields = isSubscription
-      ? buildMandateUpdateFields(mihpayid.trim(), planId)
-      : null;
 
     await User.findByIdAndUpdate(userId, {
       $set: {
         billingPlanId: planId,
         subscribedAt: new Date(),
+        subscriptionStatus: "active",
+        planAmount: totalAmount,
         currentPeriodEnd: periodEnd,
+        trialEndsAt: null,
         cancelAtPeriodEnd: false,
-        ...(isSubscription && mandateFields ? mandateFields : { subscriptionStatus: "active" }),
+        ...(mihpayid?.trim() ? { payuMandateToken: mihpayid.trim() } : {}),
       },
-      ...(isSubscription
-        ? {
-            $unset: {
-              payuFirstChargeAt: "",
-              payuLastRecurringTxnId: "",
-              payuPreDebitSentAt: "",
-              payuPreDebitForDate: "",
-            },
-          }
-        : {}),
+      $unset: {
+        nextBillingDate: "",
+        payuPreDebitSentAt: "",
+        payuPreDebitForDate: "",
+        payuFirstChargeAt: "",
+        payuLastRecurringTxnId: "",
+      },
     });
 
-    console.log("payu-callback-mandate-saved", {
+    console.log("payu-callback-plan-success", {
       userId: user._id.toString(),
       planId,
       txnid,
-      mihpayid: mihpayid.trim(),
-      nextBillingDate: mandateFields?.nextBillingDate?.toISOString(),
     });
 
     return NextResponse.redirect(
-      `${origin}/pricing/success?type=${checkoutType}&product=${planId}`,
+      `${origin}/pricing/success?type=plan&product=${planId}`,
       { status: 303 }
     );
   } catch (err) {
