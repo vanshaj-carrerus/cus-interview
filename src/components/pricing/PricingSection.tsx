@@ -25,7 +25,6 @@ import {
   type BillingPlanId,
   type PricingFeature,
 } from "@/lib/billing/plan";
-import { TRIAL_MOCK_INTERVIEWS_PER_DAY } from "@/lib/billing/trial-limits";
 
 const BRAND_BLUE = "#00a6f4";
 
@@ -132,7 +131,7 @@ function PricingCard({
       </div>
 
       <p className="mt-3 text-xs leading-relaxed text-slate-500">
-        ₹{SUBSCRIPTION_AUTH_AMOUNT_INR} today to save your card · 10-minute free trial · then{" "}
+        ₹{SUBSCRIPTION_AUTH_AMOUNT_INR} today to register mandate · full access now · first auto-debit in 24h · then{" "}
         {planId === "test"
           ? "₹8 auto-billed (₹10 total)"
           : `${plan.priceDisplay} + ${GST_RATE * 100}% GST (${getSubscriptionTotalDisplay(planId)}${plan.periodSuffix.toLowerCase()}) auto-billed`}
@@ -396,10 +395,9 @@ export default function PricingSection() {
           </h1>
 
           <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-slate-500 sm:text-[15px]">
-            Platform plans: pay ₹{SUBSCRIPTION_AUTH_AMOUNT_INR} now to save your
-            payment method, enjoy a 10-minute free trial (
-            {TRIAL_MOCK_INTERVIEWS_PER_DAY} mock interview/day), then your plan
-            price + 18% GST auto-renews for unlimited access.
+            Platform plans: pay ₹{SUBSCRIPTION_AUTH_AMOUNT_INR} now to register your
+            UPI/card mandate, get immediate full access, then your plan price + 18% GST
+            auto-debits after 24 hours (RBI pre-debit rules).
           </p>
         </header>
 
@@ -478,13 +476,11 @@ export default function PricingSection() {
         <footer className="mt-12 text-center">
           <p className="text-xs text-slate-400">
             * Platform plan prices are exclusive of 18% GST. ₹
-            {SUBSCRIPTION_AUTH_AMOUNT_INR} authorization is charged today. During
-            the 10-minute trial you get full access to practice problems,
-            courses, compiler, and ATS Resume Analyzer, plus{" "}
-            {TRIAL_MOCK_INTERVIEWS_PER_DAY} AI mock interview per day. After the
-            trial, the plan amount + 18% GST is auto-billed and everything is
-            unlimited (e.g. ₹499 + GST = {getSubscriptionTotalDisplay("monthly")}
-            /month).
+            {SUBSCRIPTION_AUTH_AMOUNT_INR} mandate registration is charged today. You
+            get immediate full access to practice problems, courses, compiler, and
+            ATS Resume Analyzer. The plan amount + 18% GST auto-debits after 24 hours
+            (pre-debit notification sent first), then renews each billing cycle
+            (e.g. ₹499 + GST = {getSubscriptionTotalDisplay("monthly")}/month).
           </p>
           <p className="mt-2 text-xs text-slate-400">
             Secure payments powered by PayU.

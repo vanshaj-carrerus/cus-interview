@@ -1,8 +1,10 @@
 export type SubscriptionStatus =
   | "none"
+  | "pending"
   | "trialing"
   | "active"
   | "past_due"
+  | "failed"
   | "canceled"
   | "unpaid";
 

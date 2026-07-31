@@ -1,41 +1,52 @@
 import { getSubscriptionAmounts } from "@/lib/billing/order-amount";
-import { TRIAL_MINUTES, type BillingPlanId } from "@/lib/billing/plan";
+import {
+  addDays,
+  formatDateYYYYMMDD,
+} from "@/lib/billing/payu-billing-dates";
+import type { BillingPlanId } from "@/lib/billing/plan";
 
-function formatDateYYYYMMDD(date: Date): string {
-  const yyyy = date.getFullYear();
-  const mm = String(date.getMonth() + 1).padStart(2, "0");
-  const dd = String(date.getDate()).padStart(2, "0");
-  return `${yyyy}-${mm}-${dd}`;
+function addYears(date: Date, years: number): Date {
+  const result = new Date(date);
+  result.setFullYear(result.getFullYear() + years);
+  return result;
 }
 
-export function getTrialEndDate(from = new Date()): Date {
-  return new Date(from.getTime() + TRIAL_MINUTES * 60 * 1000);
-}
+export type PayUSiDetailsPayload = {
+  billingAmount: string;
+  billingCurrency: "INR";
+  billingCycle: "MONTHLY";
+  billingInterval: number;
+  billingRule: "MAX";
+  paymentStartDate: string;
+  paymentEndDate: string;
+};
 
-/** PayU auto-debit schedule starts after the first post-trial charge. */
-export function getPayURecurringStartDate(
+/**
+ * Builds PayU Standing Instruction (SI) JSON for mandate registration.
+ * `paymentStartDate` is tomorrow — RBI/PayU disallow same-day recurring debits.
+ */
+export function buildPayUSiDetailsPayload(
   planId: BillingPlanId,
-  trialEndsAt: Date
-): Date {
-  const start = new Date(trialEndsAt);
-  if (planId === "quarterly") {
-    start.setMonth(start.getMonth() + 3);
-  } else {
-    start.setMonth(start.getMonth() + 1);
-  }
-  return start;
-}
-
-export function buildPayUSiDetails(planId: BillingPlanId, trialEndsAt: Date): string {
+  from = new Date()
+): PayUSiDetailsPayload {
   const { totalAmount } = getSubscriptionAmounts(planId);
-  const recurringStart = getPayURecurringStartDate(planId, trialEndsAt);
+  const mandateStart = addDays(from, 1);
 
-  return JSON.stringify({
+  return {
     billingAmount: totalAmount.toFixed(2),
     billingCurrency: "INR",
     billingCycle: "MONTHLY",
     billingInterval: planId === "quarterly" ? 3 : 1,
-    paymentStartDate: formatDateYYYYMMDD(recurringStart),
-    paymentEndDate: "2035-12-31",
-  });
+    billingRule: "MAX",
+    paymentStartDate: formatDateYYYYMMDD(mandateStart),
+    paymentEndDate: formatDateYYYYMMDD(addYears(from, 1)),
+  };
+}
+
+/** JSON string for PayU checkout `si_details` form field (must match hash input exactly). */
+export function buildPayUSiDetails(
+  planId: BillingPlanId,
+  from = new Date()
+): string {
+  return JSON.stringify(buildPayUSiDetailsPayload(planId, from));
 }

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getBillingSetupError } from "@/lib/billing/config";
-import { processDuePayUTrialCharges } from "@/lib/billing/process-payu-trial-charges";
+import { processRecurringBilling } from "@/lib/billing/process-payu-trial-charges";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -31,7 +31,7 @@ async function handleProcessRecurring(request: Request) {
   }
 
   try {
-    const summary = await processDuePayUTrialCharges();
+    const summary = await processRecurringBilling();
     return NextResponse.json({ ok: true, ...summary });
   } catch (err) {
     console.error("payu-process-recurring-error", err);

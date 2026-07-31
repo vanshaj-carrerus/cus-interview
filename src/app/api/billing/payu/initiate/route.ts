@@ -4,11 +4,8 @@ import { User } from "@/models/User";
 import { getSessionPublicUser } from "@/lib/get-session-user";
 import { getBillingSetupError } from "@/lib/billing/config";
 import { generatePayUHash, getAppOrigin } from "@/lib/payu";
-import { getSubscriptionAmounts } from "@/lib/billing/order-amount";
-import {
-  buildPayUSiDetails,
-  getTrialEndDate,
-} from "@/lib/billing/payu-si-details";
+import { getPlanRecurringAmount } from "@/lib/billing/payu-mandate";
+import { buildPayUSiDetails } from "@/lib/billing/payu-si-details";
 import {
   getPricingPlan,
   isBillingPlanId,
@@ -83,34 +80,31 @@ export async function POST(request: Request) {
     user.lastName = checkout.lastName;
     user.phone = checkout.contact;
     user.billingPlanId = billingPlanId;
+    user.planAmount = getPlanRecurringAmount(billingPlanId);
+    user.subscriptionStatus = "pending";
     await user.save();
 
     const selectedPlan = getPricingPlan(billingPlanId);
-    const subscriptionAmounts = getSubscriptionAmounts(billingPlanId);
-    
-    // Generate unique transaction ID
     const txnid = `tx${Date.now()}${Math.floor(Math.random() * 1000)}`;
     const origin = getAppOrigin();
 
-    // Callback URLs
     const surl = `${origin}/api/billing/payu/callback`;
     const furl = `${origin}/api/billing/payu/callback`;
 
-    // Sanitize parameters for PayU gateway
     const firstname = sanitizeString(checkout.firstName || user.name || "Customer", "Customer");
     const email = checkout.email || user.email || "customer@example.com";
     const phone = sanitizePhone(checkout.contact || user.phone || "");
     const rawProductInfo = `${selectedPlan.name} ${billingPlanId}`;
     const productinfo = sanitizeString(rawProductInfo, "Platform Access");
 
-    // Determine initial auth amount vs recurring amount
-    const isSubscription = billingPlanId === "monthly" || billingPlanId === "quarterly" || billingPlanId === "test";
-    const initialAmount = isSubscription ? SUBSCRIPTION_AUTH_AMOUNT_INR : subscriptionAmounts.totalAmount;
-    const amountStr = initialAmount.toFixed(2);
+    const isSubscription =
+      billingPlanId === "monthly" ||
+      billingPlanId === "quarterly" ||
+      billingPlanId === "test";
 
-    // ₹2 auth today; full plan amount auto-debited after 10-minute trial via PayU SI.
-    const trialEndDate = getTrialEndDate();
-    const siDetails = isSubscription ? buildPayUSiDetails(billingPlanId, trialEndDate) : undefined;
+    // ₹2 mandate registration; full plan amount is auto-debited later via si_transaction.
+    const amountStr = SUBSCRIPTION_AUTH_AMOUNT_INR.toFixed(2);
+    const siDetails = isSubscription ? buildPayUSiDetails(billingPlanId) : undefined;
 
     const payuParams = {
       txnid,
@@ -124,9 +118,10 @@ export async function POST(request: Request) {
       udf1: user._id.toString(),
       udf2: billingPlanId,
       udf3: "plan",
+      ...(siDetails ? { siDetails } : {}),
     };
 
-    const { hash, key, actionUrl } = generatePayUHash(payuParams);
+    const { hash, key, actionUrl, apiVersion } = generatePayUHash(payuParams);
 
     const formParams: Record<string, string> = {
       ...payuParams,
@@ -135,10 +130,15 @@ export async function POST(request: Request) {
       service_provider: "payu_paisa",
     };
 
+    delete formParams.siDetails;
+
     if (isSubscription) {
       formParams.si = "1";
       if (siDetails) {
         formParams.si_details = siDetails;
+      }
+      if (apiVersion) {
+        formParams.api_version = apiVersion;
       }
     }
 

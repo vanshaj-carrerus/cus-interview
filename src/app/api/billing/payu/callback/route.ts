@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import { User } from "@/models/User";
 import { verifyPayUResponseHash, getAppOrigin } from "@/lib/payu";
-import { isBillingPlanId, TRIAL_MINUTES } from "@/lib/billing/plan";
+import { getPlanPeriodEnd } from "@/lib/billing/activate-plan";
+import { buildMandateUpdateFields } from "@/lib/billing/payu-mandate";
+import { isBillingPlanId, type BillingPlanId } from "@/lib/billing/plan";
 
 export const dynamic = "force-dynamic";
 
@@ -10,13 +12,15 @@ async function parsePayUParams(request: Request): Promise<Record<string, string>
   const contentType = request.headers.get("content-type") ?? "";
   const params: Record<string, string> = {};
 
-  if (contentType.includes("application/x-www-form-urlencoded") || contentType.includes("multipart/form-data")) {
+  if (
+    contentType.includes("application/x-www-form-urlencoded") ||
+    contentType.includes("multipart/form-data")
+  ) {
     const formData = await request.formData();
     formData.forEach((value, key) => {
       params[key] = typeof value === "string" ? value : value.name;
     });
   } else {
-    // Try URL search params or JSON body
     const url = new URL(request.url);
     url.searchParams.forEach((value, key) => {
       params[key] = value;
@@ -42,6 +46,10 @@ export async function GET(request: Request) {
   return handlePayUCallback(request);
 }
 
+/**
+ * PayU success redirect / webhook handler.
+ * Verifies reverse hash, saves mandate token (`mihpayid`), activates subscription.
+ */
 async function handlePayUCallback(request: Request) {
   const origin = getAppOrigin();
 
@@ -71,6 +79,12 @@ async function handlePayUCallback(request: Request) {
     if (status?.toLowerCase() !== "success") {
       console.warn("payu-callback-failed-status", { status, error_Message, txnid });
       const failureReason = error_Message || "Payment transaction was not successful.";
+
+      if (userId) {
+        await connectDB();
+        await User.findByIdAndUpdate(userId, { subscriptionStatus: "failed" });
+      }
+
       return NextResponse.redirect(
         `${origin}/pricing?error=${encodeURIComponent(failureReason)}`,
         { status: 303 }
@@ -85,7 +99,17 @@ async function handlePayUCallback(request: Request) {
       );
     }
 
-    const planId = isBillingPlanId(rawPlanId) ? rawPlanId : "monthly";
+    if (!mihpayid?.trim()) {
+      console.error("payu-callback-missing-mihpayid", { txnid, userId });
+      return NextResponse.redirect(
+        `${origin}/pricing?error=${encodeURIComponent("Mandate token (mihpayid) missing from PayU response.")}`,
+        { status: 303 }
+      );
+    }
+
+    const planId: BillingPlanId = isBillingPlanId(rawPlanId) ? rawPlanId : "monthly";
+    const isSubscription =
+      planId === "monthly" || planId === "quarterly" || planId === "test";
 
     await connectDB();
     const user = await User.findById(userId);
@@ -97,36 +121,37 @@ async function handlePayUCallback(request: Request) {
       );
     }
 
-    const periodDays = planId === "quarterly" ? 90 : 30;
-    const isSubscription = planId === "monthly" || planId === "quarterly" || planId === "test";
-    const trialEndsAt = isSubscription ? new Date(Date.now() + TRIAL_MINUTES * 60 * 1000) : null;
+    const periodEnd = getPlanPeriodEnd(planId);
+    const mandateFields = isSubscription
+      ? buildMandateUpdateFields(mihpayid.trim(), planId)
+      : null;
 
     await User.findByIdAndUpdate(userId, {
       $set: {
-        subscriptionStatus: isSubscription ? "trialing" : "active",
         billingPlanId: planId,
         subscribedAt: new Date(),
-        trialEndsAt,
-        currentPeriodEnd: new Date(Date.now() + periodDays * 24 * 60 * 60 * 1000),
+        currentPeriodEnd: periodEnd,
         cancelAtPeriodEnd: false,
-        ...(isSubscription && mihpayid?.trim()
-          ? { payuAuthPayuId: mihpayid.trim() }
-          : {}),
+        ...(isSubscription && mandateFields ? mandateFields : { subscriptionStatus: "active" }),
       },
       ...(isSubscription
         ? {
             $unset: {
               payuFirstChargeAt: "",
               payuLastRecurringTxnId: "",
+              payuPreDebitSentAt: "",
+              payuPreDebitForDate: "",
             },
           }
         : {}),
     });
 
-    console.log("payu-callback-success-activated", {
+    console.log("payu-callback-mandate-saved", {
       userId: user._id.toString(),
       planId,
       txnid,
+      mihpayid: mihpayid.trim(),
+      nextBillingDate: mandateFields?.nextBillingDate?.toISOString(),
     });
 
     return NextResponse.redirect(

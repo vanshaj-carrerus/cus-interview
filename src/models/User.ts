@@ -5,9 +5,11 @@ export type UserRole = (typeof USER_ROLES)[number];
 
 export const SUBSCRIPTION_STATUSES = [
   "none",
+  "pending",
   "trialing",
   "active",
   "past_due",
+  "failed",
   "canceled",
   "unpaid",
 ] as const;
@@ -43,7 +45,18 @@ const userSchema = new Schema(
     trialEndsAt: { type: Date },
     currentPeriodEnd: { type: Date },
     cancelAtPeriodEnd: { type: Boolean, default: false },
+    /** PayU mandate token (`mihpayid`) from ₹2 SI registration — used for auto-debit. */
+    payuMandateToken: { type: String, sparse: true },
+    /** @deprecated Alias — kept in sync with payuMandateToken for older records. */
     payuAuthPayuId: { type: String, sparse: true },
+    /** Recurring charge amount (plan + GST) stored at mandate registration. */
+    planAmount: { type: Number },
+    /** When the next server-to-server recurring charge should run. */
+    nextBillingDate: { type: Date },
+    /** Timestamp when PayU pre_debit_SI was sent for the upcoming debit. */
+    payuPreDebitSentAt: { type: Date },
+    /** The billing date (debitDate) notified to PayU via pre_debit_SI. */
+    payuPreDebitForDate: { type: Date },
     payuFirstChargeAt: { type: Date },
     payuLastRecurringTxnId: { type: String, sparse: true },
   },

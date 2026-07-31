@@ -14,6 +14,8 @@ export type PayUPaymentParams = {
   udf3?: string;
   udf4?: string;
   udf5?: string;
+  /** Raw JSON string — when set, uses PayU api_version=7 SI hash formula. */
+  siDetails?: string;
 };
 
 export function getPayUMerchantKey(): string {
@@ -60,6 +62,7 @@ export function generatePayUHash(params: PayUPaymentParams): {
   hash: string;
   key: string;
   actionUrl: string;
+  apiVersion?: string;
 } {
   const key = getPayUMerchantKey();
   const salt = getPayUMerchantSalt();
@@ -79,10 +82,14 @@ export function generatePayUHash(params: PayUPaymentParams): {
     udf3 = "",
     udf4 = "",
     udf5 = "",
+    siDetails,
   } = params;
 
-  // Format: key|txnid|amount|productinfo|firstname|email|udf1|udf2|udf3|udf4|udf5||||||SALT
-  const hashString = `${key}|${txnid}|${amount}|${productinfo}|${firstname}|${email}|${udf1}|${udf2}|${udf3}|${udf4}|${udf5}||||||${salt}`;
+  // Standard: key|txnid|amount|productinfo|firstname|email|udf1|udf2|udf3|udf4|udf5||||||SALT
+  // SI (api_version=7): key|txnid|amount|productinfo|firstname|email|udf1|udf2|udf3|udf4|udf5||||||si_details|SALT
+  const hashString = siDetails
+    ? `${key}|${txnid}|${amount}|${productinfo}|${firstname}|${email}|${udf1}|${udf2}|${udf3}|${udf4}|${udf5}||||||${siDetails}|${salt}`
+    : `${key}|${txnid}|${amount}|${productinfo}|${firstname}|${email}|${udf1}|${udf2}|${udf3}|${udf4}|${udf5}||||||${salt}`;
 
   const hash = crypto.createHash("sha512").update(hashString).digest("hex");
 
@@ -90,6 +97,7 @@ export function generatePayUHash(params: PayUPaymentParams): {
     hash,
     key,
     actionUrl: getPayUActionUrl(),
+    ...(siDetails ? { apiVersion: "7" } : {}),
   };
 }
 

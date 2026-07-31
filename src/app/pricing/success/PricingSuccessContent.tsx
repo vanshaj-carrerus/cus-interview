@@ -58,12 +58,12 @@ export default function PricingSuccessContent() {
             </>
           ) : isPlan ? (
             <>
-              Your 10-minute free trial is active. Full platform access
-              is unlocked now. After the trial,{" "}
+              Your subscription is active. Full platform access
+              is unlocked now. Your first auto-debit of{" "}
               <span className="font-medium text-slate-700">
                 {planLabel} + 18% GST ({planTotalWithGst})
               </span>{" "}
-              will be auto-billed to your saved payment method.
+              will run in 24 hours per RBI mandate rules (pre-debit notification sent first).
             </>
           ) : (
             <>

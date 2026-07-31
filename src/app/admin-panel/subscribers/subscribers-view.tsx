@@ -16,12 +16,16 @@ function StatusBadge({ label, tone }: { label: string; tone: string }) {
 
 function statusTone(status: string): string {
   switch (status) {
+    case "pending":
+      return "bg-violet-100 text-violet-700";
     case "trialing":
       return "bg-sky-100 text-sky-700";
     case "active":
       return "bg-emerald-100 text-emerald-700";
     case "past_due":
       return "bg-amber-100 text-amber-700";
+    case "failed":
+      return "bg-red-100 text-red-700";
     case "canceled":
       return "bg-slate-100 text-slate-600";
     default:

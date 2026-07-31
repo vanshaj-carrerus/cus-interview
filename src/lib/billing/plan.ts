@@ -1,9 +1,11 @@
 export type BillingPlanId = "test" | "monthly" | "quarterly";
 
 export const TRIAL_MINUTES = 10;
+export const PRE_DEBIT_HOURS = 24;
 export const TRIAL_HOURS = 10 / 60;
 export const TRIAL_DAYS = 10 / (24 * 60);
 export const TRIAL_LABEL = "10-minute";
+export const FIRST_CHARGE_LABEL = "24-hour";
 export const SUBSCRIPTION_AUTH_AMOUNT_INR = 2;
 export const SUBSCRIPTION_AUTH_AMOUNT_PAISE = SUBSCRIPTION_AUTH_AMOUNT_INR * 100;
 

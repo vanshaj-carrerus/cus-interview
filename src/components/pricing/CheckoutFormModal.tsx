@@ -50,7 +50,7 @@ function getProductSummary(target: CheckoutFormTarget) {
             : "Test plan",
       name: `${plan.name} (${plan.periodLabel})`,
       totalDisplay: getSubscriptionTotalDisplay(target.id),
-      note: `₹${SUBSCRIPTION_AUTH_AMOUNT_INR} charged today · 10-minute free trial · then auto-billed`,
+      note: `₹${SUBSCRIPTION_AUTH_AMOUNT_INR} charged today · full access now · first auto-debit in 24 hours`,
     };
   }
 

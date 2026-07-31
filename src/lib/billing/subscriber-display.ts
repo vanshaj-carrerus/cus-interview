@@ -52,12 +52,16 @@ export function getPlanLabel(planId?: string | null): string {
 
 export function getSubscriptionStatusLabel(status: SubscriptionStatus): string {
   switch (status) {
+    case "pending":
+      return "Pending mandate";
     case "trialing":
       return "Free trial";
     case "active":
       return "Active";
     case "past_due":
       return "Past due";
+    case "failed":
+      return "Failed";
     case "canceled":
       return "Canceled";
     case "unpaid":
