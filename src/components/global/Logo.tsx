@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 export const LOGO_SRC = "/cus-interview-logo-cropped.png?v=20260714";
+export const LOGO_ICON_SRC = "/cus-interview-icon.png";
 export const LOGO_ALT = "CUS Interview";
 
 type LogoProps = {
@@ -9,6 +10,7 @@ type LogoProps = {
   width?: number;
   height?: number;
   priority?: boolean;
+  variant?: "full" | "icon";
 };
 
 export default function Logo({
@@ -17,12 +19,14 @@ export default function Logo({
   width = 140,
   height = 62,
   priority = false,
+  variant = "full",
 }: LogoProps) {
+  const src = variant === "icon" ? LOGO_ICON_SRC : LOGO_SRC;
   const image = (
     // Plain img so width/height always apply (Next/Image was shrinking in the navbar).
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src={LOGO_SRC}
+      src={src}
       alt={LOGO_ALT}
       width={width}
       height={height}

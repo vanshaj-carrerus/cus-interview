@@ -137,7 +137,15 @@ type MockInterviewQuota = {
   unlimited: boolean;
 };
 
-export function AiMockSetupForm() {
+export function AiMockSetupForm({
+  backHref = "/mock-interviews",
+  backLabel = "AI mock interviews",
+  interviewBasePath = "/mock-interviews/ai-mock",
+}: {
+  backHref?: string;
+  backLabel?: string;
+  interviewBasePath?: string;
+}) {
   const router = useRouter();
   const { checkAccess, gatedNavigate, paywallOpen, closePaywall, openPaywall } =
     useSubscriptionGate();
@@ -310,7 +318,7 @@ export function AiMockSetupForm() {
           );
           return;
         }
-        router.push(`/mock-interviews/ai-mock/${data.interview.id}`);
+        router.push(`${interviewBasePath}/${data.interview.id}`);
       } catch {
         setSubmitError(
           "Unable to create mock interview right now. Please try again.",
@@ -325,11 +333,11 @@ export function AiMockSetupForm() {
     <div className="min-h-screen mb-10 bg-[#fcfcfd] p-6 md:p-12 font-sans text-slate-900 selection:bg-sky-100 selection:text-sky-600">
       <div className="max-w-5xl mx-auto">
         <Link
-          href="/mock-interviews"
+          href={backHref}
           className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-sky-500 transition-colors mb-10"
         >
           <ArrowLeft className="w-4 h-4" />
-          AI mock interviews
+          {backLabel}
         </Link>
 
         <header className="mb-10 md:mb-12">
@@ -385,7 +393,7 @@ export function AiMockSetupForm() {
                     <button
                       type="button"
                       onClick={() =>
-                        gatedNavigate(`/mock-interviews/ai-mock/${item.id}`)
+                        gatedNavigate(`${interviewBasePath}/${item.id}`)
                       }
                       className="min-w-0 flex-1 text-left transition-opacity hover:opacity-85"
                     >

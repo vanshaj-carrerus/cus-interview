@@ -18,6 +18,13 @@ const learningQuestionSchema = new Schema(
     explanation: { type: String, default: "", trim: true },
     tags: { type: [String], default: [] },
     difficulty: { type: String, enum: ["easy", "medium", "hard"], default: "medium" },
+    questionType: {
+      type: String,
+      enum: ["mcq", "coding"],
+      default: "coding",
+    },
+    sampleInput: { type: String, default: "" },
+    expectedOutput: { type: String, default: "" },
     order: { type: Number, default: 0 },
     version: { type: Number, default: 1 },
     status: {

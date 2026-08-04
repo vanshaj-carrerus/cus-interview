@@ -5,6 +5,7 @@ import { User } from "@/models/User";
 import { setAuthCookieFromUser } from "@/lib/auth-cookie";
 import { toPublicUser } from "@/lib/user-public";
 import { normalizeEmail } from "@/lib/email-validation";
+import { scheduleUserAvatarSync } from "@/lib/sync-user-avatar";
 
 export async function POST(request: Request) {
   try {
@@ -38,6 +39,7 @@ export async function POST(request: Request) {
     }
 
     const response = NextResponse.json({ user: toPublicUser(user) });
+    scheduleUserAvatarSync(user._id.toString(), user.email);
     await setAuthCookieFromUser(response, user);
     return response;
   } catch (err) {

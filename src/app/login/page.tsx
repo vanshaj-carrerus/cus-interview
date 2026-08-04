@@ -1,8 +1,9 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useAuth } from "@/components/providers/auth-provider";
+import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
@@ -50,6 +51,13 @@ function LoginPageContent() {
   const isAuthRequiredNotice = searchParams.get("reason") === "auth-required";
   const nextPath = getSafeNextPath(searchParams.get("next"));
 
+  useEffect(() => {
+    const authError = searchParams.get("auth_error");
+    if (authError) {
+      setError(authError);
+    }
+  }, [searchParams]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -89,6 +97,23 @@ function LoginPageContent() {
                 Please log in to access this page.
               </p>
             ) : null}
+
+            <GoogleSignInButton
+              nextPath={nextPath}
+              onError={setError}
+              className="mb-6 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-3 text-sm font-semibold text-secondary transition hover:bg-slate-50"
+            />
+
+            <div className="relative mb-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-slate-200" />
+              </div>
+              <div className="relative flex justify-center">
+                <span className="bg-white px-3 text-[11px] font-semibold tracking-wider text-slate-400">
+                  OR CONTINUE WITH EMAIL
+                </span>
+              </div>
+            </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
               {error ? (

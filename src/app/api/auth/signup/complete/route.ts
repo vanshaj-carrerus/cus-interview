@@ -8,6 +8,8 @@ import { toPublicUser } from "@/lib/user-public";
 import { EMAIL_RE, normalizeEmail } from "@/lib/email-validation";
 import { splitFullName } from "@/lib/billing/checkout-details";
 import { normalizeVerificationCode } from "@/lib/signup-code";
+import { scheduleUserAvatarSync } from "@/lib/sync-user-avatar";
+import { ensureUserLearningProfileInitialized } from "@/lib/learning/service";
 
 export async function POST(request: Request) {
   try {
@@ -117,6 +119,8 @@ export async function POST(request: Request) {
     }
 
     const response = NextResponse.json({ user: toPublicUser(user) });
+    scheduleUserAvatarSync(user._id.toString(), user.email);
+    await ensureUserLearningProfileInitialized(user._id.toString());
     await setAuthCookieFromUser(response, user);
     return response;
   } catch (err) {

@@ -25,6 +25,7 @@ export type PublicUser = {
   id: string;
   email: string;
   name: string;
+  image: string | null;
   role: "User" | "SuperAdmin";
   createdAt: string;
   subscription: PublicSubscription;

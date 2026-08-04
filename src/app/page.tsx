@@ -1,47 +1,19 @@
-import { Suspense } from "react"
-import NewsLetter from "@/components/global/NewsLetter"
-import CodingEnvironment from "@/components/home/Codingenvironment"
-import CompaniesAndTestimonials from "@/components/home/CompanesAndTestimonials"
-import LearningSection from "@/components/home/LearningSection"
-import FastTrackCourses, {
-  FastTrackCoursesSection,
-  FastTrackCoursesSkeleton,
-} from "@/components/home/Fasttrackcourses"
-import CusInterviewHero from "@/components/home/Header&Hero"
-import MockInterviewBanner from "@/components/home/Mockinterviewbanner"
-import PracticeProblems, {
-  PracticeProblemsSection,
-  PracticeProblemsSkeleton,
-} from "@/components/home/Practiceproblems"
+import AiVisionSection from "@/components/home/AiVisionSection";
+import DeveloperSkillsSection from "@/components/home/DeveloperSkillsSection";
+import HomeTestimonials from "@/components/home/HomeTestimonials";
+import BottomCtaCards from "@/components/home/BottomCtaCards";
+import CusInterviewHero from "@/components/home/Header&Hero";
 
-import CareerGuidanceBanner from "@/components/home/CareerGuidanceBanner"
-import CrackedInterviewsSection from "@/components/home/CrackedInterviewsSection"
-import MustExplore from "@/components/home/MustExplore"
-import ExploreTopics from "@/components/home/ExploreTopics"
-
-
-export const revalidate = 60
+export const revalidate = 60;
 
 const Home = () => {
   return (
     <>
       <CusInterviewHero />
-
-      <div className="section-soft">
-        <LearningSection />
-        <CareerGuidanceBanner />
-        <MustExplore />
-        <ExploreTopics /> 
-      </div>
-
-      {/* <div className="section-surface">
-        <Suspense fallback={<PracticeProblemsSkeleton />}>
-          <PracticeProblemsSection />
-        </Suspense>
-        <Suspense fallback={<FastTrackCoursesSkeleton />}>
-          <FastTrackCoursesSection />
-        </Suspense>
-      </div> */}
+      <AiVisionSection />
+      <DeveloperSkillsSection />
+      <HomeTestimonials />
+      <BottomCtaCards />
     </>
   );
 };

@@ -12,9 +12,10 @@ export default function ConditionalLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  
+
   const isFullPageRoute =
     pathname?.startsWith("/admin-panel") ||
+    pathname?.startsWith("/dashboard") ||
     pathname?.includes("/ai-mock") ||
     pathname?.includes("/step-") ||
     pathname?.includes("/interview-session");
@@ -22,7 +23,7 @@ export default function ConditionalLayout({
   return (
     <>
       {!isFullPageRoute && header}
-      <div className={`flex ${!isFullPageRoute ? "pt-24" : ""} min-h-screen flex-col`}>
+      <div className={`flex ${!isFullPageRoute ? "pt-16" : ""} min-h-screen flex-col`}>
         <main className="flex-1">{children}</main>
         {!isFullPageRoute && footer}
       </div>

@@ -36,6 +36,208 @@ function matchUserLearningAttempts(userId: string): Record<string, unknown> {
   };
 }
 
+const EMPTY_LEARNING_TOTALS = {
+  totalAttempts: 0,
+  totalCleared: 0,
+  totalQuestionsAttempted: 0,
+  totalTasksAttempted: 0,
+  totalLevelsCompleted: 0,
+  distinctQuestionsSolved: 0,
+} as const;
+
+/** Adds a question to the user's permanent solved list (count only goes up). */
+async function recordPermanentQuestionSolve(
+  userId: string,
+  questionId: Types.ObjectId
+): Promise<{ isNew: boolean }> {
+  const trackingModels = await getTrackingModelsSafe();
+  if (!trackingModels) return { isNew: false };
+
+  const { UserLearningProfile } = trackingModels;
+  const objectUserId = new Types.ObjectId(userId);
+
+  const updated = await UserLearningProfile.findOneAndUpdate(
+    {
+      userId: objectUserId,
+      solvedQuestionIds: { $ne: questionId },
+    },
+    {
+      $addToSet: { solvedQuestionIds: questionId },
+      $inc: {
+        "totals.distinctQuestionsSolved": 1,
+        "totals.totalQuestionsAttempted": 1,
+      },
+      $set: { lastActiveAt: new Date() },
+      $setOnInsert: {
+        userId: objectUserId,
+        languages: [],
+      },
+    },
+    { upsert: true, new: true }
+  );
+
+  if (updated) {
+    return { isNew: true };
+  }
+
+  const profile = await UserLearningProfile.findOne({ userId: objectUserId }).lean();
+  const idsLen = profile?.solvedQuestionIds?.length ?? 0;
+  const counter = Number(profile?.totals?.distinctQuestionsSolved ?? 0);
+  if (idsLen > counter) {
+    await UserLearningProfile.updateOne(
+      { userId: objectUserId },
+      { $set: { "totals.distinctQuestionsSolved": idsLen } }
+    );
+  }
+
+  return { isNew: false };
+}
+
+/** All question ids the user has permanently solved (profile + attempt rows). */
+export async function getUserSolvedQuestionIds(userId: string): Promise<string[]> {
+  const trackingModels = await getTrackingModelsSafe();
+  if (!trackingModels) return [];
+
+  const { UserLearningAttempt, UserLearningProfile } = trackingModels;
+  const objectUserId = new Types.ObjectId(userId);
+  const userMatch = matchUserLearningAttempts(userId);
+
+  const [profile, attemptEntityIds] = await Promise.all([
+    UserLearningProfile.findOne({ userId: objectUserId })
+      .select({ solvedQuestionIds: 1 })
+      .lean(),
+    UserLearningAttempt.distinct("entityId", {
+      ...userMatch,
+      entityType: "question",
+      isCorrect: true,
+    }),
+  ]);
+
+  const ids = new Set<string>();
+  for (const id of profile?.solvedQuestionIds ?? []) {
+    ids.add(String(id));
+  }
+  for (const id of attemptEntityIds) {
+    ids.add(String(id));
+  }
+  return [...ids];
+}
+
+/** Lifetime count of published questions the user has permanently solved (all days, all tracks). */
+export async function getUserAllTimeSolvedPublishedQuestionCount(userId: string): Promise<number> {
+  const solvedIds = await getUserSolvedQuestionIds(userId);
+  if (solvedIds.length === 0) return 0;
+
+  await connectDB();
+  const validOids = solvedIds
+    .filter((id) => Types.ObjectId.isValid(id))
+    .map((id) => new Types.ObjectId(id));
+  if (validOids.length === 0) return 0;
+
+  return LearningQuestion.countDocuments({
+    _id: { $in: validOids },
+    status: "published",
+  });
+}
+
+/** Lifetime count of solved published practice-track questions (all days). */
+export async function getUserAllTimePracticeSolvedCount(
+  userId: string,
+  practiceLevelIds: string[]
+): Promise<number> {
+  const solvedIds = await getUserSolvedQuestionIds(userId);
+  if (solvedIds.length === 0 || practiceLevelIds.length === 0) return 0;
+
+  await connectDB();
+  const practiceLevelOids = practiceLevelIds
+    .filter((id) => Types.ObjectId.isValid(id))
+    .map((id) => new Types.ObjectId(id));
+  const validOids = solvedIds
+    .filter((id) => Types.ObjectId.isValid(id))
+    .map((id) => new Types.ObjectId(id));
+  if (validOids.length === 0 || practiceLevelOids.length === 0) return 0;
+
+  return LearningQuestion.countDocuments({
+    _id: { $in: validOids },
+    levelId: { $in: practiceLevelOids },
+    status: "published",
+  });
+}
+
+/** Creates a zeroed learning profile for brand-new users (does not overwrite existing progress). */
+export async function ensureUserLearningProfileInitialized(userId: string): Promise<void> {
+  const trackingModels = await getTrackingModelsSafe();
+  if (!trackingModels) return;
+
+  const { UserLearningProfile } = trackingModels;
+  const objectUserId = new Types.ObjectId(userId);
+
+  await UserLearningProfile.findOneAndUpdate(
+    { userId: objectUserId },
+    {
+      $setOnInsert: {
+        userId: objectUserId,
+        totals: { ...EMPTY_LEARNING_TOTALS },
+        languages: [],
+        lastActiveAt: null,
+      },
+    },
+    { upsert: true }
+  );
+}
+
+/** Force-clears cached profile stats (used when user has zero attempts). */
+export async function zeroUserLearningProfile(userId: string): Promise<void> {
+  const trackingModels = await getTrackingModelsSafe();
+  if (!trackingModels) return;
+
+  const { UserLearningProfile } = trackingModels;
+  const objectUserId = new Types.ObjectId(userId);
+  const existing = await UserLearningProfile.findOne({ userId: objectUserId }).lean();
+  const preservedDistinct = Number(existing?.totals?.distinctQuestionsSolved ?? 0);
+
+  await UserLearningProfile.findOneAndUpdate(
+    { userId: objectUserId },
+    {
+      $set: {
+        totals: { ...EMPTY_LEARNING_TOTALS, distinctQuestionsSolved: preservedDistinct },
+        languages: [],
+        lastActiveAt: null,
+      },
+      $setOnInsert: { userId: objectUserId },
+    },
+    { upsert: true }
+  );
+}
+
+/** Wipes all learning attempts and resets profile stats to zero. */
+export async function resetUserLearningProgress(userId: string): Promise<void> {
+  const trackingModels = await getTrackingModelsSafe();
+  if (!trackingModels) return;
+
+  const { UserLearningAttempt, UserLearningProfile } = trackingModels;
+  const objectUserId = new Types.ObjectId(userId);
+  await UserLearningAttempt.deleteMany(matchUserLearningAttempts(userId));
+  await UserLearningProfile.findOneAndUpdate(
+    { userId: objectUserId },
+    {
+      $set: {
+        totals: { ...EMPTY_LEARNING_TOTALS },
+        languages: [],
+        solvedQuestionIds: [],
+        lastActiveAt: null,
+      },
+      $setOnInsert: { userId: objectUserId },
+    },
+    { upsert: true }
+  );
+}
+
+/** Rebuilds profile totals from attempt rows (call before reading dashboard stats). */
+export async function syncUserLearningProgress(userId: string): Promise<void> {
+  await refreshUserProfile(userId);
+}
+
 async function getTrackingModelsSafe() {
   try {
     return await getTrackingModels();
@@ -92,21 +294,28 @@ function toLevelDto(level: Record<string, unknown>, questionCount = 0, taskCount
 }
 
 function toQuestionDto(question: Record<string, unknown>): LearningQuestionDto {
+  const options = Array.isArray(question.options)
+    ? question.options.map((option) => ({
+        id: String((option as Record<string, unknown>).id ?? ""),
+        text: String((option as Record<string, unknown>).text ?? ""),
+      }))
+    : [];
+  const explicit = question.questionType as LearningQuestionDto["questionType"] | undefined;
+  const questionType = options.length > 0 ? "mcq" : explicit === "mcq" ? "mcq" : "coding";
+
   return {
     id: toId(question._id),
     levelId: toId(question.levelId),
     externalId: String(question.externalId ?? ""),
     prompt: String(question.prompt ?? ""),
-    options: Array.isArray(question.options)
-      ? question.options.map((option) => ({
-          id: String((option as Record<string, unknown>).id ?? ""),
-          text: String((option as Record<string, unknown>).text ?? ""),
-        }))
-      : [],
+    options,
     explanation: String(question.explanation ?? ""),
     order: Number(question.order ?? 0),
     tags: Array.isArray(question.tags) ? question.tags.map(String) : [],
     difficulty: (question.difficulty as LearningQuestionDto["difficulty"]) ?? "medium",
+    questionType,
+    sampleInput: String(question.sampleInput ?? ""),
+    expectedOutput: String(question.expectedOutput ?? ""),
   };
 }
 
@@ -262,10 +471,29 @@ type AttemptContext = {
   languageSlug: string;
   trackId: Types.ObjectId;
   trackSlug: string;
+  trackKind: "track" | "course";
   levelId: Types.ObjectId;
   levelNumber: number;
   passScore: number;
 };
+
+const getCachedPracticeLevelIds = unstable_cache(
+  async (): Promise<Types.ObjectId[]> => {
+    await connectDB();
+    const practiceTracks = await LearningTrack.find({ status: "published", kind: "track" })
+      .select({ _id: 1 })
+      .lean();
+    const levels = await LearningLevel.find({
+      trackId: { $in: practiceTracks.map((track) => track._id) },
+      status: "published",
+    })
+      .select({ _id: 1 })
+      .lean();
+    return levels.map((level) => level._id as Types.ObjectId);
+  },
+  ["learning-practice-level-ids"],
+  { revalidate: 300 }
+);
 
 const getCachedAttemptContextFromLevel = unstable_cache(
   async (levelId: string): Promise<AttemptContext | null> => {
@@ -282,6 +510,7 @@ const getCachedAttemptContextFromLevel = unstable_cache(
       languageSlug: String(language.slug),
       trackId: track._id,
       trackSlug: String(track.slug),
+      trackKind: track.kind === "course" ? "course" : "track",
       levelId: level._id,
       levelNumber: Number(level.levelNumber),
       passScore: Number(level.passScore),
@@ -291,8 +520,34 @@ const getCachedAttemptContextFromLevel = unstable_cache(
   { revalidate: 60 }
 );
 
+async function getAttemptContextFromLevelUncached(
+  levelId: Types.ObjectId
+): Promise<AttemptContext | null> {
+  const level = await LearningLevel.findById(levelId).lean();
+  if (!level) return null;
+  const track = await LearningTrack.findById(level.trackId).lean();
+  if (!track) return null;
+  const language = await LearningLanguage.findById(track.languageId).lean();
+  if (!language) return null;
+
+  return {
+    languageId: language._id,
+    languageSlug: String(language.slug),
+    trackId: track._id,
+    trackSlug: String(track.slug),
+    trackKind: track.kind === "course" ? "course" : "track",
+    levelId: level._id,
+    levelNumber: Number(level.levelNumber),
+    passScore: Number(level.passScore),
+  };
+}
+
 async function getAttemptContextFromLevel(levelId: Types.ObjectId): Promise<AttemptContext | null> {
-  return getCachedAttemptContextFromLevel(String(levelId));
+  try {
+    return await getCachedAttemptContextFromLevel(String(levelId));
+  } catch {
+    return getAttemptContextFromLevelUncached(levelId);
+  }
 }
 
 async function refreshUserProfile(userId: string) {
@@ -303,25 +558,13 @@ async function refreshUserProfile(userId: string) {
   const userAttemptMatch = matchUserLearningAttempts(userId);
 
   const attemptCount = await UserLearningAttempt.countDocuments(userAttemptMatch);
-  if (attemptCount === 0) {
-    await UserLearningProfile.findOneAndUpdate(
-      { userId: objectUserId },
-      {
-        $set: {
-          totals: {
-            totalAttempts: 0,
-            totalCleared: 0,
-            totalQuestionsAttempted: 0,
-            totalTasksAttempted: 0,
-            totalLevelsCompleted: 0,
-          },
-          languages: [],
-          lastActiveAt: null,
-        },
-        $setOnInsert: { userId: objectUserId },
-      },
-      { upsert: true, new: true }
-    );
+  const existingBeforeRefresh = await UserLearningProfile.findOne({ userId: objectUserId })
+    .select({ solvedQuestionIds: 1 })
+    .lean();
+  const hasPermanentSolves = (existingBeforeRefresh?.solvedQuestionIds?.length ?? 0) > 0;
+
+  if (attemptCount === 0 && !hasPermanentSolves) {
+    await zeroUserLearningProfile(userId);
     return;
   }
 
@@ -579,7 +822,37 @@ async function refreshUserProfile(userId: string) {
     totalQuestionsAttempted: Number(microAgg.questionMicro ?? 0),
     totalTasksAttempted: Number(microAgg.taskMicro ?? 0),
     totalLevelsCompleted,
+    distinctQuestionsSolved: 0,
   };
+
+  const existingProfile = await UserLearningProfile.findOne({ userId: objectUserId }).lean();
+  const practiceLevelIds = await getCachedPracticeLevelIds();
+
+  const [distinctSolvedAgg] = await UserLearningAttempt.aggregate<{ total: number }>([
+    {
+      $match: {
+        ...userAttemptMatch,
+        entityType: "question",
+        isCorrect: true,
+        ...(practiceLevelIds.length > 0 ? { levelId: { $in: practiceLevelIds } } : { levelId: null }),
+      },
+    },
+    { $group: { _id: "$entityId" } },
+    { $count: "total" },
+  ]);
+  const distinctFromAttempts = Number(distinctSolvedAgg?.total ?? 0);
+
+  let preservedPracticeDistinct = 0;
+  const solvedQuestionIds = existingProfile?.solvedQuestionIds ?? [];
+  if (solvedQuestionIds.length > 0 && practiceLevelIds.length > 0) {
+    preservedPracticeDistinct = await LearningQuestion.countDocuments({
+      _id: { $in: solvedQuestionIds },
+      levelId: { $in: practiceLevelIds },
+      status: "published",
+    });
+  }
+
+  totals.distinctQuestionsSolved = Math.max(preservedPracticeDistinct, distinctFromAttempts);
 
   await UserLearningProfile.findOneAndUpdate(
     { userId: objectUserId },
@@ -710,6 +983,67 @@ export async function attemptQuestion(params: {
     },
     tracked: true,
   };
+}
+
+/** Records a correct coding solve from the compiler (after client-side output validation). */
+export async function recordCompilerQuestionSolve(params: {
+  userId: string;
+  questionId: string;
+}): Promise<{ tracked: boolean; alreadySolved: boolean } | null> {
+  await connectDB();
+  const question = await LearningQuestion.findById(params.questionId).lean();
+  if (!question || question.status !== "published") return null;
+
+  const context = await getAttemptContextFromLevel(question.levelId as Types.ObjectId);
+  if (!context || context.trackKind !== "track") {
+    return null;
+  }
+
+  await ensureUserLearningProfileInitialized(params.userId);
+  const permanent = await recordPermanentQuestionSolve(params.userId, question._id as Types.ObjectId);
+
+  const trackingModels = await getTrackingModelsSafe();
+  if (!trackingModels) {
+    return { tracked: permanent.isNew, alreadySolved: !permanent.isNew };
+  }
+
+  const { UserLearningAttempt } = trackingModels;
+  const userMatch = matchUserLearningAttempts(params.userId);
+
+  const existingCorrect = await UserLearningAttempt.findOne({
+    ...userMatch,
+    entityType: "question",
+    entityId: question._id,
+    isCorrect: true,
+  }).lean();
+
+  if (existingCorrect) {
+    return { tracked: true, alreadySolved: true };
+  }
+
+  await UserLearningAttempt.create({
+    userId: new Types.ObjectId(params.userId),
+    entityType: "question",
+    entityId: question._id,
+    languageId: context.languageId,
+    trackId: context.trackId,
+    levelId: context.levelId,
+    levelNumber: context.levelNumber,
+    submittedAnswer: "compiler:passed",
+    isCorrect: true,
+    scoreAwarded: 1,
+    outcome: "passed",
+    latencyMs: null,
+    attemptedAt: new Date(),
+  });
+
+  try {
+    await refreshUserProfile(params.userId);
+  } catch (error) {
+    console.error("refresh-user-profile-after-compiler-solve", error);
+  }
+
+  return { tracked: true, alreadySolved: false };
 }
 
 export async function verifyQuestionWithoutTracking(params: {
@@ -872,6 +1206,7 @@ export async function getUserLearningProfile(userId: string, displayName: string
       totalQuestionsAttempted: 0,
       totalTasksAttempted: 0,
       totalLevelsCompleted: 0,
+      distinctQuestionsSolved: 0,
     },
     languages: [],
     recentAttempts: [],
@@ -911,6 +1246,9 @@ export async function getUserLearningProfile(userId: string, displayName: string
   }
 
   if (!profile) {
+    if (attemptCount === 0) {
+      await ensureUserLearningProfileInitialized(userId);
+    }
     return empty;
   }
 
@@ -923,6 +1261,7 @@ export async function getUserLearningProfile(userId: string, displayName: string
       totalQuestionsAttempted: Number(profile.totals?.totalQuestionsAttempted ?? 0),
       totalTasksAttempted: Number(profile.totals?.totalTasksAttempted ?? 0),
       totalLevelsCompleted: Number(profile.totals?.totalLevelsCompleted ?? 0),
+      distinctQuestionsSolved: Number(profile.totals?.distinctQuestionsSolved ?? 0),
     },
     languages: (profile.languages ?? []).map((language) => ({
       languageId: toId(language.languageId),

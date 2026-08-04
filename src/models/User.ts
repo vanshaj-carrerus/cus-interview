@@ -59,6 +59,13 @@ const userSchema = new Schema(
     payuPreDebitForDate: { type: Date },
     payuFirstChargeAt: { type: Date },
     payuLastRecurringTxnId: { type: String, sparse: true },
+    profileImageUrl: { type: String, default: "", trim: true },
+    googleId: { type: String, index: true, sparse: true, unique: true },
+    /** Consecutive calendar days the user opened the platform (Asia/Kolkata). */
+    loginStreak: { type: Number, default: 0 },
+    bestLoginStreak: { type: Number, default: 0 },
+    /** Last visit date key (YYYY-MM-DD) in LOGIN_STREAK_TIMEZONE. */
+    lastLoginDateKey: { type: String, default: "", trim: true },
   },
   { timestamps: true }
 );

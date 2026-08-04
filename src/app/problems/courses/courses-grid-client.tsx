@@ -2,7 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronRight, BookOpen, Layers } from "lucide-react";
+import { useMemo, useState } from "react";
+import { BookOpen, ChevronRight, Layers, Search, Star } from "lucide-react";
+import LanguageIcon from "@/components/language/LanguageIcon";
+import { getLanguageIconUrlFromParts } from "@/lib/language-icons";
+import { getCourseModuleLabel, getQuizModuleLabel } from "@/lib/learning/problem-prompt";
 
 type CourseCard = {
   id: string;
@@ -11,59 +15,216 @@ type CourseCard = {
   intro: string;
   iconImage?: string;
   levels?: number;
+  questionCount?: number;
 };
 
-export default function CoursesGridClient({ courses }: { courses: CourseCard[] }) {
+const INITIAL_VISIBLE = 12;
+
+const CARD_STYLES = [
+  "border border-orange-100/80 bg-gradient-to-br from-orange-50/60 via-amber-50/40 to-rose-50/50",
+  "border border-emerald-100/80 bg-gradient-to-br from-emerald-50/60 via-teal-50/40 to-green-50/50",
+  "border border-sky-100/80 bg-gradient-to-br from-sky-50/60 via-blue-50/40 to-indigo-50/50",
+  "border border-violet-100/80 bg-gradient-to-br from-violet-50/60 via-purple-50/40 to-fuchsia-50/50",
+  "border border-amber-100/80 bg-gradient-to-br from-amber-50/60 via-yellow-50/40 to-orange-50/50",
+  "border border-pink-100/80 bg-gradient-to-br from-pink-50/60 via-rose-50/40 to-fuchsia-50/50",
+] as const;
+
+function CourseCardLink({
+  course,
+  href,
+  surface,
+  variant,
+}: {
+  course: CourseCard;
+  href: string;
+  surface: string;
+  variant: "roadmap" | "quiz";
+}) {
   return (
-    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      {courses.map((course) => {
-        const href = `/problems/courses/${course.slug}`;
+    <Link
+      href={href}
+      className={`group relative flex min-h-[176px] flex-col rounded-xl p-5 transition hover:shadow-md ${surface}`}
+    >
+      <div className="mb-4 flex items-start justify-between">
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/60 bg-white/70 shadow-sm">
+          {course.iconImage ? (
+            <Image
+              src={course.iconImage}
+              alt={`${course.title} icon`}
+              loading="lazy"
+              className="h-5 w-5 rounded object-cover"
+              width={20}
+              height={20}
+            />
+          ) : getLanguageIconUrlFromParts(course.slug, course.title) ? (
+            <LanguageIcon
+              slug={course.slug}
+              title={course.title}
+              language={course.slug}
+              className="h-5 w-5"
+            />
+          ) : (
+            <Layers className="h-4 w-4 text-primary" />
+          )}
+        </div>
+        <ChevronRight className="h-4 w-4 text-secondary/30 transition group-hover:translate-x-0.5 group-hover:text-primary" />
+      </div>
 
-        return (
-          <Link
-            key={course.id}
-            href={href}
-            className="group flex h-full flex-col rounded-2xl border border-slate-200/60 bg-white/70 p-6 backdrop-blur-xl ring-2 ring-transparent transition-all duration-600 hover:-translate-y-1 hover:border-slate-300/80 hover:bg-white hover:shadow-[0_15px_30px_-10px_rgba(0,0,0,0.05)] hover:ring-sky-500/20"
-          >
-            <div className="mb-5 flex items-start justify-between">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-sky-100 bg-sky-50 text-sky-600 shadow-sm transition-transform duration-300 ease-out group-hover:scale-110">
-                {course.iconImage ? (
-                  <Image
-                    src={course.iconImage}
-                    alt={`${course.title} icon`}
-                    loading="lazy"
-                    className="h-7 w-7 rounded-lg object-cover"
-                    width={48}
-                    height={48}
-                  />
-                ) : (
-                  <Layers className="h-6 w-6" />
-                )}
-              </div>
-              <div className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-100 bg-slate-50 shadow-sm transition-colors duration-300 group-hover:border-sky-500 group-hover:bg-sky-500">
-                <ChevronRight className="h-4 w-4 text-slate-400 transition-colors duration-300 group-hover:text-white" />
-              </div>
-            </div>
+      <h2 className="mb-auto pr-2 text-base font-bold leading-snug text-secondary transition group-hover:text-primary">
+        {course.title}
+      </h2>
 
-            <div className="mb-2">
-              <h2 className="text-lg font-bold text-slate-800 transition-colors duration-300 group-hover:text-sky-500">
-                {course.title}
+      <div className="mt-6 flex items-center gap-1.5 text-secondary/50">
+        <BookOpen className="h-3.5 w-3.5" />
+        <span className="text-[10px] font-bold uppercase tracking-wider">
+          {variant === "quiz"
+            ? getQuizModuleLabel(course.levels)
+            : getCourseModuleLabel(course.levels, course.questionCount)}
+        </span>
+      </div>
+    </Link>
+  );
+}
+
+export default function CoursesGridClient({
+  courses,
+  basePath = "/problems/courses",
+  showAllByDefault = false,
+  variant = "roadmap",
+  popularSlugs = [],
+}: {
+  courses: CourseCard[];
+  basePath?: string;
+  showAllByDefault?: boolean;
+  variant?: "roadmap" | "quiz";
+  popularSlugs?: readonly string[];
+}) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showAll, setShowAll] = useState(showAllByDefault);
+
+  const filteredCourses = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return courses;
+    return courses.filter(
+      (course) =>
+        course.title.toLowerCase().includes(query) ||
+        course.intro.toLowerCase().includes(query),
+    );
+  }, [courses, searchQuery]);
+
+  const isSearching = searchQuery.trim().length > 0;
+
+  const { popularCourses, otherCourses } = useMemo(() => {
+    if (!popularSlugs.length || isSearching) {
+      return { popularCourses: [] as CourseCard[], otherCourses: filteredCourses };
+    }
+
+    const bySlug = new Map(filteredCourses.map((course) => [course.slug, course]));
+    const popular = popularSlugs
+      .map((slug) => bySlug.get(slug))
+      .filter((course): course is CourseCard => Boolean(course));
+    const popularSet = new Set(popular.map((course) => course.slug));
+    const others = filteredCourses.filter((course) => !popularSet.has(course.slug));
+
+    return { popularCourses: popular, otherCourses: others };
+  }, [filteredCourses, popularSlugs, isSearching]);
+
+  const listCourses = popularCourses.length > 0 ? otherCourses : filteredCourses;
+
+  const visibleCourses =
+    showAll || isSearching ? listCourses : listCourses.slice(0, INITIAL_VISIBLE);
+
+  const hasMore =
+    !showAllByDefault && !isSearching && listCourses.length > INITIAL_VISIBLE;
+
+  const countLabel = variant === "quiz" ? "quizzes" : "roadmaps";
+
+  return (
+    <div className="space-y-8">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative flex-1 sm:max-w-md">
+          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-secondary/40" />
+          <input
+            type="text"
+            placeholder={
+              variant === "quiz"
+                ? "Search for a language or quiz course..."
+                : "Search for a language or course roadmap..."
+            }
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full rounded-xl border border-primary/15 bg-white py-2.5 pl-10 pr-4 text-sm text-secondary transition placeholder:text-secondary/40 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+          />
+        </div>
+        <p className="text-sm text-secondary/50">
+          <span className="font-semibold text-secondary">{filteredCourses.length}</span> {countLabel}{" "}
+          available
+        </p>
+      </div>
+
+      {popularCourses.length > 0 ? (
+        <section>
+          <div className="mb-4 flex items-center gap-2">
+            <Star className="h-4 w-4 fill-primary text-primary" />
+            <h2 className="text-sm font-bold uppercase tracking-wider text-secondary">
+              Popular Languages
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {popularCourses.map((course, index) => (
+              <CourseCardLink
+                key={course.id}
+                course={course}
+                href={`${basePath}/${course.slug}`}
+                surface={CARD_STYLES[index % CARD_STYLES.length]}
+                variant={variant}
+              />
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {visibleCourses.length > 0 ? (
+        <section>
+          {popularCourses.length > 0 && !isSearching ? (
+            <>
+              <div className="mb-6 h-px w-full bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+              <h2 className="mb-4 text-sm font-bold uppercase tracking-wider text-secondary/60">
+                All {variant === "quiz" ? "Quizzes" : "Roadmaps"}
               </h2>
-            </div>
+            </>
+          ) : null}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {visibleCourses.map((course, index) => (
+              <CourseCardLink
+                key={course.id}
+                course={course}
+                href={`${basePath}/${course.slug}`}
+                surface={CARD_STYLES[(index + popularCourses.length) % CARD_STYLES.length]}
+                variant={variant}
+              />
+            ))}
+          </div>
+        </section>
+      ) : null}
 
-            <p className="mb-6 line-clamp-3 flex-grow text-[13px] font-medium leading-relaxed text-slate-500">
-              {course.intro}
-            </p>
+      {filteredCourses.length === 0 ? (
+        <p className="py-16 text-center text-sm text-secondary/45">
+          No {countLabel} match your search.
+        </p>
+      ) : null}
 
-            <div className="mt-auto flex items-center gap-2 border-t border-slate-100 pt-4 text-slate-400 transition-colors duration-300 group-hover:text-sky-500">
-              <BookOpen className="h-3.5 w-3.5" />
-              <span className="text-[10px] font-black uppercase tracking-[0.15em]">
-                {course.levels || 0} Modules
-              </span>
-            </div>
-          </Link>
-        );
-      })}
+      {hasMore && !showAll ? (
+        <div className="flex justify-center pt-2">
+          <button
+            type="button"
+            onClick={() => setShowAll(true)}
+            className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-primary/90"
+          >
+            Explore all {listCourses.length} {countLabel}
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }

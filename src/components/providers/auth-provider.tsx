@@ -10,6 +10,11 @@ import {
   type ReactNode,
 } from "react";
 import type { PublicUser } from "@/types/auth";
+import {
+  clearLocalProgressCache,
+  hydrateUserProgressFromServer,
+  UserProgressHydrator,
+} from "@/hooks/use-sync-solved-questions";
 
 type CompleteSignupFields = {
   email: string;
@@ -76,6 +81,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (cancelled) return;
       if (result.status === "ok") {
         setUser(result.user);
+        if (result.user) {
+          void hydrateUserProgressFromServer();
+        }
       } else if (result.status === "unauthorized") {
         setUser(null);
       }
@@ -104,11 +112,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         if (data.user) {
           setUser(data.user);
+          void hydrateUserProgressFromServer();
           return {};
         }
         const me = await fetchSessionUser();
         if (me.status === "ok") {
           setUser(me.user);
+          if (me.user) {
+            void hydrateUserProgressFromServer();
+          }
         }
         return {};
       } catch {
@@ -155,6 +167,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     if (data.user) {
       setUser(data.user);
+      void hydrateUserProgressFromServer();
     }
     return {};
   }, []);
@@ -165,6 +178,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       credentials: "same-origin",
       cache: "no-store",
     });
+    clearLocalProgressCache();
     setUser(null);
   }, []);
 
@@ -181,7 +195,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [user, loading, refreshUser, login, sendSignupCode, completeSignup, logout]
   );
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      <UserProgressHydrator userId={user?.id} />
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth(): AuthContextValue {

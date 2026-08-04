@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronLeft,
@@ -13,22 +13,130 @@ import {
   Target,
   BarChart3,
   Compass,
+  Code2,
 } from "lucide-react";
 
-import { LevelItem, TopicData } from "../../practice/data/types";
+import { LevelItem, QuestionItem, TopicData } from "../../practice/data/types";
+import { isCodingLevel } from "@/lib/learning/question-kind";
+import { formatLevelTitle } from "@/lib/learning/problem-prompt";
 import { logLearningProgress } from "@/lib/learning-progress-debug";
+import { buildProblemCompilerUrl } from "@/app/compiler/lib/problem-templates";
+import { parseProblemPrompt } from "@/lib/learning/problem-prompt";
+import SubscriptionPaywallModal from "@/components/billing/SubscriptionPaywallModal";
+import { useSubscriptionGate } from "@/hooks/use-subscription-gate";
 
 type Props = {
   topic: TopicData;
   level: LevelItem;
   basePath?: string;
+  mode?: "roadmap" | "quiz";
 };
+
+function CodingLevelPage({
+  topic,
+  level,
+  basePath = "/problems",
+}: Props) {
+  const { checkAccess, paywallOpen, closePaywall } = useSubscriptionGate();
+  const [solvedQuestionIds, setSolvedQuestionIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("cus_solved_questions");
+      if (!stored) return;
+      setSolvedQuestionIds(new Set(JSON.parse(stored) as string[]));
+    } catch {
+      // ignore malformed local storage
+    }
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-slate-50 p-6 md:p-12 font-sans text-secondary">
+      <div className="max-w-4xl mx-auto">
+        <Link
+          href={`${basePath}/${topic.slug}`}
+          className="group inline-flex items-center text-sm font-medium text-slate-500 hover:text-primary transition-colors mb-8"
+        >
+          <ChevronLeft className="w-4 h-4 mr-1 group-hover:-translate-x-1 transition-transform" />
+          Back to Roadmap
+        </Link>
+
+        <header className="mb-8">
+          <h1 className="text-3xl font-bold text-secondary">{level.title}</h1>
+          <p className="text-slate-500 mt-2">{level.description}</p>
+          <p className="text-sm text-slate-400 mt-1">
+            {level.questions.length} coding problems · click any to open in the compiler
+          </p>
+        </header>
+
+        <div className="space-y-3">
+          {level.questions.map((question, index) => {
+            const isSolved = solvedQuestionIds.has(question.id);
+            const parsed = parseProblemPrompt(question.question);
+            return (
+              <button
+                key={question.id}
+                type="button"
+                onClick={() =>
+                  checkAccess(() => {
+                    window.location.href = buildProblemCompilerUrl(
+                      question.id,
+                      question.question,
+                    );
+                  })
+                }
+                className="w-full text-left rounded-xl border border-slate-200 bg-white p-5 transition-all hover:border-primary/40 hover:shadow-sm"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-4 min-w-0">
+                    <div
+                      className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${
+                        isSolved ? "bg-emerald-50 text-emerald-600" : "bg-sky-50 text-primary"
+                      }`}
+                    >
+                      {isSolved ? (
+                        <CheckCircle2 className="h-5 w-5" />
+                      ) : (
+                        <Code2 className="h-5 w-5" />
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                        Problem {index + 1}
+                      </p>
+                      <p className="font-semibold text-secondary mt-1">{parsed.title}</p>
+                      {parsed.description ? (
+                        <p className="text-sm text-slate-500 mt-1">{parsed.description}</p>
+                      ) : null}
+                    </div>
+                  </div>
+                  <span className="shrink-0 text-sm font-bold text-primary">
+                    {isSolved ? "Review" : "Open"}
+                  </span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <SubscriptionPaywallModal open={paywallOpen} onClose={closePaywall} />
+    </div>
+  );
+}
 
 export default function TopicStepPage({
   topic,
   level,
   basePath = "/problems",
+  mode = "roadmap",
 }: Props) {
+  const isQuizMode = mode === "quiz";
+
+  if (isCodingLevel(level) && !isQuizMode) {
+    return <CodingLevelPage topic={topic} level={level} basePath={basePath} />;
+  }
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [correctCount, setCorrectCount] = useState(0);
@@ -147,12 +255,18 @@ export default function TopicStepPage({
           </div>
 
           <h1 className="text-4xl font-bold text-slate-900 tracking-tight">
-            {passed ? "Step Mastered" : "Keep Practicing"}
+            {passed
+              ? isQuizMode
+                ? "Quiz Passed!"
+                : "Step Mastered"
+              : isQuizMode
+                ? "Quiz Incomplete"
+                : "Keep Practicing"}
           </h1>
           <p className="text-slate-500 mt-4 text-lg">
             {passed
-              ? `You've successfully completed ${level.title}.`
-              : `You scored ${correctCount}/${level.questions.length}. You need ${level.passScore} to pass.`}
+              ? `You've passed ${formatLevelTitle(level.title, level.level)}.`
+              : `You scored ${correctCount}/${level.questions.length}. You need ${level.passScore} to pass this quiz.`}
           </p>
 
           <div className="grid grid-cols-2 gap-4 mt-10">
@@ -181,7 +295,7 @@ export default function TopicStepPage({
               href={`${basePath}/${topic.slug}`}
               className="flex-1 bg-slate-900 text-white w-96! py-2 rounded-2xl font-bold hover:bg-primary transition-all shadow-lg shadow-slate-900/10"
             >
-              Back to Roadmap
+              {isQuizMode ? "Back to Quiz Levels" : "Back to Roadmap"}
             </Link>
             {passed && nextLevel ? (
               <Link
@@ -189,7 +303,7 @@ export default function TopicStepPage({
                 className="flex-1 inline-flex items-center justify-center gap-2 bg-white text-slate-600 border border-slate-200 px-6 py-2 rounded-2xl font-bold hover:bg-slate-50 transition-all"
               >
                 <Compass className="w-5 h-5" />
-                <span>Next Step</span>
+                <span>{isQuizMode ? "Next Quiz Level" : "Next Step"}</span>
               </Link>
             ) : null}
             <button
@@ -226,17 +340,19 @@ export default function TopicStepPage({
               <ChevronLeft className="w-4 h-4 mr-1 group-hover:-translate-x-1 transition-transform" />
               {topic.title}
             </Link>
-            <h1 className="text-xl md:text-2xl font-bold tracking-tight">{level.title}</h1>
+            <h1 className="text-xl md:text-2xl font-bold tracking-tight">
+              {formatLevelTitle(level.title, level.level)}
+            </h1>
           </div>
 
           <div className="flex gap-4">
             <StatBox
-              label="Live Score"
+              label={isQuizMode ? "Quiz Score" : "Live Score"}
               value={`${correctCount}/${level.questions.length}`}
               icon={<Target className="w-4 h-4" />}
             />
             <StatBox
-              label="Goal"
+              label={isQuizMode ? "Pass Mark" : "Goal"}
               value={`${level.passScore}`}
               icon={<Trophy className="w-4 h-4" />}
             />

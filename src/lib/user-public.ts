@@ -7,6 +7,7 @@ type UserLike = {
   _id: { toString(): string };
   email: string;
   name?: string;
+  profileImageUrl?: string;
   role?: "User" | "SuperAdmin";
   createdAt?: Date | string;
   billingPlanId?: string | null;
@@ -61,6 +62,7 @@ export function toPublicUser(user: UserLike): PublicUser {
     id: user._id.toString(),
     email: user.email,
     name: user.name ?? "",
+    image: user.profileImageUrl?.trim() || null,
     role: user.role === "SuperAdmin" ? "SuperAdmin" : "User",
     createdAt,
     subscription: toPublicSubscription(user),

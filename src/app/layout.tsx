@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import NextTopLoader from "nextjs-toploader";
 import Footer from "@/components/global/Footer";
@@ -8,9 +8,10 @@ import { AppProviders } from "@/components/providers/app-providers";
 import ConditionalLayout from "@/components/global/ConditionalLayout";
 // Trigger hot reload
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const plusJakarta = Plus_Jakarta_Sans({
+  variable: "--font-plus-jakarta",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
 });
 
 const geistMono = Geist_Mono({
@@ -38,9 +39,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased light`}
+      className={`${plusJakarta.variable} ${geistMono.variable} h-full antialiased light`}
     >
-      <body className="min-h-screen bg-background text-foreground">
+      <body className="min-h-screen bg-background font-sans text-foreground">
         <NextTopLoader
           color="#5bb9e5"
           initialPosition={0.08}

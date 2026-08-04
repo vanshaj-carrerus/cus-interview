@@ -13,6 +13,9 @@ type QuestionItem = {
   correctOptionId: string;
   explanation: string;
   difficulty?: "easy" | "medium" | "hard";
+  questionType?: "mcq" | "coding";
+  sampleInput?: string;
+  expectedOutput?: string;
 };
 
 type LevelItem = {
@@ -59,6 +62,9 @@ export default function QuestionTableManager({ levels }: Props) {
     const explanation = String(formData.get("explanation") ?? "").trim();
     const correctOptionId = Number(formData.get("correctOptionId") ?? 0);
     const difficulty = String(formData.get("difficulty") ?? "medium");
+    const questionType = String(formData.get("questionType") ?? "coding");
+    const sampleInput = String(formData.get("sampleInput") ?? "");
+    const expectedOutput = String(formData.get("expectedOutput") ?? "");
 
     const options = optionsCsv
       .split(",")
@@ -89,6 +95,9 @@ export default function QuestionTableManager({ levels }: Props) {
               correctOptionId: normalizedCorrectOptionId,
               explanation,
               difficulty,
+              questionType,
+              sampleInput,
+              expectedOutput,
               status: "published",
             },
           }),
@@ -109,6 +118,9 @@ export default function QuestionTableManager({ levels }: Props) {
               correctOptionId: normalizedCorrectOptionId,
               explanation,
               difficulty,
+              questionType,
+              sampleInput,
+              expectedOutput,
             },
           }),
         });
@@ -153,6 +165,8 @@ export default function QuestionTableManager({ levels }: Props) {
                     <th className="px-3 py-2 text-left">Prompt</th>
                     <th className="px-3 py-2 text-left">Options</th>
                     <th className="px-3 py-2 text-left">Correct</th>
+                    <th className="px-3 py-2 text-left">Type</th>
+                    <th className="px-3 py-2 text-left">Auto-check</th>
                     <th className="px-3 py-2 text-left">Difficulty</th>
                     <th className="px-3 py-2 text-left">Actions</th>
                   </tr>
@@ -167,6 +181,12 @@ export default function QuestionTableManager({ levels }: Props) {
                       </td>
                       <td className="px-3 py-2 text-secondary/70">
                         {question.options.find((option) => option.id === question.correctOptionId)?.text ?? "-"}
+                      </td>
+                      <td className="px-3 py-2 text-secondary/70">
+                        {(question.questionType ?? "coding").toUpperCase()}
+                      </td>
+                      <td className="px-3 py-2 text-secondary/70">
+                        {question.expectedOutput?.trim() ? "Yes" : "No"}
                       </td>
                       <td className="px-3 py-2">
                         <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ring-1 ring-inset ${
@@ -208,7 +228,7 @@ export default function QuestionTableManager({ levels }: Props) {
                   ))}
                   {level.questions.length === 0 ? (
                     <tr>
-                      <td className="px-3 py-4 text-secondary/60" colSpan={6}>
+                      <td className="px-3 py-4 text-secondary/60" colSpan={8}>
                         No questions added yet.
                       </td>
                     </tr>
@@ -259,6 +279,51 @@ export default function QuestionTableManager({ levels }: Props) {
                     <option value="medium">Medium</option>
                     <option value="hard">Hard</option>
                   </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-secondary/70 mb-1">Question Type</label>
+                <select
+                  name="questionType"
+                  defaultValue={
+                    modalState.mode === "edit"
+                      ? modalState.question.questionType ?? "coding"
+                      : "coding"
+                  }
+                  className="w-full rounded-lg border border-primary/20 px-3 py-2 text-sm text-secondary bg-white"
+                >
+                  <option value="coding">Coding</option>
+                  <option value="mcq">MCQ</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-secondary/70 mb-1">
+                    Sample Input (STDIN)
+                  </label>
+                  <textarea
+                    name="sampleInput"
+                    defaultValue={
+                      modalState.mode === "edit" ? modalState.question.sampleInput ?? "" : ""
+                    }
+                    placeholder="e.g. 3 7 2 9 1"
+                    className="h-20 w-full rounded-lg border border-primary/20 px-3 py-2 text-sm font-mono text-secondary"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-secondary/70 mb-1">
+                    Expected Output
+                  </label>
+                  <textarea
+                    name="expectedOutput"
+                    defaultValue={
+                      modalState.mode === "edit" ? modalState.question.expectedOutput ?? "" : ""
+                    }
+                    placeholder="e.g. 9 1"
+                    className="h-20 w-full rounded-lg border border-primary/20 px-3 py-2 text-sm font-mono text-secondary"
+                  />
                 </div>
               </div>
 

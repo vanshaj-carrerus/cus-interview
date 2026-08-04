@@ -46,6 +46,13 @@ export const userLearningProfileSchema = new Schema(
       totalQuestionsAttempted: { type: Number, default: 0 },
       totalTasksAttempted: { type: Number, default: 0 },
       totalLevelsCompleted: { type: Number, default: 0 },
+      /** Distinct problems solved — only increases, never reset by profile sync. */
+      distinctQuestionsSolved: { type: Number, default: 0 },
+    },
+    /** Permanent list of solved question ids — never removed except explicit admin reset. */
+    solvedQuestionIds: {
+      type: [{ type: Schema.Types.ObjectId, ref: "LearningQuestion" }],
+      default: [],
     },
     languages: { type: [languageProgressSchema], default: [] },
     lastActiveAt: { type: Date, default: null, index: true },

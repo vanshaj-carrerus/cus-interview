@@ -4,7 +4,7 @@ import { getSessionPublicUser } from "@/lib/get-session-user";
 import { buildProfileDashboardModel } from "@/lib/profile/profile-dashboard-model";
 import { connectDB } from "@/lib/mongodb";
 import { User } from "@/models/User";
-import { getUserLearningActivityRollup, getUserLearningProfile } from "@/lib/learning/service";
+import { ensureUserLearningProfileInitialized, getUserLearningActivityRollup, getUserLearningProfile } from "@/lib/learning/service";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +15,8 @@ export default async function ProfilePage() {
   }
 
   await connectDB();
+  await ensureUserLearningProfileInitialized(user.id);
+
   const [userDoc, profile, rollup] = await Promise.all([
     User.findById(user.id).select({ updatedAt: 1 }).lean(),
     getUserLearningProfile(user.id, user.name || user.email),

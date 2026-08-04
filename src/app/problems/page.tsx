@@ -1,6 +1,7 @@
 import { connectDB } from "@/lib/mongodb";
-import { LearningTrack, LearningLevel, LearningQuestion, getTrackingModels } from "@/models/learning";
+import { LearningTrack, LearningLevel, LearningQuestion } from "@/models/learning";
 import { getSessionPublicUser } from "@/lib/get-session-user";
+import { getUserSolvedQuestionIds } from "@/lib/learning/service";
 import ProblemsSheetClient from "./components/problems-sheet-client";
 
 export const dynamic = "force-dynamic";
@@ -46,18 +47,7 @@ export default async function ProblemsHomePage() {
         name: session.name || undefined,
       };
 
-      const tracking = await getTrackingModels();
-      const { UserLearningAttempt } = tracking;
-
-      const correctAttempts = await UserLearningAttempt.find({
-        userId: session.id,
-        entityType: "question",
-        isCorrect: true,
-      })
-        .select({ entityId: 1 })
-        .lean();
-
-      initialSolvedQuestionIds = correctAttempts.map((item) => String(item.entityId));
+      initialSolvedQuestionIds = await getUserSolvedQuestionIds(session.id);
     }
   } catch (error) {
     console.warn("[ProblemsHomePage] Failed to fetch user progress details:", error);

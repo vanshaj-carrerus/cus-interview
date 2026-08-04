@@ -1,116 +1,67 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence, Variants } from "framer-motion";
-
-
-
-function CompanyLogo({ name, src }: { name: string; src: string }) {
-  return (
-    <div className="relative shrink-0 w-24 h-8 sm:w-28 sm:h-10 md:w-32 md:h-10 cursor-default flex items-center justify-center">
-      <Image src={src} alt={name} fill className="object-contain grayscale opacity-50 hover:opacity-100 transition-opacity" />
-    </div>
-  );
-}
-
-
+import { HeroCompanyLogos } from "@/components/home/CompanyLogosBand";
 
 export default function CusInterviewHero() {
-
-
   return (
-    <div className="relative bg-white overflow-hidden pb-1">
+    <section className="relative overflow-hidden">
+      <div className="hero-mesh-base absolute inset-0" />
 
+      <div className="hero-color-blob hero-blob-1" aria-hidden />
+      <div className="hero-color-blob hero-blob-2" aria-hidden />
+      <div className="hero-color-blob hero-blob-3" aria-hidden />
+      <div className="hero-color-blob hero-blob-4" aria-hidden />
+      <div className="hero-color-blob hero-blob-5" aria-hidden />
 
-      {/* ── HERO CONTENT (CENTERED) ── */}
-      <main className="relative pt-28 md:pt-32 z-20">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col items-center text-center">
+      <div
+        className="pointer-events-none absolute inset-0 opacity-40"
+        style={{
+          backgroundImage: `
+            radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,0.7) 0%, transparent 100%),
+            radial-gradient(1px 1px at 40% 70%, rgba(255,255,255,0.5) 0%, transparent 100%),
+            radial-gradient(1px 1px at 65% 25%, rgba(255,255,255,0.6) 0%, transparent 100%),
+            radial-gradient(1px 1px at 80% 60%, rgba(255,255,255,0.45) 0%, transparent 100%),
+            radial-gradient(1.5px 1.5px at 55% 45%, rgba(255,255,255,0.85) 0%, transparent 100%),
+            radial-gradient(1px 1px at 90% 40%, rgba(255,255,255,0.55) 0%, transparent 100%),
+            radial-gradient(1px 1px at 10% 55%, rgba(255,255,255,0.5) 0%, transparent 100%),
+            radial-gradient(1px 1px at 72% 85%, rgba(255,255,255,0.4) 0%, transparent 100%)
+          `,
+        }}
+      />
 
-          {/* Top Pill */}
-          {/* <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 rounded-full mb-8">
-            <span className="flex h-2 w-2 rounded-full bg-primary animate-pulse" />
-            <span className="text-primary text-[10px] font-black uppercase tracking-widest">
-              Global Staffing & Coaching
-            </span>
-          </div> */}
-
-          {/* Main Headline */}
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-[#111827] mt-0 leading-[1.1] tracking-tight mb-3 max-w-none mx-auto">
-            Build Your Dream Career with CUS.
+      <div className="relative mx-auto flex min-h-[720px] max-w-7xl flex-col items-center px-6 py-10 sm:min-h-[780px] md:min-h-[840px] md:px-10 md:py-20">
+        <div className="flex flex-1 flex-col items-center justify-center text-center">
+          <h1 className="max-w-7xl text-2xl font-extrabold leading-[1.12] tracking-tight text-white sm:text-4xl md:text-5xl lg:text-[3.9rem]">
+            Architecting The Next <br />{" "}
+            <span className="font-extrabold">Generation</span> of AI-Driven
+            Developers.
           </h1>
 
-          {/* Subtitle */}
-          <p className="text-[#4E6F80] text-sm sm:text-lg font-medium  leading-relaxed mb-8">
-            Mixpanel helps teams turn user behavior insights into <br className="hidden md:block" /> clear next steps, without delays or SQL bottlenecks.
+          <p className="mx-auto mt-8 max-w-2xl text-center text-sm font-medium leading-relaxed text-white/90 sm:text-base md:text-[17px]">
+            CUS Interview enables skill improvement through automated assessments,
+            AI-powered mock interviews, and personalized learning paths — helping
+            developers and companies grow together.
           </p>
 
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row items-center gap-3 justify-center mb-16 w-full px-4">
-            <Link href="https://www.custech.co/" target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
-              <button className="flex items-center justify-center gap-1.5 w-full sm:w-auto px-5 py-2.5 bg-sky-500 hover:bg-sky-600 text-white text-[15px] font-semibold rounded-full cursor-pointer active:scale-95 transition-all">
-                Get Started Free
-
-              </button>
+          <div className="mt-10 flex w-full flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
+            <Link
+              href="/pricing"
+              className="inline-flex w-full items-center justify-center rounded-full bg-white px-7 py-3.5 text-[15px] font-semibold text-primary transition-colors hover:bg-white/90 sm:w-auto"
+            >
+              For Companies
             </Link>
-
+            <Link
+              href="/signup"
+              className="inline-flex w-full items-center justify-center rounded-full border-2 border-white/80 bg-transparent px-7 py-3.5 text-[15px] font-semibold text-white transition-colors hover:border-white hover:bg-white/10 sm:w-auto"
+            >
+              For Developers/Job Seekers
+            </Link>
           </div>
-
-          {/* Company Slider Title */}
-          <p className="text-center text-sm font-semibold text-slate-500 uppercase tracking-widest mb-6">Our candidates work at</p>
-
-          {/* Company Slider */}
-          <div className="w-full max-w-5xl mx-auto overflow-hidden relative pb-10">
-            {/* Gradient Masks */}
-            <div className="absolute top-0 bottom-0 left-0 w-24 bg-gradient-to-r from-white to-transparent z-10" />
-            <div className="absolute top-0 bottom-0 right-0 w-24 bg-gradient-to-l from-white to-transparent z-10" />
-
-
-
-            <div className="flex w-max animate-[marquee_35s_linear_infinite]">
-              {/* First Set */}
-              <div className="flex items-center gap-8 sm:gap-12 md:gap-16 px-4 sm:px-6 md:px-8">
-                <CompanyLogo name="Amazon" src="/logos/amazon.png" />
-                <CompanyLogo name="Facebook" src="/logos/facebook.png" />
-                <CompanyLogo name="Goldman Sachs" src="/logos/goldman-sachs.png" />
-                <CompanyLogo name="TCS" src="/logos/tcs.png" />
-                <CompanyLogo name="Accenture" src="/logos/accenture.png" />
-                <CompanyLogo name="HCL" src="/logos/HCL.png" />
-              </div>
-              {/* Second Set (Duplicate for seamless loop) */}
-              <div className="flex items-center gap-8 sm:gap-12 md:gap-16 px-4 sm:px-6 md:px-8">
-                <CompanyLogo name="Amazon" src="/logos/amazon.png" />
-                <CompanyLogo name="Facebook" src="/logos/facebook.png" />
-                <CompanyLogo name="Goldman Sachs" src="/logos/goldman-sachs.png" />
-                <CompanyLogo name="TCS" src="/logos/tcs.png" />
-                <CompanyLogo name="Accenture" src="/logos/accenture.png" />
-                <CompanyLogo name="HCL" src="/logos/HCL.png" />
-              </div>
-            </div>
-
-            <style>{`
-              @keyframes marquee {
-                0% { transform: translateX(0%); }
-                100% { transform: translateX(-50%); }
-              }
-            `}</style>
-          </div>
-
-          {/* Dashboard Preview Image */}
-          <div className="w-full max-w-6xl mx-auto mt-2 px-4 relative z-10 pb-16">
-            <Image
-              src="/home-hero.png"
-              alt="Dashboard Preview"
-              width={1600}
-              height={1100}
-              className="w-full h-auto rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-slate-200"
-              priority
-            />
-          </div>
-
         </div>
-      </main>
-    </div>
+
+        <HeroCompanyLogos />
+      </div>
+    </section>
   );
 }

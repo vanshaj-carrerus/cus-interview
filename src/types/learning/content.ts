@@ -54,6 +54,9 @@ export type LearningQuestionDto = {
   order: number;
   tags: string[];
   difficulty: "easy" | "medium" | "hard";
+  questionType: "mcq" | "coding";
+  sampleInput: string;
+  expectedOutput: string;
 };
 
 export type LearningTaskDto = {

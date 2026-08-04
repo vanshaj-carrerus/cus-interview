@@ -2,36 +2,35 @@
 
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
-import { UserRound, Search, ChevronDown } from "lucide-react";
+import { UserRound, ChevronDown } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
 import Logo from "@/components/global/Logo";
-import { usePathname, useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
 
 export default function Header() {
   const { user, loading, logout } = useAuth();
-  const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
-
-  const navItems: { label: string; href: string; accent?: string; items?: { label: string; href: string; }[] }[] = [
+  const navItems: {
+    label: string;
+    href: string;
+    items?: { label: string; href: string }[];
+  }[] = [
     {
-      label: "Practice Problems",
+      label: "Practice",
       href: "/problems",
     },
     {
-      label: "Programming Languages",
+      label: "Courses",
       href: "/problems/courses",
-      accent: "#22c55e",
       items: [
         { label: "Python Mastery", href: "/problems/courses/python-mastery" },
         { label: "HTML Mastery", href: "/problems/courses/html-mastery" },
         { label: "CSS Mastery", href: "/problems/courses/css-mastery" },
         { label: "Java Mastery", href: "/problems/courses/java-mastery" },
         { label: "C# Mastery", href: "/problems/courses/csharp-mastery" },
-        { label: "View All ", href: "/problems/courses" },
+        { label: "View All", href: "/problems/courses" },
       ],
     },
     {
@@ -43,7 +42,7 @@ export default function Header() {
       href: "/compiler",
     },
     {
-      label: "Resume Analyzer",
+      label: "Resources",
       href: "/resume-analyzer",
     },
     {
@@ -51,14 +50,6 @@ export default function Header() {
       href: "/pricing",
     },
   ];
-
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-
 
   useEffect(() => {
     document.body.style.overflow = mobileMenuOpen ? "hidden" : "";
@@ -70,7 +61,10 @@ export default function Header() {
   useEffect(() => {
     if (!userMenuOpen) return;
     const handlePointerDown = (e: MouseEvent) => {
-      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+      if (
+        userMenuRef.current &&
+        !userMenuRef.current.contains(e.target as Node)
+      ) {
         setUserMenuOpen(false);
       }
     };
@@ -89,32 +83,30 @@ export default function Header() {
 
   return (
     <>
-      <nav
-        className={`fixed top-4 left-0 right-0 z-50 px-4 sm:px-8 lg:px-12 flex justify-center pointer-events-none transition-all duration-300 ${scrolled ? "top-2" : "top-4"}`}
-      >
-        <div
-          className={`pointer-events-auto w-full flex items-center justify-between gap-4 px-6 py-3 sm:py-4 rounded-full border border-slate-100 bg-white transition-all duration-300 ${scrolled ? "shadow-md bg-white/95 backdrop-blur-xl" : "shadow-sm"}`}
-        >
+      <header className="fixed top-0 left-0 right-0 z-50 border-b border-slate-100 bg-white">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-6 lg:px-8">
           <div className="flex shrink-0 items-center">
-            <Logo priority />
+            <Logo priority width={120} height={48} />
           </div>
 
-          {/* NAVIGATION */}
-          <div className="hidden lg:flex flex-1 items-center justify-center gap-6 xl:gap-10">
-            {navItems.map((item) => (
+          <nav className="hidden flex-1 items-center justify-center gap-8 lg:flex">
+            {navItems.map((item) =>
               item.items ? (
                 <div key={item.label} className="relative group">
-                  <button className="flex items-center gap-1.5 text-slate-800 hover:text-sky-500 font-semibold text-[15px] transition-colors py-2 cursor-pointer">
+                  <button
+                    type="button"
+                    className="flex cursor-pointer items-center gap-1 py-2 text-[15px] font-medium text-secondary transition-colors hover:text-primary"
+                  >
                     {item.label}
-                    <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-sky-500 transition-all duration-200 group-hover:rotate-180" />
+                    <ChevronDown className="h-4 w-4 text-slate-400 transition-transform group-hover:rotate-180" />
                   </button>
-                  <div className="absolute top-full left-0 z-50 hidden group-hover:block pt-2">
-                    <div className="w-48 rounded-2xl border border-slate-100 bg-white py-2 shadow-xl">
+                  <div className="absolute top-full left-0 z-50 hidden pt-2 group-hover:block">
+                    <div className="w-48 rounded-xl border border-slate-100 bg-white py-2 shadow-xl">
                       {item.items.map((sub) => (
                         <Link
                           key={sub.label}
                           href={sub.href}
-                          className="block px-4 py-2 text-sm font-medium text-slate-600 hover:bg-sky-50 hover:text-sky-500 transition-colors"
+                          className="block px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-primary/5 hover:text-primary"
                         >
                           {sub.label}
                         </Link>
@@ -123,59 +115,60 @@ export default function Header() {
                   </div>
                 </div>
               ) : (
-                <Link key={item.label} href={item.href} className="text-slate-800 hover:text-sky-500 font-semibold text-[15px] transition-colors py-2">
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className="py-2 text-[15px] font-medium text-secondary transition-colors hover:text-primary"
+                >
                   {item.label}
                 </Link>
-              )
-            ))}
-          </div>
+              ),
+            )}
+          </nav>
 
-          {/* ACTIONS */}
-          <div className="flex items-center justify-end gap-5">
+          <div className="flex items-center justify-end gap-4">
             {loading ? (
-              <span className="hidden sm:block text-slate-400 text-sm font-semibold">
-                …
-              </span>
+              <span className="hidden text-sm text-slate-400 sm:block">…</span>
             ) : user ? (
-              <div className="relative isolate" ref={userMenuRef}>
+              <div className="relative" ref={userMenuRef}>
                 <button
                   type="button"
                   onClick={() => setUserMenuOpen((open) => !open)}
-                  className="inline-flex cursor-pointer items-center justify-center w-10 h-10 rounded-full border border-slate-200 bg-slate-50 text-slate-600 hover:border-sky-200 hover:text-sky-400 hover:bg-sky-50/50 transition-colors shadow-sm"
+                  className="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-600 transition-colors hover:border-primary/30 hover:text-primary"
                   aria-expanded={userMenuOpen}
                   aria-haspopup="menu"
-                  aria-controls="header-user-menu"
                 >
-                  <UserRound className="w-5 h-5" strokeWidth={2} aria-hidden />
+                  <UserRound className="h-4 w-4" strokeWidth={2} />
                   <span className="sr-only">Account menu</span>
                 </button>
                 {userMenuOpen ? (
                   <div
-                    id="header-user-menu"
                     role="menu"
-                    aria-orientation="vertical"
-                    className="absolute right-0 top-full z-50 mt-2 w-56 sm:w-60 rounded-2xl border border-slate-100 bg-white py-2 shadow-xl ring-1 ring-slate-900/5"
+                    className="absolute right-0 top-full z-50 mt-2 w-56 rounded-xl border border-slate-100 bg-white py-2 shadow-xl"
                   >
-                    <div className="px-4 py-3 border-b border-slate-100">
+                    <div className="border-b border-slate-100 px-4 py-3">
                       <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
                         Signed in
                       </p>
-                      {user.name ? (
-                        <>
-                          <p className="text-sm font-bold text-slate-800 truncate mt-1">{user.name}</p>
-                          <p className="text-xs text-slate-500 truncate mt-0.5">{user.email}</p>
-                        </>
-                      ) : (
-                        <p className="text-sm font-bold text-slate-800 truncate mt-1">{user.email}</p>
-                      )}
+                      <p className="mt-1 truncate text-sm font-semibold text-secondary">
+                        {user.name ?? user.email}
+                      </p>
                     </div>
                     <Link
                       href="/profile"
                       role="menuitem"
                       onClick={() => setUserMenuOpen(false)}
-                      className="block px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-sky-50 hover:text-sky-600 transition-colors"
+                      className="block px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-primary/5 hover:text-primary"
                     >
                       Profile
+                    </Link>
+                    <Link
+                      href="/dashboard"
+                      role="menuitem"
+                      onClick={() => setUserMenuOpen(false)}
+                      className="block px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-primary/5 hover:text-primary"
+                    >
+                      Dashboard
                     </Link>
                     <button
                       type="button"
@@ -184,7 +177,7 @@ export default function Header() {
                         setUserMenuOpen(false);
                         void logout();
                       }}
-                      className="w-full text-left px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-red-50 hover:text-red-600 transition-colors"
+                      className="w-full px-4 py-2.5 text-left text-sm font-medium text-slate-600 hover:bg-red-50 hover:text-red-600"
                     >
                       Log out
                     </button>
@@ -193,12 +186,17 @@ export default function Header() {
               </div>
             ) : (
               <>
-
                 <Link
                   href="/login"
-                  className="hidden sm:inline-flex items-center justify-center px-6 py-2.5 rounded-full bg-[#4ba3e3] hover:bg-sky-500 text-white text-[15px] font-semibold shadow-sm shadow-sky-200 transition-all"
+                  className="hidden text-[15px] font-medium text-secondary transition-colors hover:text-primary sm:inline-flex"
                 >
-                  Get Started
+                  Login
+                </Link>
+                <Link
+                  href="/signup"
+                  className="hidden items-center justify-center rounded-md bg-primary px-5 py-2 text-[14px] font-semibold text-white transition-colors hover:bg-primary/90 sm:inline-flex"
+                >
+                  Create a free account
                 </Link>
               </>
             )}
@@ -209,12 +207,10 @@ export default function Header() {
                 setUserMenuOpen(false);
                 setMobileMenuOpen(true);
               }}
-              className="lg:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg border border-secondary/20 text-secondary hover:text-primary hover:border-primary/40 transition-colors"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 text-secondary lg:hidden"
               aria-label="Open menu"
-              aria-expanded={mobileMenuOpen}
-              aria-controls="mobile-sidebar-menu"
             >
-              <svg viewBox="0 0 24 24" className="w-6 h-6" fill="none" aria-hidden>
+              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none">
                 <path
                   d="M4 7h16M4 12h16M4 17h16"
                   stroke="currentColor"
@@ -225,40 +221,32 @@ export default function Header() {
             </button>
           </div>
         </div>
-      </nav>
+      </header>
 
       <div
-        className={`lg:hidden fixed inset-0 z-60 transition ${mobileMenuOpen ? "pointer-events-auto" : "pointer-events-none"
-          }`}
+        className={`fixed inset-0 z-60 lg:hidden ${mobileMenuOpen ? "pointer-events-auto" : "pointer-events-none"}`}
         aria-hidden={!mobileMenuOpen}
       >
         <button
           type="button"
-          className={`absolute inset-0 bg-black/40 backdrop-blur-[1px] transition-opacity ${mobileMenuOpen ? "opacity-100" : "opacity-0"
-            }`}
+          className={`absolute inset-0 bg-black/40 transition-opacity ${mobileMenuOpen ? "opacity-100" : "opacity-0"}`}
           onClick={() => setMobileMenuOpen(false)}
-          aria-label="Close menu overlay"
+          aria-label="Close menu"
         />
-
         <aside
-          id="mobile-sidebar-menu"
-          className={`absolute top-0 right-0 h-full w-[85%] max-w-sm bg-white shadow-2xl px-6 py-6 transition-transform duration-300 ${mobileMenuOpen ? "translate-x-0" : "translate-x-full"
-            }`}
-          role="dialog"
-          aria-modal="true"
-          aria-label="Mobile menu"
+          className={`absolute top-0 right-0 h-full w-[85%] max-w-sm bg-white px-6 py-6 shadow-2xl transition-transform duration-300 ${mobileMenuOpen ? "translate-x-0" : "translate-x-full"}`}
         >
-          <div className="flex items-center justify-between mb-8">
-            <span className="text-secondary font-black text-sm uppercase tracking-widest">
+          <div className="mb-8 flex items-center justify-between">
+            <span className="text-sm font-bold uppercase tracking-widest text-slate-400">
               Menu
             </span>
             <button
               type="button"
               onClick={() => setMobileMenuOpen(false)}
-              className="inline-flex items-center justify-center w-10 h-10 rounded-lg border border-secondary/20 text-secondary hover:text-primary hover:border-primary/40 transition-colors"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-200"
               aria-label="Close menu"
             >
-              <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" aria-hidden>
+              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none">
                 <path
                   d="M6 6l12 12M18 6L6 18"
                   stroke="currentColor"
@@ -269,87 +257,55 @@ export default function Header() {
             </button>
           </div>
 
-          <div className="flex flex-col gap-5 overflow-y-auto max-h-[60vh] pr-2">
-            {navItems.map((item) => (
-              <div key={item.label} className="space-y-1">
-                {item.items ? (
-                  <>
-                    <p className="px-3 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                      {item.label}
-                    </p>
-                    <div className="flex flex-col gap-1 pl-2">
-                      {item.items.map((sub) => (
-                        <Link
-                          key={sub.label}
-                          href={sub.href}
-                          onClick={() => setMobileMenuOpen(false)}
-                          className="px-3 py-2 rounded-lg text-secondary font-extrabold text-[13px] hover:bg-secondary/5 hover:text-primary transition-colors"
-                        >
-                          {sub.label}
-                        </Link>
-                      ))}
-                    </div>
-                  </>
-                ) : (
-                  <Link
-                    href={item.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="px-3 py-2 block rounded-lg text-secondary font-extrabold text-[13px] hover:bg-secondary/5 hover:text-primary transition-colors"
-                  >
+          <div className="flex max-h-[60vh] flex-col gap-1 overflow-y-auto">
+            {navItems.map((item) =>
+              item.items ? (
+                <div key={item.label} className="space-y-1 py-2">
+                  <p className="px-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">
                     {item.label}
-                  </Link>
-                )}
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-8 pt-6 border-t border-secondary/10 flex flex-col gap-3">
-            {loading ? (
-              <span className="text-secondary/40 text-[10px] font-black uppercase tracking-widest">
-                Loading...
-              </span>
-            ) : user ? (
-              <>
+                  </p>
+                  {item.items.map((sub) => (
+                    <Link
+                      key={sub.label}
+                      href={sub.href}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="block rounded-lg px-3 py-2 text-sm font-semibold text-secondary hover:bg-slate-50"
+                    >
+                      {sub.label}
+                    </Link>
+                  ))}
+                </div>
+              ) : (
                 <Link
-                  href="/profile"
+                  key={item.label}
+                  href={item.href}
                   onClick={() => setMobileMenuOpen(false)}
-                  className="px-3 py-3 rounded-lg text-secondary font-extrabold text-xs uppercase tracking-widest hover:bg-secondary/5 hover:text-primary transition-colors"
+                  className="block rounded-lg px-3 py-2.5 text-sm font-semibold text-secondary hover:bg-slate-50"
                 >
-                  Profile
+                  {item.label}
                 </Link>
-                <span className="text-secondary/80 text-sm font-bold truncate">
-                  {user.name ? user.name : user.email}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    void logout();
-                  }}
-                  className="px-4 py-2.5 rounded-lg bg-secondary text-white font-black text-[10px] uppercase tracking-[0.15em] text-center"
-                >
-                  Log out
-                </button>
-              </>
-            ) : (
-              <>
-                <Link
-                  href="/login"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="px-4 py-2.5 rounded-lg border border-secondary/20 text-secondary font-black text-[10px] uppercase tracking-[0.15em] text-center"
-                >
-                  Log In
-                </Link>
-                <Link
-                  href="/signup"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="px-4 py-2.5 rounded-lg bg-secondary text-white font-black text-[10px] uppercase tracking-[0.15em] text-center"
-                >
-                  Get Started
-                </Link>
-              </>
+              ),
             )}
           </div>
+
+          {!user && !loading ? (
+            <div className="mt-8 flex flex-col gap-3 border-t border-slate-100 pt-6">
+              <Link
+                href="/login"
+                onClick={() => setMobileMenuOpen(false)}
+                className="rounded-lg border border-slate-200 px-4 py-2.5 text-center text-sm font-semibold text-secondary"
+              >
+                Login
+              </Link>
+              <Link
+                href="/signup"
+                onClick={() => setMobileMenuOpen(false)}
+                className="rounded-lg bg-primary px-4 py-2.5 text-center text-sm font-semibold text-white"
+              >
+                Create a free account
+              </Link>
+            </div>
+          ) : null}
         </aside>
       </div>
     </>

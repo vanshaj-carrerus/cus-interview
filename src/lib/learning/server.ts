@@ -73,7 +73,7 @@ const getCachedTrackCards = unstable_cache(
         slug: String(track.slug),
         title: String(track.title),
         intro: String(track.intro ?? ""),
-        iconImage: String(track.iconImage ?? ""),
+        iconImage: track.iconImage ? String(track.iconImage) : undefined,
         kind: track.kind,
         levels: countByTrack.get(String(track._id)) ?? 0,
         questionCount: questionCountByTrack.get(String(track._id)) ?? 0,
@@ -89,6 +89,19 @@ const getCachedTrackCards = unstable_cache(
 
 export async function getTrackCards(kind: "track" | "course") {
   return getCachedTrackCards(kind);
+}
+
+export async function getAllCourseRoadmaps() {
+  const [trackCards, courseCards] = await Promise.all([
+    getTrackCards("track"),
+    getTrackCards("course"),
+  ]);
+
+  return [...trackCards, ...courseCards];
+}
+
+export async function getQuizCourseRoadmaps() {
+  return getTrackCards("course");
 }
 
 export async function getTopicViewBySlug(trackSlug: string): Promise<TopicView | null> {
@@ -109,6 +122,9 @@ export async function getTopicViewBySlug(trackSlug: string): Promise<TopicView |
             question: question.prompt,
             options: question.options.map((option) => option.text),
             explanation: question.explanation,
+            questionType: question.questionType,
+            externalId: question.externalId,
+            difficulty: question.difficulty,
           })) ?? [],
       };
     })

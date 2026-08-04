@@ -96,6 +96,7 @@ export const config = {
     "/problems/:path*",
     "/mock-interviews/:path*",
     "/compiler/:path*",
+    "/dashboard/:path*",
     "/admin-panel/:path*",
     "/api/admin-panel/:path*",
     "/api/learning/admin/:path*",

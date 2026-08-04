@@ -4,6 +4,9 @@ export type QuestionItem = {
   options: string[];
   answerIndex?: number;
   explanation: string;
+  questionType?: "mcq" | "coding";
+  externalId?: string;
+  difficulty?: "easy" | "medium" | "hard";
 };
 
 export type LevelItem = {

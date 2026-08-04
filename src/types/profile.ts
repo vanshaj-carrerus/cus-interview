@@ -10,6 +10,8 @@ export type LearningTotals = {
   totalQuestionsAttempted: number;
   totalTasksAttempted: number;
   totalLevelsCompleted: number;
+  /** Distinct coding problems solved — monotonic, never decreases after assigned. */
+  distinctQuestionsSolved: number;
 };
 
 export type UserLearningProfile = {
