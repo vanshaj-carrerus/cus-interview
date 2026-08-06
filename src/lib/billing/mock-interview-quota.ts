@@ -28,8 +28,17 @@ export type MockInterviewQuota = {
 
 export async function getMockInterviewQuota(
   subscription: PublicSubscription,
-  userId: string
+  userId: string,
+  isSuperAdmin: boolean = false
 ): Promise<MockInterviewQuota> {
+  if (isSuperAdmin || hasUnlimitedMockInterviews(subscription)) {
+    return {
+      dailyLimit: null,
+      usedToday: 0,
+      remainingToday: null,
+      unlimited: true,
+    };
+  }
   const dailyLimit = getMockInterviewDailyLimit(subscription);
   if (dailyLimit === null) {
     return {

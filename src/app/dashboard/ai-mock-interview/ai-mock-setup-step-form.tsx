@@ -99,7 +99,7 @@ function FieldLabel({ children, required }: { children: React.ReactNode; require
   return (
     <label className="mb-2 block text-sm font-medium text-secondary">
       {children}
-      {required ? <span className="ml-0.5 text-primary">*</span> : null}
+      {required ? <span className="ml-0.5 text-sky-500">*</span> : null}
     </label>
   );
 }
@@ -119,8 +119,8 @@ function ChoiceChip({
       onClick={onClick}
       className={`rounded-full border px-4 py-2 text-sm font-medium transition-all duration-200 ${
         selected
-          ? "border-primary bg-primary text-white shadow-sm shadow-primary/20"
-          : "border-primary/15 bg-white text-secondary/70 hover:border-primary/30 hover:bg-primary/5 hover:text-secondary"
+          ? "border-sky-500 bg-sky-500 text-white shadow-sm shadow-sky-500/20"
+          : "border-sky-500/15 bg-white text-secondary/70 hover:border-sky-500/30 hover:bg-sky-500/5 hover:text-secondary"
       }`}
     >
       {children}
@@ -322,7 +322,7 @@ export default function AiMockSetupStepForm({
       {!hideBackLink ? (
         <Link
           href={backHref}
-          className="mb-6 inline-flex items-center gap-2 text-sm text-secondary/45 transition hover:text-primary"
+          className="mb-6 inline-flex items-center gap-2 text-sm text-secondary/45 transition hover:text-sky-500"
         >
           <ArrowLeft className="h-4 w-4" />
           {backLabel}
@@ -348,17 +348,17 @@ export default function AiMockSetupStepForm({
                   <span
                     className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition-all duration-300 ${
                       isComplete
-                        ? "bg-primary text-white"
+                        ? "bg-sky-500 text-white"
                         : isActive
-                          ? "bg-primary text-white ring-4 ring-primary/15"
-                          : "border border-primary/20 bg-white text-secondary/40"
-                    } ${index < step ? "cursor-pointer group-hover:ring-4 group-hover:ring-primary/10" : ""}`}
+                          ? "bg-sky-500 text-white ring-4 ring-sky-500/15"
+                          : "border border-sky-500/20 bg-white text-secondary/40"
+                    } ${index < step ? "cursor-pointer group-hover:ring-4 group-hover:ring-sky-500/10" : ""}`}
                   >
                     {isComplete ? <Check className="h-4 w-4" /> : index + 1}
                   </span>
                   <span
                     className={`hidden text-center text-[11px] font-medium sm:block ${
-                      isActive ? "text-primary" : isComplete ? "text-secondary/70" : "text-secondary/35"
+                      isActive ? "text-sky-500" : isComplete ? "text-secondary/70" : "text-secondary/35"
                     }`}
                   >
                     {item.title}
@@ -367,7 +367,7 @@ export default function AiMockSetupStepForm({
                 {index < STEPS.length - 1 ? (
                   <div
                     className={`mx-2 h-px flex-1 transition-colors duration-500 ${
-                      index < step ? "bg-primary" : "bg-primary/15"
+                      index < step ? "bg-sky-500" : "bg-sky-500/15"
                     }`}
                   />
                 ) : null}
@@ -380,22 +380,22 @@ export default function AiMockSetupStepForm({
       {/* Card */}
       <form onSubmit={handleSubmit} className={fullscreen ? "flex min-h-0 flex-1 flex-col" : undefined}>
         <div
-          className={`flex flex-col overflow-hidden rounded-2xl border border-primary/10 bg-white shadow-sm ${
+          className={`flex flex-col overflow-hidden rounded-2xl border border-sky-500/10 bg-white shadow-sm ${
             fullscreen ? "min-h-0 flex-1" : ""
           }`}
         >
           {/* Card header */}
-          <div className="border-b border-primary/8 px-6 py-5 sm:px-8">
+          <div className="border-b border-sky-500/8 px-6 py-5 sm:px-8">
             <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky-500/10">
                 {step === 2 ? (
-                  <Sparkles className="h-5 w-5 text-primary" />
+                  <Sparkles className="h-5 w-5 text-sky-500" />
                 ) : (
-                  <Bot className="h-5 w-5 text-primary" />
+                  <Bot className="h-5 w-5 text-sky-500" />
                 )}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-medium uppercase tracking-wider text-primary/70">
+                <p className="text-xs font-medium uppercase tracking-wider text-sky-500/70">
                   Step {step + 1} of {STEPS.length}
                 </p>
                 <h2 className="mt-0.5 text-lg font-bold text-secondary sm:text-xl">
@@ -404,7 +404,7 @@ export default function AiMockSetupStepForm({
                 <p className="mt-1 text-sm text-secondary/55">{STEPS[step].subtitle}</p>
               </div>
               {step === 0 ? (
-                <span className="hidden shrink-0 rounded-full bg-primary/8 px-3 py-1 text-xs font-semibold text-primary sm:inline-flex">
+                <span className="hidden shrink-0 rounded-full bg-sky-500/8 px-3 py-1 text-xs font-semibold text-sky-500 sm:inline-flex">
                   {step1Progress}/3 set
                 </span>
               ) : null}
@@ -416,10 +416,10 @@ export default function AiMockSetupStepForm({
             className={`px-6 py-6 sm:px-8 sm:py-7 ${fullscreen ? "min-h-0 flex-1 overflow-y-auto" : ""}`}
           >
             {mockQuota && !mockQuota.unlimited && step === 2 ? (
-              <div className="mb-6 rounded-xl border border-primary/15 bg-primary/5 px-4 py-3 text-sm text-secondary">
+              <div className="mb-6 rounded-xl border border-sky-500/15 bg-sky-500/5 px-4 py-3 text-sm text-secondary">
                 <p className="font-semibold">Free trial limit</p>
                 <p className="mt-1 text-secondary/65">{buildTrialMockLimitMessage()}</p>
-                <p className="mt-2 text-xs font-medium text-primary">
+                <p className="mt-2 text-xs font-medium text-sky-500">
                   Today: {mockQuota.usedToday}/{mockQuota.dailyLimit} used
                 </p>
               </div>
@@ -523,14 +523,14 @@ export default function AiMockSetupStepForm({
                     maxLength={NOTE_MAX_LENGTH}
                     rows={3}
                     placeholder="Optional — company target, weak areas, interview style…"
-                    className="w-full resize-none rounded-xl border border-primary/15 bg-white px-4 py-3 text-sm text-secondary placeholder:text-secondary/40 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+                    className="w-full resize-none rounded-xl border border-sky-500/15 bg-white px-4 py-3 text-sm text-secondary placeholder:text-secondary/40 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15"
                   />
                   <p className="mt-1.5 text-right text-xs text-secondary/40">
                     {notes.length}/{NOTE_MAX_LENGTH}
                   </p>
                 </div>
 
-                <div className="rounded-xl border border-primary/10 bg-slate-50/60 p-4">
+                <div className="rounded-xl border border-sky-500/10 bg-slate-50/60 p-4">
                   <p className="text-xs font-semibold uppercase tracking-wider text-secondary/45">
                     Session summary
                   </p>
@@ -562,7 +562,7 @@ export default function AiMockSetupStepForm({
                       {historyLoading ? "Loading…" : `${history.length} total`}
                     </span>
                   </div>
-                  <div className="max-h-40 space-y-2 overflow-y-auto rounded-xl border border-primary/10 bg-white p-2">
+                  <div className="max-h-40 space-y-2 overflow-y-auto rounded-xl border border-sky-500/10 bg-white p-2">
                     {historyLoading ? (
                       <p className="px-2 py-3 text-sm text-secondary/45">Loading…</p>
                     ) : history.length === 0 ? (
@@ -571,7 +571,7 @@ export default function AiMockSetupStepForm({
                       history.map((item) => (
                         <div
                           key={item.id}
-                          className="flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 transition hover:bg-primary/5"
+                          className="flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 transition hover:bg-sky-500/5"
                         >
                           <button
                             type="button"
@@ -612,12 +612,12 @@ export default function AiMockSetupStepForm({
           </div>
 
           {/* Card footer */}
-          <div className="flex items-center justify-between gap-4 border-t border-primary/8 px-6 py-5 sm:px-8">
+          <div className="flex items-center justify-between gap-4 border-t border-sky-500/8 px-6 py-5 sm:px-8">
             {step > 0 ? (
               <button
                 type="button"
                 onClick={goBack}
-                className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-medium text-secondary/60 transition hover:bg-primary/5 hover:text-secondary"
+                className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-medium text-secondary/60 transition hover:bg-sky-500/5 hover:text-secondary"
               >
                 <ChevronLeft className="h-4 w-4" />
                 Back
@@ -630,7 +630,7 @@ export default function AiMockSetupStepForm({
               <button
                 type="button"
                 onClick={goNext}
-                className="ml-auto inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-sm font-semibold text-white shadow-sm shadow-primary/20 transition hover:bg-primary/90 active:scale-[0.98]"
+                className="ml-auto inline-flex items-center gap-2 rounded-xl bg-sky-500 px-6 py-2.5 text-sm font-semibold text-white shadow-sm shadow-sky-500/20 transition hover:bg-sky-500/90 active:scale-[0.98]"
               >
                 Continue
                 <ArrowRight className="h-4 w-4" />
@@ -639,7 +639,7 @@ export default function AiMockSetupStepForm({
               <button
                 type="submit"
                 disabled={!isFormValid || isSubmitting}
-                className="ml-auto inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-sm font-semibold text-white shadow-sm shadow-primary/20 transition hover:bg-primary/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
+                className="ml-auto inline-flex items-center gap-2 rounded-xl bg-sky-500 px-6 py-2.5 text-sm font-semibold text-white shadow-sm shadow-sky-500/20 transition hover:bg-sky-500/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {isSubmitting ? "Starting…" : "Start interview"}
                 <ArrowRight className="h-4 w-4" />

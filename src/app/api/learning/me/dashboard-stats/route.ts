@@ -31,17 +31,16 @@ export async function GET() {
     const metrics = await getUserDashboardMetrics(user.id, profile, platform);
 
     const practiceSolved = metrics.distinctPracticeSolved;
-    const totalLevels = platform.totalLevels;
 
     return NextResponse.json({
       practiceSolved,
-      totalLevels,
+      totalLevels: platform.totalLevels,
       points: practiceSolved,
       problemsSolved: practiceSolved,
       solutionsSubmitted: metrics.solutionsSubmitted,
       levelsCompleted: metrics.levelsCompleted,
-      codingPracticesLabel: `${practiceSolved} / ${totalLevels}`,
-      learnLabel: `${metrics.levelsCompleted} / ${totalLevels}`,
+      codingPracticesLabel: `${practiceSolved} / ${platform.totalPracticeQuestions}`,
+      learnLabel: `${metrics.courseLevelsCompleted} / ${platform.totalCourseLevels}`,
       practiceSubtitle:
         practiceSolved > 0
           ? `${practiceSolved} solved — keep going!`

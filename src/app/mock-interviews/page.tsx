@@ -1,340 +1,405 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import SubscriptionPaywallModal from "@/components/billing/SubscriptionPaywallModal";
 import { useSubscriptionGate } from "@/hooks/use-subscription-gate";
 import {
-  ArrowRight,
-  Bot,
-  Brain,
-  ClipboardList,
-  Gauge,
-  LineChart,
-  MessageSquare,
-  Mic,
+  Play,
+  ShieldCheck,
+  Layers,
   Sparkles,
-  ChevronRight,
+  ChevronDown,
+  ArrowRight,
+  CheckCircle2,
+  Bot,
+  Zap,
+  Brain,
+  Code2,
+  Terminal,
   Cpu,
-  FileText,
+  Lock,
+  BarChart3,
+  HelpCircle,
+  Mail,
 } from "lucide-react";
 
-const steps = [
+const rolesList = [
   {
-    number: "01",
-    title: "Pick your stack & seniority",
-    description:
-      "Tell the AI your role, target company style, and topics—DSA, system design, or behavioral. It shapes the rubric before you start.",
-    icon: Cpu,
-    bg: "bg-blue-50/80",
-    color: "text-blue-600",
+    id: "backend",
+    title: "Backend Developer",
+    desc: "Node.js, System Design, SQL, API Scalability",
+    icon: Terminal,
+    tags: ["Node.js", "PostgreSQL", "System Architecture"],
   },
   {
-    number: "02",
-    title: "Adaptive AI interviewer",
-    description:
-      "Natural follow-ups, clarifying questions, and pressure similar to a real loop. Difficulty ramps based on how you answer.",
-    icon: MessageSquare,
-    bg: "bg-teal-50/80",
-    color: "text-teal-600",
-  },
-  {
-    number: "03",
-    title: "Timed, structured rounds",
-    description:
-      "Fixed segments with hints off by default, whiteboard-style prompts, and optional voice-style pacing so you build interview stamina.",
-    icon: Gauge,
-    bg: "bg-purple-50/80",
-    color: "text-purple-600",
-  },
-  {
-    number: "04",
-    title: "Instant scorecard & gaps",
-    description:
-      "Structured feedback on communication, depth, and correctness—plus a short study plan so your next session compounds.",
-    icon: LineChart,
-    bg: "bg-amber-50/80",
-    color: "text-amber-600",
-  },
-];
-
-const stats = [
-  { label: "AI sessions run", value: "120K+", icon: Bot },
-  { label: "Avg. session length", value: "42 min", icon: Mic },
-  { label: "Learner rating", value: "4.9★", icon: Sparkles },
-];
-
-const aiHighlights = [
-  {
-    title: "Role-aware prompts",
-    body: "Questions mirror real loops for backend, frontend, full-stack, and data roles.",
+    id: "ai-engineer",
+    title: "AI Engineer",
+    desc: "LLMs, RAG, PyTorch, Model Fine-Tuning & Evaluation",
     icon: Brain,
+    tags: ["Python", "LangChain", "Vector DBs"],
   },
   {
-    title: "Consistent rubric",
-    body: "Every answer is graded against the same criteria—no bad days or vague “you did fine.”",
-    icon: FileText,
+    id: "senior-devops",
+    title: "Senior DevOps",
+    desc: "Kubernetes, CI/CD pipelines, Cloud Infra & Security",
+    icon: Cpu,
+    tags: ["Docker", "Kubernetes", "AWS / Terraform"],
   },
   {
-    title: "Repeat on demand",
-    body: "Run another full loop tonight. No scheduling, no awkward small talk—just reps.",
-    icon: Sparkles,
+    id: "product-manager",
+    title: "Product Manager",
+    desc: "Product Sense, System Architecture & Metric Prioritization",
+    icon: Layers,
+    tags: ["Strategy", "Roadmapping", "Tech Specs"],
+  },
+];
+
+const faqItems = [
+  {
+    q: "Will CUS integrate with my existing ATS?",
+    a: "Yes, CUS seamlessly connects with major ATS platforms (Greenhouse, Lever, Workday) and provides robust webhooks and REST APIs to sync candidate scorecards automatically.",
+  },
+  {
+    q: "Does CUS evaluate coding speed and depth?",
+    a: "CUS measures solution correctness, time complexity, code cleanliness, edge case handling, and adaptive follow-up responses in real time.",
+  },
+  {
+    q: "Why should I use an AI interviewer for my hiring process?",
+    a: "Reduce interviewer fatigue, eliminate scheduling bottlenecks, eliminate human bias with standardized rubrics, and 10x your candidate screening capacity without adding engineering hours.",
+  },
+  {
+    q: "Will this replace my team's final interview decision?",
+    a: "No, CUS acts as your force multiplier—delivering evidence-based scores, full video recordings, and granular transcripts so human panels can focus on high-touch final cultural & leadership rounds.",
   },
 ];
 
 export default function MockInterviewPage() {
   const { gatedNavigate, paywallOpen, closePaywall } = useSubscriptionGate();
+  const [activeRole, setActiveRole] = useState("backend");
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [email, setEmail] = useState("");
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+
+  const toggleFaq = (index: number) => {
+    setOpenFaq(openFaq === index ? null : index);
+  };
+
+  const handleStartInterview = (roleId?: string) => {
+    const targetRole = roleId || activeRole;
+    gatedNavigate(`/mock-interviews/ai-mock?role=${targetRole}`);
+  };
 
   return (
-    <div className="min-h-screen bg-white  p-6 md:p-12 font-sans text-slate-900 overflow-hidden relative">
+    <div className="min-h-screen bg-[#F7F9FB] text-slate-900 font-sans selection:bg-sky-100 selection:text-sky-900 overflow-x-hidden">
+      {/* ── Top Hero Section ── */}
+      <section className="relative pt-24 pb-16 md:pt-32 md:pb-24 px-6 max-w-7xl mx-auto text-center">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-200/60 border border-slate-300/50 text-xs font-semibold text-slate-700 tracking-wide mb-8">
+          <Sparkles className="w-3.5 h-3.5 text-sky-600" />
+          <span>Next-Gen AI Technical Interviewer</span>
+        </div>
 
-      <div className="lg:container mx-auto mt-10 relative z-10">
-        <header className="relative mb-16 md:mb-20">
-          <div className="flex flex-col items-center justify-center text-center gap-10">
-            <div className="space-y-6 max-w-3xl flex  flex-col items-center">
-              <div className="flex flex-wrap justify-center items-center gap-3">
-                <span className="text-sm font-semibold uppercase tracking-widest text-sky-500 bg-sky-50/80 border border-sky-100 px-4 py-2 rounded-full inline-flex items-center gap-2">
-                  <span className="relative flex h-2.5 w-2.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-40" />
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-sky-500" />
-                  </span>
-                  AI interviewer online
-                </span>
-                <span className="hidden sm:inline w-12 h-px bg-slate-200" />
-                <span className="text-sm font-semibold uppercase tracking-widest text-slate-400">
-                  24/7 · Private · Adaptive
-                </span>
+        <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tight text-slate-950 leading-[1.1] max-w-4xl mx-auto mb-6">
+          Finally, an AI Interviewer that <span className="italic font-serif font-normal text-slate-800">actually works.</span>
+        </h1>
+
+        <p className="text-base sm:text-lg md:text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed mb-10 font-normal">
+          <strong className="text-slate-900 font-semibold">CUS Interview:</strong> Full-stack AI interviews that test candidates, adapt in real-time, probe for depth, flag suspicious behavior, and deliver evidence-based reports you can trust.
+        </p>
+
+        {/* ── Dark Hero Player Card ── */}
+        <div className="mt-8 relative max-w-5xl mx-auto">
+          <div className="relative rounded-3xl bg-[#090D14] border border-slate-800 p-4 md:p-8 shadow-2xl overflow-hidden group">
+            {/* Glow accent behind player */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-sky-500/10 rounded-full blur-3xl pointer-events-none" />
+
+            <div className="relative aspect-video md:aspect-[21/9] rounded-2xl bg-[#05070A] border border-slate-800/80 flex flex-col items-center justify-center overflow-hidden shadow-inner">
+              {/* Subtle mesh background grid */}
+              <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b15_1px,transparent_1px),linear-gradient(to_bottom,#1e293b15_1px,transparent_1px)] bg-[size:24px_24px]" />
+
+              {/* Watermark Logo */}
+              <div className="absolute top-6 left-6 flex items-center gap-2">
+                <div className="w-6 h-6 rounded-lg bg-sky-500/20 border border-sky-400/30 flex items-center justify-center text-sky-400">
+                  <Bot className="w-3.5 h-3.5" />
+                </div>
+                <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">CUS Interviewer</span>
               </div>
 
-              <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-slate-900 leading-[1.1]">
-                AI Mock Interview
-              </h1>
+              {/* Interactive Video / Demo Player view */}
+              {!isVideoPlaying ? (
+                <div className="relative z-10 flex flex-col items-center justify-center text-center p-6 space-y-5">
+                  <div className="w-20 h-20 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white shadow-xl transition-all duration-300 group-hover:scale-110 group-hover:bg-sky-500 group-hover:border-sky-400 cursor-pointer"
+                       onClick={() => setIsVideoPlaying(true)}>
+                    <Play className="w-8 h-8 ml-1 fill-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl md:text-2xl font-bold text-white tracking-tight">Your hiring superpower</h3>
+                    <p className="text-xs md:text-sm text-slate-400 mt-1 font-mono">cusinterview.com/ai-interview</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="relative z-10 w-full h-full p-6 flex flex-col justify-between text-left">
+                  <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                    <span className="text-xs font-mono text-sky-400 flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                      Live AI Session Simulation
+                    </span>
+                    <button 
+                      onClick={() => setIsVideoPlaying(false)} 
+                      className="text-xs font-mono text-slate-400 hover:text-white"
+                    >
+                      Close Demo
+                    </button>
+                  </div>
+                  <div className="space-y-3 my-auto max-w-xl">
+                    <div className="bg-slate-900/80 border border-slate-700/60 rounded-xl p-4 text-slate-200 text-sm font-mono leading-relaxed">
+                      <span className="text-sky-400 font-semibold">AI Interviewer:</span> "Can you optimize your SQL query when dealing with millions of concurrent read requests?"
+                    </div>
+                    <div className="bg-sky-950/40 border border-sky-800/40 rounded-xl p-4 text-slate-100 text-sm font-mono leading-relaxed ml-6">
+                      <span className="text-emerald-400 font-semibold">Candidate:</span> "I would implement read replicas, add indexing on high-frequency filters, and introduce Redis caching..."
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between pt-3 border-t border-white/10 text-xs font-mono text-slate-400">
+                    <span>Adaptive Depth: High</span>
+                    <span>Proctoring Status: Active</span>
+                  </div>
+                </div>
+              )}
 
-              <p className="text-[#4E6F80] text-sm sm:text-md font-medium leading-relaxed max-w-3xl mx-auto">
-                Practice full technical loops with an AI that asks follow-ups,
-                enforces time boxes, and delivers a clear scorecard so you walk
-                into human panels prepared, not guessing.
-              </p>
-
-              <div className="flex flex-col sm:flex-row items-center gap-3 justify-center mb-5 w-full px-4">
+              {/* Bottom Play bar simulation */}
+              <div className="absolute bottom-4 right-4 z-10 flex items-center gap-3">
                 <button
                   type="button"
-                  onClick={() => gatedNavigate("/mock-interviews/ai-mock")}
-                  className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-sky-500 px-6 py-3 text-md font-semibold text-white transition-all hover:bg-sky-600 active:scale-95 sm:w-auto"
+                  onClick={() => handleStartInterview()}
+                  className="px-4 py-2 rounded-full bg-sky-500 hover:bg-sky-400 text-white text-xs font-semibold shadow-lg transition-all"
                 >
-                  Get Started Free
+                  Start Live Session →
                 </button>
               </div>
             </div>
           </div>
-        </header>
+        </div>
+      </section>
 
-        {/* AI session preview card */}
-        <section className="mb-30 md:mb-34">
-          <div className="relative overflow-hidden rounded-[2.5rem] md:rounded-[3rem] border border-slate-200/60 bg-white p-8 md:p-14 shadow-xl shadow-slate-200/40">
-            <div className="grid lg:grid-cols-2 gap-10 lg:gap-14 items-center relative z-10">
-              <div className="flex flex-col gap-5">
-                <div className="space-y-4">
-                  <p className="text-sky-500 font-semibold text-sm tracking-widest uppercase">
-                    Inside the session
-                  </p>
-                  <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight leading-[1.15]">
-                    Feels like a{" "}
-                    <span className="text-sky-500">live panel</span>
-                    <br />
-                    without the calendar tetris.
-                  </h2>
-                  <p className="text-[#4E6F80] text-sm md:text-md leading-relaxed max-w-2xl">
-                    The model tracks your thread, probes weak spots, and
-                    summarizes what to fix before your next attempt. Use it for
-                    warm-ups before peer mocks or as your default nightly drill.
-                  </p>
-                </div>
+      {/* ── Dark Features Grid Section ── */}
+      <section className="bg-[#090D14] text-white py-20 px-6 border-t border-b border-slate-800">
+        <div className="max-w-7xl mx-auto space-y-12">
+          {/* Quick email action row */}
+          <div className="max-w-xl mx-auto flex items-center justify-center gap-3 bg-white/5 border border-white/10 rounded-full p-1.5 shadow-inner">
+            <input
+              type="email"
+              placeholder="Enter your work email for a demo"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="bg-transparent text-sm text-white placeholder:text-slate-400 px-5 focus:outline-none flex-1"
+            />
+            <button
+              type="button"
+              onClick={() => handleStartInterview()}
+              className="px-6 py-2.5 rounded-full bg-sky-500 hover:bg-sky-400 text-white text-sm font-semibold transition-all shrink-0 shadow-md"
+            >
+              Get Started
+            </button>
+          </div>
 
-                <ul className="flex flex-wrap gap-3 pt-2">
-                  {[
-                    "System design",
-                    "Coding rounds",
-                    "Behavioral",
-                    "Bar raiser style",
-                  ].map((tag) => (
-                    <li
-                      key={tag}
-                      className="inline-flex items-center px-4 py-2 rounded-full bg-slate-50 border border-slate-200 text-slate-700 text-sm font-medium transition-colors"
-                    >
-                      {tag}
-                    </li>
-                  ))}
-                </ul>
+          {/* 2-Column Cards */}
+          <div className="grid md:grid-cols-2 gap-8 pt-6">
+            {/* Card 1 */}
+            <div className="bg-[#0D131F] border border-slate-800 rounded-3xl p-8 md:p-10 space-y-4 hover:border-slate-700 transition-colors">
+              <div className="w-12 h-12 rounded-2xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 mb-6">
+                <ShieldCheck className="w-6 h-6" />
               </div>
+              <h3 className="text-2xl font-semibold tracking-tight text-white">Integrity Built In</h3>
+              <p className="text-slate-400 text-sm md:text-base leading-relaxed">
+                Real-time proctoring, tab switch tracking, and audio/video analysis ensure you can make hiring decisions based strictly on true candidate performance.
+              </p>
+            </div>
 
-              <div className="relative group w-full max-w-md mx-auto lg:max-w-[550px] lg:ml-auto lg:mr-0">
-                <div className="relative bg-white rounded-[1.25rem] p-2 border border-slate-100 shadow-sm  ">
-                  <div className="aspect-4/3 md:aspect-video bg-[#0A0A0B] rounded-2xl overflow-hidden border border-slate-800 shadow-inner flex flex-col">
-                    <div className="h-10 shrink-0 bg-white/5 border-b border-white/10 flex items-center px-4 gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-red-500/80" />
-                      <span className="w-2.5 h-2.5 rounded-full bg-amber-500/80" />
-                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80" />
-                      <span className="ml-auto text-xs font-mono text-slate-500">
-                        ai-session · live
-                      </span>
-                    </div>
-                    <div className="flex-1 p-5 md:p-6 flex flex-col justify-between min-h-[200px]">
-                      <div>
-                        <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">
-                          Interviewer
-                        </p>
-                        <p className="text-slate-100 font-semibold text-base md:text-lg leading-relaxed mb-3">
-                          “Walk me through how you&apos;d evolve this API if
-                          traffic 10×’d overnight.”
-                        </p>
-                        <p className="text-slate-400 text-sm leading-relaxed font-normal">
-                          Follow-up queued: failure modes → caching →
-                          observability. Timer 18:42 remaining.
-                        </p>
-                      </div>
-                      <div className="flex items-center justify-between gap-3 pt-5 border-t border-slate-800">
-                        <span className="text-slate-500 text-xs font-semibold uppercase tracking-widest">
-                          Adaptive depth
-                        </span>
-                        <span className="shrink-0 bg-primary/20 text-primary border border-primary/20 text-xs font-bold px-3 py-1.5 rounded-full">
-                          AI MOCK
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="absolute -inset-8 bg-primary/10 rounded-full blur-[80px] -z-10 pointer-events-none" />
+            {/* Card 2 */}
+            <div className="bg-[#0D131F] border border-slate-800 rounded-3xl p-8 md:p-10 space-y-4 hover:border-slate-700 transition-colors">
+              <div className="w-12 h-12 rounded-2xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 mb-6">
+                <BarChart3 className="w-6 h-6" />
               </div>
+              <h3 className="text-2xl font-semibold tracking-tight text-white">Consistent by Design</h3>
+              <p className="text-slate-400 text-sm md:text-base leading-relaxed">
+                Slide into any role, seniority level, or tech stack—evaluations follow a standardized rubric framework so feedback remains objective every single time.
+              </p>
             </div>
           </div>
-        </section>
 
-        {/* HOW IT WORKS SECTION */}
-        <section className="mb-10  md:mb-18">
-          <div className="mb-14 space-y-4 flex flex-col items-center text-center">
-            <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">
-              How your AI session works
-            </h2>
-            <p className="text-slate-600 text-lg font-normal max-w-2xl leading-relaxed">
-              Four stages from setup to feedback—built to mirror how strong
-              candidates actually prepare.
+          {/* Center Callout */}
+          <div className="text-center pt-8 max-w-2xl mx-auto space-y-3">
+            <h4 className="text-2xl md:text-3xl font-semibold text-white tracking-tight">Get Started Quickly</h4>
+            <p className="text-slate-400 text-sm md:text-base leading-relaxed">
+              Set up a job role in under 2 minutes and share a link to start interviewing candidates right away.
             </p>
           </div>
+        </div>
+      </section>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-            {steps.map((step) => {
-              const Icon = step.icon;
+      {/* ── Try CUS for yourself (Interactive Role Selector) ── */}
+      <section className="bg-[#090D14] text-white py-20 px-6 border-b border-slate-800">
+        <div className="max-w-5xl mx-auto text-center space-y-10">
+          <div>
+            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-white">Try CUS for yourself</h2>
+            <p className="text-slate-400 text-sm md:text-base mt-2">Select a role below to start a live trial session:</p>
+          </div>
+
+          {/* Role selector buttons */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-4xl mx-auto">
+            {rolesList.map((role) => {
+              const isSelected = activeRole === role.id;
               return (
-                <div
-                  key={step.number}
-                  className="group relative h-full bg-white border border-slate-200/60 rounded-3xl p-8 transition-all duration-300 hover:shadow-xl hover:shadow-slate-200/40 hover:border-slate-300 flex flex-col items-center text-center"
+                <button
+                  key={role.id}
+                  type="button"
+                  onClick={() => setActiveRole(role.id)}
+                  className={`py-3.5 px-4 rounded-xl text-xs md:text-sm font-medium transition-all duration-200 text-center border ${
+                    isSelected
+                      ? "bg-slate-800 border-slate-600 text-white shadow-lg ring-1 ring-slate-500"
+                      : "bg-[#0D131F] border-slate-800/80 text-slate-400 hover:text-slate-200 hover:bg-slate-900"
+                  }`}
                 >
-                  <span className="absolute top-8 right-8 text-xs font-bold text-slate-200 select-none">
-                    {step.number}
-                  </span>
-                  <div
-                    className={`w-14 h-14 ${step.bg} ${step.color} rounded-2xl flex items-center justify-center mb-6 transition-transform duration-500 group-hover:scale-110`}
-                  >
-                    <Icon className="w-7 h-7" />
-                  </div>
-                  <h3 className="font-bold text-slate-900 text-xl mb-3 tracking-tight">
-                    {step.title}
-                  </h3>
-                  <p className="text-slate-600 text-base leading-relaxed flex-1">
-                    {step.description}
-                  </p>
-                </div>
+                  {role.title}
+                </button>
               );
             })}
           </div>
-        </section>
 
-        {/* CTA SECTION */}
-        <section className="pt-8 pb-4 max-w-5xl mx-auto mb-10 px-4">
-          <div className="relative overflow-hidden rounded-[2.5rem] bg-[#0a0a0b] border border-white/10 px-8 py-12 md:p-14 flex flex-col md:flex-row items-center justify-between gap-10 shadow-2xl">
-            {/* Subtle glow effect */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-32 bg-sky-500/20 blur-[100px] pointer-events-none" />
+          {/* Selected Role Card Details */}
+          {rolesList.find((r) => r.id === activeRole) && (
+            <div className="bg-[#0D131F] border border-slate-800 rounded-3xl p-8 md:p-10 max-w-3xl mx-auto text-left space-y-6 shadow-2xl">
+              {(() => {
+                const current = rolesList.find((r) => r.id === activeRole)!;
+                const IconComponent = current.icon;
+                return (
+                  <>
+                    <div className="flex items-center justify-between border-b border-slate-800 pb-5">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400">
+                          <IconComponent className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h4 className="text-lg font-semibold text-white">{current.title}</h4>
+                          <p className="text-xs text-slate-400">{current.desc}</p>
+                        </div>
+                      </div>
+                      <span className="text-xs font-mono bg-sky-500/10 text-sky-400 border border-sky-500/20 px-3 py-1 rounded-full">
+                        Ready to launch
+                      </span>
+                    </div>
 
-            <div className="relative z-10 flex-1 text-center md:text-left">
-              <h3 className="text-3xl md:text-4xl font-bold text-white tracking-tight leading-tight mb-4">
-                Ready for your next AI mock loop?
-              </h3>
-              <p className="text-slate-400 text-base md:text-lg font-normal leading-relaxed max-w-lg mx-auto md:mx-0">
-                Create a free account, pick a track, and debrief with a scorecard in under an hour. No scheduling required.
-              </p>
+                    <div className="space-y-2">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Evaluated Tech Stack & Skills:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {current.tags.map((tag) => (
+                          <span key={tag} className="px-3 py-1 rounded-lg bg-slate-900 border border-slate-800 text-xs font-medium text-slate-300">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="pt-2 flex items-center justify-between gap-4">
+                      <p className="text-xs text-slate-400">Full 30-min adaptive session with AI instant scorecard report.</p>
+                      <button
+                        type="button"
+                        onClick={() => handleStartInterview(current.id)}
+                        className="px-6 py-2.5 rounded-full bg-sky-500 hover:bg-sky-400 text-white text-xs md:text-sm font-semibold transition-all shrink-0 flex items-center gap-2 shadow-lg"
+                      >
+                        Launch Interview <ArrowRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
-            <div className="relative z-10 shrink-0 w-full sm:w-auto">
-              <button
-                type="button"
-                onClick={() => gatedNavigate("/mock-interviews/ai-mock")}
-                className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-white px-8 py-3.5 text-[15px] font-semibold text-black transition-all hover:bg-slate-100 active:scale-95 sm:w-auto"
+          )}
+        </div>
+      </section>
+
+      {/* ── FAQ Section ── */}
+      <section className="py-24 px-6 max-w-4xl mx-auto">
+        <div className="text-center space-y-3 mb-14">
+          <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-slate-950">Frequently asked questions</h2>
+          <p className="text-slate-600 text-sm sm:text-base">Everything you need to know about CUS AI Interviewer.</p>
+        </div>
+
+        <div className="space-y-4">
+          {faqItems.map((item, idx) => {
+            const isOpen = openFaq === idx;
+            return (
+              <div
+                key={item.q}
+                className="bg-white border border-slate-200/80 rounded-2xl overflow-hidden transition-all duration-200 shadow-sm"
               >
-                Get Started
-              </button>
+                <button
+                  type="button"
+                  onClick={() => toggleFaq(idx)}
+                  className="w-full px-6 py-5 text-left flex items-center justify-between gap-4 font-semibold text-slate-900 text-base md:text-lg hover:text-sky-600 transition-colors"
+                >
+                  <span>{item.q}</span>
+                  <span className="text-slate-400 shrink-0">
+                    <ChevronDown className={`w-5 h-5 transition-transform duration-200 ${isOpen ? "rotate-180 text-sky-600" : ""}`} />
+                  </span>
+                </button>
+                {isOpen && (
+                  <div className="px-6 pb-6 text-slate-600 text-sm md:text-base leading-relaxed border-t border-slate-100 pt-4">
+                    {item.a}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="mt-12 text-center text-sm text-slate-500">
+          Have more questions?{" "}
+          <a href="mailto:support@cusinterview.com" className="text-sky-600 hover:underline font-medium">
+            Contact us at support@cusinterview.com
+          </a>
+        </div>
+      </section>
+
+      {/* ── Dark Bottom CTA Banner ── */}
+      <section className="bg-[#090D14] text-white py-16 px-6 border-t border-slate-800">
+        <div className="max-w-5xl mx-auto text-center space-y-8">
+          <p className="text-xl sm:text-2xl md:text-3xl font-semibold text-slate-100 tracking-tight leading-relaxed max-w-3xl mx-auto">
+            Quick setup, seamless interview, built-in integrity, instant report. See for yourself and get CUS for your team.
+          </p>
+
+          <div className="max-w-md mx-auto flex items-center justify-center gap-3 bg-white/5 border border-white/10 rounded-full p-1.5 shadow-inner">
+            <input
+              type="email"
+              placeholder="Enter your work email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="bg-transparent text-sm text-white placeholder:text-slate-400 px-5 focus:outline-none flex-1"
+            />
+            <button
+              type="button"
+              onClick={() => handleStartInterview()}
+              className="px-6 py-2.5 rounded-full bg-sky-500 hover:bg-sky-400 text-white text-sm font-semibold transition-all shrink-0 shadow-md"
+            >
+              Get Started
+            </button>
+          </div>
+
+          <div className="pt-6 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-slate-400">CUS Interviewer</span>
+              <span>© {new Date().getFullYear()} All rights reserved.</span>
+            </div>
+            <div className="flex items-center gap-6 text-slate-400">
+              <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>
+              <Link href="/terms" className="hover:text-white transition-colors">Terms</Link>
+              <Link href="/contact" className="hover:text-white transition-colors">Contact</Link>
             </div>
           </div>
-        </section>
-      </div>
+        </div>
+      </section>
 
       <SubscriptionPaywallModal open={paywallOpen} onClose={closePaywall} />
-    </div>
-  );
-}
-
-function HeaderStat({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
-  const [displayValue, setDisplayValue] = useState("0");
-
-  useEffect(() => {
-    const match = value.match(/([\d.]+)(.*)/);
-    if (!match) {
-      setDisplayValue(value);
-      return;
-    }
-
-    const target = parseFloat(match[1]);
-    const suffix = match[2];
-    const isFloat = match[1].includes(".");
-
-    let start = 0;
-    const duration = 1000;
-    const frameRate = 1000 / 60;
-    const totalFrames = Math.round(duration / frameRate);
-    let frame = 0;
-
-    const timer = setInterval(() => {
-      frame++;
-      const progress = frame / totalFrames;
-      const easeProgress = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
-      const current = start + (target - start) * easeProgress;
-
-      if (frame >= totalFrames) {
-        clearInterval(timer);
-        setDisplayValue(value);
-      } else {
-        setDisplayValue((isFloat ? current.toFixed(1) : Math.floor(current)) + suffix);
-      }
-    }, frameRate);
-
-    return () => clearInterval(timer);
-  }, [value]);
-
-  return (
-    <div className="group flex flex-col items-center justify-center gap-1.5 text-center">
-      <div className="flex items-center justify-center gap-2 text-slate-500 ">
-        <span className="text-xs font-semibold uppercase tracking-widest">
-          {label}
-        </span>
-      </div>
-      <span className="text-2xl font-extrabold text-slate-900 tracking-tight">
-        {displayValue}
-      </span>
     </div>
   );
 }

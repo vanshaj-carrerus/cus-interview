@@ -87,6 +87,7 @@ export default function AdminSidebar({ tracks, courses }: Props) {
                 <SidebarLink href="/admin-panel/courses" label="Courses" />
                 <SidebarLink href="/admin-panel/users" label="Users" />
                 <SidebarLink href="/admin-panel/subscribers" label="Subscribers" />
+                <SidebarLink href="/admin-panel/projects" label="Projects" />
               </div>
             </section>
           </>

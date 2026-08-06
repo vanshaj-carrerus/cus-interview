@@ -1,6 +1,6 @@
 export default function AiVisionSection() {
   return (
-    <section className="relative overflow-hidden bg-white py-20 md:py-28">
+    <section className="relative overflow-hidden bg-white py-20 md:pb-32 md:pt-28">
       <div
         className="pointer-events-none absolute left-1/2 top-[32%] h-56 w-[32rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/25 blur-3xl"
         aria-hidden

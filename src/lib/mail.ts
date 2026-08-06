@@ -6,6 +6,7 @@ export type SendSignupVerificationOutcome =
   | { channel: "dev_console" };
 
 export type SendPasswordResetOutcome = SendSignupVerificationOutcome;
+export type SendDemoOTPOutcome = SendSignupVerificationOutcome;
 
 function getTransporter(): {
   transporter: nodemailer.Transporter | null;
@@ -59,12 +60,18 @@ function getTransporter(): {
   return { transporter: null, provider: null };
 }
 
-function createVerificationEmailHtml(code: string, purpose: "signup" | "reset"): string {
+function createVerificationEmailHtml(code: string, purpose: "signup" | "reset" | "demo"): string {
   const title =
-    purpose === "signup" ? "Verification Code" : "Password Reset Code";
+    purpose === "signup"
+      ? "Verification Code"
+      : purpose === "demo"
+      ? "Demo Verification Code"
+      : "Password Reset Code";
   const intro =
     purpose === "signup"
       ? "Your unique verification code is:"
+      : purpose === "demo"
+      ? "Your demo request verification code is:"
       : "Use this code to reset your password:";
 
   return `<!DOCTYPE html>
@@ -102,13 +109,18 @@ function createVerificationEmailHtml(code: string, purpose: "signup" | "reset"):
 async function sendCodeEmail(
   to: string,
   code: string,
-  purpose: "signup" | "reset"
+  purpose: "signup" | "reset" | "demo"
 ): Promise<SendSignupVerificationOutcome> {
   const { transporter, provider } = getTransporter();
 
   if (!transporter || !provider) {
     if (process.env.NODE_ENV === "development") {
-      const label = purpose === "signup" ? "Signup verification" : "Password reset";
+      const label =
+        purpose === "signup"
+          ? "Signup verification"
+          : purpose === "demo"
+          ? "Demo verification"
+          : "Password reset";
       console.info(`[email] ${label} for ${to}: ${code}`);
       return { channel: "dev_console" };
     }
@@ -126,10 +138,14 @@ async function sendCodeEmail(
   const subject =
     purpose === "signup"
       ? "Signup Verification Code"
+      : purpose === "demo"
+      ? "Demo Verification Code"
       : "Password Reset Code";
   const text =
     purpose === "signup"
       ? `Your verification code is ${code}. It expires in 15 minutes.`
+      : purpose === "demo"
+      ? `Your demo request verification code is ${code}. It expires in 15 minutes.`
       : `Your password reset code is ${code}. It expires in 15 minutes.`;
 
   await transporter.sendMail({
@@ -155,4 +171,57 @@ export async function sendPasswordResetEmail(
   code: string
 ): Promise<SendPasswordResetOutcome> {
   return sendCodeEmail(to, code, "reset");
+}
+
+export async function sendDemoOTPEmail(
+  to: string,
+  code: string
+): Promise<SendDemoOTPOutcome> {
+  return sendCodeEmail(to, code, "demo");
+}
+
+export async function sendDemoRequestNotification(
+  details: {
+    name: string;
+    email: string;
+    phone: string;
+    companyName: string;
+    isStudent: boolean;
+  }
+) {
+  const { transporter, provider } = getTransporter();
+
+  if (!transporter || !provider) {
+    if (process.env.NODE_ENV === "development") {
+      console.info(`[email] New Demo Request to info@custech.co:`, details);
+      return { channel: "dev_console" };
+    }
+    throw new Error(
+      "Email not configured. Set EMAIL_USER/EMAIL_PASS or SMTP settings."
+    );
+  }
+
+  const from =
+    process.env.EMAIL_FROM?.trim() ||
+    (process.env.EMAIL_USER
+      ? `"CareerUs Interview" <${process.env.EMAIL_USER}>`
+      : '"CareerUs Interview" <noreply@localhost>');
+
+  const subject = "New Demo Request";
+  const html = `
+    <h2>New Demo Request</h2>
+    <p><strong>Name:</strong> ${details.name}</p>
+    <p><strong>Email:</strong> ${details.email}</p>
+    <p><strong>Phone:</strong> ${details.phone}</p>
+    <p><strong>Company:</strong> ${details.isStudent ? "Student/Job Seeker" : details.companyName}</p>
+  `;
+
+  await transporter.sendMail({
+    from,
+    to: "info@custech.co",
+    subject,
+    html,
+  });
+
+  return { channel: "remote", provider };
 }

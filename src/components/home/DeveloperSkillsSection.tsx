@@ -19,34 +19,54 @@ const FEATURES = [
     description:
       "Industry-ready programming language courses and career tracks — from Python to Java — designed to get you interview-ready faster with hands-on projects and real-world problems.",
     href: "/problems/courses",
-    image: "/Programming Languages.png",
+    image: "/practice-page.png",
     imageLeft: true,
   },
   {
-    label: "CUS INTERVIEW ASSESS",
-    title: "Assessments that ensure fairness and integrity",
+    label: "RESUME ANALYZER",
+    title: "Optimize your resume for ATS and recruiters",
     description:
-      "Identify strong developers with secure take-home assessments and curated challenges across DSA, system design, and full-stack development — built for accurate, bias-free evaluation.",
-    href: "/problems",
-    image: "/Practice Problems.png",
+      "ATS scoring, keyword gaps, and AI-powered tips — upload a PDF or DOCX to get instant feedback and actionable improvements that help you stand out.",
+    href: "/resume-analyzer",
+    image: "/resume-analyzer.png",
     imageLeft: false,
-  },
-  {
-    label: "CUS FOR HIRING",
-    title: "AI mock interviews on demand",
-    description:
-      "Get an accurate sense of real interview performance with AI-powered mock sessions, live scoring, and detailed feedback — so you walk in confident on interview day.",
-    href: "/mock-interviews",
-    image: "/img-inter.png",
-    imageLeft: true,
   },
 ];
 
 export default function DeveloperSkillsSection() {
   return (
-    <section className="relative overflow-hidden bg-[#faf9f7] py-20 md:py-28">
+    <section className="relative overflow-hidden bg-[#fcfcfb] py-20 md:py-28">
+      {/* Soft uneven pastel blobs — lighter wash */}
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-64 bg-[radial-gradient(ellipse_at_top,rgba(108,92,231,0.12),transparent_70%)]"
+        className="pointer-events-none absolute -right-20 -top-10 h-[32rem] w-[32rem] rounded-full bg-[#c4b5fd]/15 blur-[110px]"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute left-[-8rem] top-[8%] h-[28rem] w-[28rem] rounded-full bg-primary/10 blur-[110px]"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute left-[35%] top-[18%] h-72 w-[28rem] rounded-full bg-sky-100/40 blur-[100px]"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute right-[5%] top-[42%] h-[26rem] w-[26rem] rounded-full bg-[#93c5fd]/18 blur-[110px]"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute left-[-4rem] top-[55%] h-80 w-80 rounded-full bg-[#fef3c7]/30 blur-[110px]"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute bottom-[8%] left-[40%] h-96 w-96 rounded-full bg-[#cffafe]/25 blur-[120px]"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute -right-10 bottom-0 h-[28rem] w-[28rem] rounded-full bg-[#fecdd3]/15 blur-[110px]"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute left-1/2 top-1/2 h-[36rem] w-[36rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/70 blur-[90px]"
         aria-hidden
       />
 

@@ -1,15 +1,23 @@
 import Link from "next/link";
-import { ArrowRight, Code2, FolderKanban, Globe, Server } from "lucide-react";
-import { PORTFOLIO_PROJECT_IDEAS } from "@/lib/dashboard/project-ideas";
+import { ArrowRight, FolderKanban } from "lucide-react";
+import { connectDB } from "@/lib/mongodb";
+import { Project } from "@/models/Project";
+import ProjectList from "./ProjectList";
 
-const projectIcons = {
-  code: Code2,
-  globe: Globe,
-  server: Server,
-  folder: FolderKanban,
-} as const;
+export const dynamic = "force-dynamic";
 
-export default function DashboardProjectsPage() {
+export default async function DashboardProjectsPage() {
+  await connectDB();
+  const rawProjects = await Project.find({}).sort({ createdAt: -1 }).lean();
+  
+  // Serialize Mongoose ObjectIds to strings for the client component
+  const projects = rawProjects.map(p => ({
+    ...p,
+    _id: p._id.toString(),
+    createdAt: undefined,
+    updatedAt: undefined,
+  })) as any[];
+
   return (
     <div className="space-y-8">
       <header>
@@ -26,31 +34,7 @@ export default function DashboardProjectsPage() {
         </p>
       </header>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        {PORTFOLIO_PROJECT_IDEAS.map((project) => {
-          const Icon = projectIcons[project.icon];
-          return (
-            <div
-              key={project.title}
-              className="rounded-xl border border-primary/15 bg-white p-5"
-            >
-              <div className="mb-3 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                  <Icon className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-secondary">{project.title}</h3>
-                  <span className="text-[10px] font-bold uppercase tracking-wide text-primary">
-                    {project.difficulty}
-                  </span>
-                </div>
-              </div>
-              <p className="text-sm text-secondary/60">{project.description}</p>
-              <p className="mt-2 text-xs font-medium text-secondary/40">{project.stack}</p>
-            </div>
-          );
-        })}
-      </div>
+      <ProjectList projects={projects} />
 
       <section className="rounded-xl border border-primary/15 bg-white p-6">
         <h3 className="font-bold text-secondary">Ready to build?</h3>

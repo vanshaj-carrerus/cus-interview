@@ -9,7 +9,7 @@ export default function DashboardResumeAnalyzerPage() {
         <div>
           <Link
             href="/dashboard"
-            className="mb-3 inline-flex items-center gap-2 text-sm text-secondary/45 transition hover:text-primary"
+            className="mb-3 inline-flex items-center gap-2 text-sm text-secondary/45 transition hover:text-sky-500"
           >
             <ArrowLeft className="h-4 w-4" />
             Dashboard

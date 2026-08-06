@@ -7,7 +7,12 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ["pdf-parse", "mammoth", "unpdf", "pdfjs-dist"],
 
   images: {
-    domains: ["res.cloudinary.com"],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+      },
+    ],
   },
 
 };

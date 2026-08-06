@@ -36,7 +36,6 @@ const TESTIMONIALS = [
 
 export default function HomeTestimonials() {
   const [active, setActive] = useState(0);
-  const current = TESTIMONIALS[active];
 
   const prev = () =>
     setActive((i) => (i === 0 ? TESTIMONIALS.length - 1 : i - 1));
@@ -46,17 +45,29 @@ export default function HomeTestimonials() {
   return (
     <section className="bg-secondary py-20 md:py-28">
       <div className="mx-auto max-w-4xl px-6 text-center">
-        <h2 className="text-2xl font-bold leading-snug text-white md:text-3xl lg:text-4xl">
-          Loved by companies of all sizes and developers from all backgrounds
-        </h2>
+        <h3 className="text-xl font-bold leading-snug text-white md:text-3xl lg:text-4xl">
+          Loved by developers from all backgrounds
+        </h3>
 
-        <div className="relative mt-14">
-          <blockquote className="font-serif text-xl leading-relaxed text-white/90 md:text-2xl lg:text-[1.75rem] lg:leading-relaxed">
-            &ldquo;{current.quote}&rdquo;
-          </blockquote>
-          <p className="mt-8 text-sm font-medium text-slate-400">
-            {current.name}, {current.role}
-          </p>
+        <div className="relative mt-14 grid">
+          {TESTIMONIALS.map((t, i) => (
+            <div
+              key={t.id}
+              className={`col-start-1 row-start-1 transition-opacity duration-300 ${
+                i === active
+                  ? "visible opacity-100"
+                  : "invisible opacity-0"
+              }`}
+              aria-hidden={i !== active}
+            >
+              <blockquote className="font-serif text-xl leading-relaxed text-white/90 md:text-2xl lg:text-[1.3rem] lg:leading-relaxed">
+                &ldquo;{t.quote}&rdquo;
+              </blockquote>
+              <p className="mt-8 text-sm font-medium text-slate-400">
+                {t.name}, {t.role}
+              </p>
+            </div>
+          ))}
         </div>
 
         <div className="mt-10 flex items-center justify-center gap-6">

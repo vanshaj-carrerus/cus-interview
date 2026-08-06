@@ -53,13 +53,13 @@ export default function ProgrammingLanguagesProgressCard({
           <p className="mt-3 text-sm font-semibold text-secondary">
             {completedModules}{" "}
             <span className="font-normal text-secondary/50">
-              / {totalModules} modules
+              / {totalModules} levels
             </span>
           </p>
 
           <div className="mt-4 w-full">
             <div className="mb-1.5 flex items-center justify-between text-[10px] font-semibold uppercase tracking-wider text-secondary/45">
-              <span>Language modules</span>
+              <span>Language levels</span>
               <span className="text-secondary/70">{percent}%</span>
             </div>
             <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
@@ -75,9 +75,8 @@ export default function ProgrammingLanguagesProgressCard({
               {Array.from({ length: totalModules }).map((_, index) => (
                 <div
                   key={index}
-                  className={`h-1.5 w-3 rounded-full transition-colors ${
-                    index < completedModules ? "bg-primary" : "bg-slate-100"
-                  }`}
+                  className={`h-1.5 w-3 rounded-full transition-colors ${index < completedModules ? "bg-primary" : "bg-slate-100"
+                    }`}
                 />
               ))}
             </div>

@@ -439,15 +439,13 @@ export default function ProblemsSheetClient({
             <thead>
               <tr className="border-b border-slate-200 text-[11px] font-semibold uppercase tracking-wider text-secondary/40">
                 <th className="px-5 py-2.5 text-left">Title</th>
-                <th className="w-24 px-3 py-2.5 text-right">Attempted</th>
-                <th className="w-24 px-3 py-2.5 text-right">Acceptance</th>
                 <th className="w-24 px-5 py-2.5 text-right">Difficulty</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filteredQuestions.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-6 py-16 text-center text-secondary/45">
+                  <td colSpan={2} className="px-6 py-16 text-center text-secondary/45">
                     No matching problems found.
                   </td>
                 </tr>
@@ -487,10 +485,6 @@ export default function ProblemsSheetClient({
                           </span>
                         </button>
                       </td>
-                      <td className="px-3 py-2 text-right text-sm text-secondary/55">
-                        {formatAttempts(stats.attempts)}
-                      </td>
-                      <td className="px-3 py-2 text-right text-sm text-secondary/55">{stats.acceptance}%</td>
                       <td className="px-5 py-2 text-right">
                         {q.difficulty === "easy" && (
                           <span className="text-xs font-medium text-emerald-600">Easy</span>

@@ -36,8 +36,8 @@ function LoginPageLoading() {
 }
 
 function getSafeNextPath(nextParam: string | null): string {
-  if (!nextParam) return "/";
-  if (!nextParam.startsWith("/") || nextParam.startsWith("//")) return "/";
+  if (!nextParam) return "/dashboard";
+  if (!nextParam.startsWith("/") || nextParam.startsWith("//")) return "/dashboard";
   return nextParam;
 }
 

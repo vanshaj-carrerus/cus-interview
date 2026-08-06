@@ -3,7 +3,7 @@
 :root {
   --background: #f8fafc;
   --foreground: #0f172a;
-  --primary: #4ba3e3;
+  --primary: #4b5563;
   --secondary: #0f172a;
   --surface: #ffffff;
   --surface-soft: hsla(215, 20%, 65%, 0.2);
@@ -32,7 +32,7 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --foreground: #f1f5f9;
-    --primary: #53b0e2;
+    --primary: #6b7280;
     --secondary: #1e293b;
   }
 }

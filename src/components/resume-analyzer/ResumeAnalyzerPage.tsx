@@ -232,14 +232,14 @@ export default function ResumeAnalyzerPage({
           const file = e.dataTransfer.files[0];
           if (file) handleFile(file);
         }}
-        className={`group relative flex cursor-pointer flex-col items-center justify-center rounded-xl border px-6 py-8 transition-all duration-300 outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${className} ${
+        className={`group relative flex cursor-pointer flex-col items-center justify-center rounded-xl border px-6 py-8 transition-all duration-300 outline-none focus-visible:ring-2 focus-visible:ring-sky-500/30 ${className} ${
           compact ? "min-h-[220px] flex-1" : "min-h-[240px] sm:min-h-[280px]"
         } ${
           dragActive
-            ? "scale-[1.01] border-primary bg-primary/8 ring-4 ring-primary/10"
+            ? "scale-[1.01] border-sky-500 bg-sky-500/8 ring-4 ring-sky-500/10"
             : hasFile
-              ? "border-primary/30 bg-primary/[0.04]"
-              : "border-primary/15 bg-white hover:border-primary/30 hover:bg-primary/[0.02]"
+              ? "border-sky-500/30 bg-sky-500/[0.04]"
+              : "border-sky-500/15 bg-white hover:border-sky-500/30 hover:bg-sky-500/[0.02]"
         }`}
         onClick={onUploadZoneClick}
         onKeyDown={(e) => {
@@ -266,27 +266,27 @@ export default function ResumeAnalyzerPage({
             ease: "easeInOut",
           }}
           className={`mb-4 flex h-14 w-14 items-center justify-center rounded-xl transition-colors sm:h-16 sm:w-16 ${
-            hasFile ? "bg-primary/15" : "bg-primary/10 group-hover:bg-primary/15"
+            hasFile ? "bg-sky-500/15" : "bg-sky-500/10 group-hover:bg-sky-500/15"
           }`}
         >
           {hasFile ? (
-            <CheckCircle2 className="h-7 w-7 text-primary sm:h-8 sm:w-8" />
+            <CheckCircle2 className="h-7 w-7 text-sky-500 sm:h-8 sm:w-8" />
           ) : (
-            <FileUp className="h-7 w-7 text-primary sm:h-8 sm:w-8" />
+            <FileUp className="h-7 w-7 text-sky-500 sm:h-8 sm:w-8" />
           )}
         </motion.div>
 
         {hasFile && selectedFile ? (
           <>
             <div className="flex max-w-full items-center gap-2">
-              <FileText className="h-4 w-4 shrink-0 text-primary" />
+              <FileText className="h-4 w-4 shrink-0 text-sky-500" />
               <h2 className="truncate text-base font-semibold text-secondary sm:text-lg">
                 {selectedFile.name}
               </h2>
             </div>
             <p className="mt-1.5 text-sm text-secondary/50">
               {formatFileSize(selectedFile.size)} ·{" "}
-              <span className="font-medium text-primary">Replace file</span>
+              <span className="font-medium text-sky-500">Replace file</span>
             </p>
           </>
         ) : (
@@ -296,7 +296,7 @@ export default function ResumeAnalyzerPage({
             </h2>
             <p className="mt-1.5 text-sm text-secondary/50">
               or{" "}
-              <span className="font-medium text-primary underline-offset-2 group-hover:underline">
+              <span className="font-medium text-sky-500 underline-offset-2 group-hover:underline">
                 browse from computer
               </span>
             </p>
@@ -304,9 +304,9 @@ export default function ResumeAnalyzerPage({
         )}
 
         <div className="mt-5 flex flex-wrap items-center justify-center gap-2 text-[11px] font-medium text-secondary/40">
-          <span className="rounded-md border border-primary/10 bg-white px-2.5 py-1">PDF</span>
-          <span className="rounded-md border border-primary/10 bg-white px-2.5 py-1">DOCX</span>
-          <span className="rounded-md border border-primary/10 bg-white px-2.5 py-1">
+          <span className="rounded-md border border-sky-500/10 bg-white px-2.5 py-1">PDF</span>
+          <span className="rounded-md border border-sky-500/10 bg-white px-2.5 py-1">DOCX</span>
+          <span className="rounded-md border border-sky-500/10 bg-white px-2.5 py-1">
             Max {MAX_FILE_SIZE_MB}MB
           </span>
         </div>
@@ -339,18 +339,18 @@ export default function ResumeAnalyzerPage({
           key={label}
           className={
             compact
-              ? "flex items-start gap-3 rounded-xl border border-primary/10 bg-white px-3.5 py-3 transition hover:border-primary/20 hover:bg-primary/[0.02]"
-              : "inline-flex items-center gap-2 rounded-full border border-primary/10 bg-white/70 px-4 py-2 text-xs font-medium text-secondary/70 shadow-sm backdrop-blur-sm"
+              ? "flex items-start gap-3 rounded-xl border border-sky-500/10 bg-white px-3.5 py-3 transition hover:border-sky-500/20 hover:bg-sky-500/[0.02]"
+              : "inline-flex items-center gap-2 rounded-full border border-sky-500/10 bg-white/70 px-4 py-2 text-xs font-medium text-secondary/70 shadow-sm backdrop-blur-sm"
           }
         >
           <span
             className={
               compact
-                ? "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10"
+                ? "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky-500/10"
                 : ""
             }
           >
-            <Icon className={`shrink-0 text-primary ${compact ? "h-4 w-4" : "h-3.5 w-3.5"}`} />
+            <Icon className={`shrink-0 text-sky-500 ${compact ? "h-4 w-4" : "h-3.5 w-3.5"}`} />
           </span>
           {compact ? (
             <div className="min-w-0">
@@ -367,8 +367,8 @@ export default function ResumeAnalyzerPage({
 
   const renderProcessingError = () =>
     processingError ? (
-      <div className="mb-6 flex items-start gap-3 rounded-2xl border border-primary/20 bg-primary/5 px-5 py-4">
-        <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+      <div className="mb-6 flex items-start gap-3 rounded-2xl border border-sky-500/20 bg-sky-500/5 px-5 py-4">
+        <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-sky-500" />
         <div className="text-left">
           <p className="text-sm font-semibold text-slate-900">Analysis failed</p>
           <p className="mt-1 text-sm text-slate-600">{processingError}</p>
@@ -386,10 +386,10 @@ export default function ResumeAnalyzerPage({
       >
         {renderProcessingError()}
 
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-primary/10 bg-white shadow-sm">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-sky-500/10 bg-white shadow-sm">
           <div className="grid min-h-0 flex-1 gap-0 lg:grid-cols-[1.15fr_0.85fr]">
-            <div className="flex min-h-[320px] flex-col border-b border-primary/8 p-5 sm:p-6 lg:min-h-0 lg:border-b-0 lg:border-r lg:p-8">
-              <p className="mb-4 shrink-0 text-xs font-semibold uppercase tracking-wider text-primary/70">
+            <div className="flex min-h-[320px] flex-col border-b border-sky-500/8 p-5 sm:p-6 lg:min-h-0 lg:border-b-0 lg:border-r lg:p-8">
+              <p className="mb-4 shrink-0 text-xs font-semibold uppercase tracking-wider text-sky-500/70">
                 Upload resume
               </p>
               <div className="flex min-h-0 flex-1 flex-col">
@@ -412,7 +412,7 @@ export default function ResumeAnalyzerPage({
                 type="button"
                 onClick={handleAnalyzeNow}
                 disabled={!selectedFile}
-                className="mt-6 inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-sm font-semibold text-white shadow-sm shadow-primary/20 transition hover:bg-primary/90 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-45 lg:mt-8"
+                className="mt-6 inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-sky-500 px-6 py-3.5 text-sm font-semibold text-white shadow-sm shadow-sky-500/20 transition hover:bg-sky-500/90 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-45 lg:mt-8"
               >
                 {selectedFile ? (
                   <>
@@ -444,7 +444,7 @@ export default function ResumeAnalyzerPage({
         >
           <h1 className="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl md:text-[3.25rem] md:leading-[1.08]">
             Get Your ATS Resume Score{" "}
-            <span className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-sky-500 to-sky-500/70 bg-clip-text text-transparent">
               in Seconds
             </span>
           </h1>
@@ -460,7 +460,7 @@ export default function ResumeAnalyzerPage({
             <button
               type="button"
               onClick={() => checkAccess(scrollToUpload)}
-              className="inline-flex items-center gap-2 rounded-full bg-primary px-8 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition hover:brightness-110 active:scale-[0.98]"
+              className="inline-flex items-center gap-2 rounded-full bg-sky-500 px-8 py-3.5 text-sm font-semibold text-white shadow-lg shadow-sky-500/25 transition hover:brightness-110 active:scale-[0.98]"
             >
               <Upload className="h-4 w-4" />
               Upload Resume
@@ -483,7 +483,7 @@ export default function ResumeAnalyzerPage({
           >
             {renderUploadZone()}
             {uploadError ? (
-              <p className="mt-4 text-center text-sm font-medium text-primary">
+              <p className="mt-4 text-center text-sm font-medium text-sky-500">
                 {uploadError}
               </p>
             ) : null}
@@ -501,9 +501,9 @@ export default function ResumeAnalyzerPage({
     >
       {!isDashboard ? (
         <div className="pointer-events-none absolute inset-0">
-          <div className="absolute -left-32 top-20 h-96 w-96 rounded-full bg-primary/[0.04] blur-3xl" />
+          <div className="absolute -left-32 top-20 h-96 w-96 rounded-full bg-sky-500/[0.04] blur-3xl" />
           <div className="absolute -right-24 top-1/3 h-80 w-80 rounded-full bg-slate-100 blur-3xl" />
-          <div className="absolute bottom-0 left-1/2 h-64 w-[600px] -translate-x-1/2 rounded-full bg-primary/[0.03] blur-3xl" />
+          <div className="absolute bottom-0 left-1/2 h-64 w-[600px] -translate-x-1/2 rounded-full bg-sky-500/[0.03] blur-3xl" />
         </div>
       ) : null}
 

@@ -142,7 +142,7 @@ export function buildDashboardModel(
 
   const currentStreak = loginStreak.currentStreak;
   const bestStreak = loginStreak.bestStreak;
-  const codingPracticeTotal = platform.totalLevels;
+  const codingPracticeTotal = platform.totalPracticeQuestions;
 
   const projectsValue =
     platform.totalTasks > 0
@@ -152,7 +152,7 @@ export function buildDashboardModel(
   const statTiles: DashboardModel["statTiles"] = [
     {
       label: "Learn",
-      value: `${formatStatCount(levelsCompleted)} / ${platform.totalLevels}`,
+      value: `${formatStatCount(userMetrics.courseLevelsCompleted)} / ${platform.totalCourseLevels}`,
       icon: "learn",
     },
     {
@@ -321,15 +321,15 @@ export async function getUserDashboardMetrics(
       ]),
       practiceLevelOids.length > 0
         ? UserLearningAttempt.aggregate<{ total: number }>([
-            {
-              $match: {
-                ...baseQuestionMatch,
-                levelId: { $in: practiceLevelOids },
-              },
+          {
+            $match: {
+              ...baseQuestionMatch,
+              levelId: { $in: practiceLevelOids },
             },
-            { $group: { _id: "$entityId" } },
-            { $count: "total" },
-          ])
+          },
+          { $group: { _id: "$entityId" } },
+          { $count: "total" },
+        ])
         : Promise.resolve([]),
       UserLearningAttempt.aggregate<{ total: number }>([
         {

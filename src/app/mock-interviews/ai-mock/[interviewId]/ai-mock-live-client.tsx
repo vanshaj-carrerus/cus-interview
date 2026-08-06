@@ -115,6 +115,26 @@ export function AiMockLiveClient({ interview }: Props) {
   const timerPausedRef = useRef(false);
   const timerPauseStartedAtRef = useRef<number | null>(null);
   const timerPausedDurationMsRef = useRef(0);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const containerRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, []);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      if (containerRef.current) {
+        containerRef.current.requestFullscreen().catch(() => {});
+      }
+    } else {
+      document.exitFullscreen().catch(() => {});
+    }
+  };
 
   const estimatedTotalSeconds = useMemo(() => {
     if (questions.length === 0) return 0;
@@ -500,7 +520,10 @@ export function AiMockLiveClient({ interview }: Props) {
   const timerLabel = `${minutes}:${String(seconds).padStart(2, "0")}`;
 
   return (
-    <section className="space-y-6">
+    <section 
+      ref={containerRef} 
+      className={`space-y-6 ${isFullscreen ? 'bg-slate-50 p-6 overflow-y-auto' : ''}`}
+    >
       <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-[0_24px_48px_-12px_rgba(0,0,0,0.06)]">
         <div className="flex flex-wrap items-center gap-3 text-xs font-black uppercase tracking-widest">
           <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-slate-500">
@@ -517,6 +540,13 @@ export function AiMockLiveClient({ interview }: Props) {
               Time left: {timerLabel}
             </span>
           )}
+          <button
+            type="button"
+            onClick={toggleFullscreen}
+            className="ml-auto rounded-full border border-slate-200 bg-white px-3 py-1.5 text-slate-600 hover:bg-slate-50 transition"
+          >
+            {isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+          </button>
         </div>
       </div>
 
