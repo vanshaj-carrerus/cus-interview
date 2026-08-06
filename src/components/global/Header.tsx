@@ -15,7 +15,7 @@ type NavItem =
 /* ─── nav data ───────────────────────────────────────────── */
 const productMega = {
   left: {
-    heading: "Products",
+    heading : "Products",
     items: [
       {
         label: "Developer Dashboard",
