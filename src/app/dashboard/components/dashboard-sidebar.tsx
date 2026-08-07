@@ -30,7 +30,6 @@ const navItems = [
   { href: "/dashboard/ai-mock-interview", label: "AI Mock Interview", icon: Bot },
   { href: "/dashboard/compiler", label: "Compiler", icon: Terminal },
   { href: "/dashboard/resume-analyzer", label: "Resume Analyzer", icon: FileSearch },
-  { href: "/dashboard/company-interviews", label: "Company Interview Que", icon: Briefcase },
   { href: "/dashboard/projects", label: "Projects", icon: FolderKanban },
 ];
 
@@ -122,7 +121,7 @@ export default function DashboardSidebar({ guest = false, forceExpanded = false 
       </div>
 
       <nav
-        className={`min-h-0 flex-1 space-y-0.5 overflow-x-hidden overflow-y-auto py-4 ${
+        className={`min-h-0 flex-1 space-y-1.5 overflow-x-hidden overflow-y-auto py-4 ${
           collapsed ? "px-2" : "px-3"
         }`}
       >
@@ -142,22 +141,7 @@ export default function DashboardSidebar({ guest = false, forceExpanded = false 
         }`}
       >
         {!guest ? (
-          <>
-            <FooterLink
-              href="/profile"
-              label="Profile"
-              icon={UserRound}
-              collapsed={collapsed}
-              index={0}
-            />
-            <FooterLink
-              label="Logout"
-              icon={LogOut}
-              onClick={() => logout()}
-              collapsed={collapsed}
-              index={1}
-            />
-          </>
+          <></>
         ) : null}
         <FooterLink
           href="/"

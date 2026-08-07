@@ -54,9 +54,6 @@ export default function DashboardHome({ model }: Props) {
     if (stat.label === "Problems Solved") {
       return { ...stat, value: String(liveStats.problemsSolved) };
     }
-    if (stat.label === "Solutions Submitted") {
-      return { ...stat, value: String(liveStats.solutionsSubmitted) };
-    }
     if (stat.label === "Levels Completed") {
       return { ...stat, value: String(liveStats.levelsCompleted) };
     }
@@ -206,11 +203,6 @@ export default function DashboardHome({ model }: Props) {
                 ? "Great job! Keep it up!"
                 : `${Math.max(0, 7 - currentStreak)} days to weekly goal`}
           </p>
-        </div>
-
-        <div className="rounded-xl border border-primary/15 bg-white p-5">
-          <h4 className="font-semibold text-secondary">Best Streak</h4>
-          <p className="mt-1 text-xl font-bold text-primary">{bestStreak} days</p>
         </div>
 
         <div className="rounded-xl border border-primary/15 bg-white p-5">

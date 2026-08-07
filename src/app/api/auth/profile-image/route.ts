@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
     const user = await User.findByIdAndUpdate(
       sessionUser.id,
       { $set: { profileImageUrl: result.secure_url } },
-      { new: true }
+      { returnDocument: 'after' }
     ).lean();
 
     if (!user) {

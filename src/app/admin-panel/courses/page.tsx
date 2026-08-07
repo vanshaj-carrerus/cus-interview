@@ -19,7 +19,7 @@ async function addCourseAction(formData: FormData) {
   const language = await LearningLanguage.findOneAndUpdate(
     { slug },
     { $set: { name: title, description: intro, status: "published" } },
-    { upsert: true, new: true }
+    { upsert: true, returnDocument: 'after' }
   );
   await LearningTrack.create({
     languageId: language._id,
@@ -54,7 +54,7 @@ async function importCourseFileAction(formData: FormData) {
         status: "published",
       },
     },
-    { upsert: true, new: true }
+    { upsert: true, returnDocument: 'after' }
   );
   const course = await LearningTrack.findOneAndUpdate(
     { slug: topic.slug },
@@ -67,7 +67,7 @@ async function importCourseFileAction(formData: FormData) {
         status: "published",
       },
     },
-    { upsert: true, new: true }
+    { upsert: true, returnDocument: 'after' }
   );
 
   let insertedCount = 0;
@@ -85,7 +85,7 @@ async function importCourseFileAction(formData: FormData) {
           status: "published",
         },
       },
-      { upsert: true, new: true }
+      { upsert: true, returnDocument: 'after' }
     );
 
     const remaining = requestedLimit - insertedCount;

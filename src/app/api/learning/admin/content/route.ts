@@ -64,7 +64,7 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: "Invalid request." }, { status: 400 });
     }
     await connectDB();
-    const updated = await model.findByIdAndUpdate(body.id, { $set: body.data }, { new: true });
+    const updated = await model.findByIdAndUpdate(body.id, { $set: body.data }, { returnDocument: 'after' });
     if (!updated) {
       return NextResponse.json({ error: "Content not found." }, { status: 404 });
     }

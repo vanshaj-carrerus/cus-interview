@@ -169,10 +169,22 @@ function PlatformSubscriberDetailModal({
       />
       <DetailRow label="Renewal" value={row.renewalLabel} />
       <DetailRow
+        label="Amount"
+        value={row.planAmount !== null ? `₹${row.planAmount.toLocaleString("en-IN")}` : "—"}
+      />
+      <DetailRow
         label="Razorpay sub ID"
         value={
           <span className="font-mono text-xs break-all">
             {row.razorpaySubscriptionId}
+          </span>
+        }
+      />
+      <DetailRow
+        label="PayU Mandate ID"
+        value={
+          <span className="font-mono text-xs break-all">
+            {row.payuMandateToken}
           </span>
         }
       />

@@ -58,7 +58,7 @@ export async function POST(request: Request) {
         signature: razorpay_signature,
         status: "SUCCESS",
       },
-      { new: true }
+      { returnDocument: 'after' }
     );
 
     if (!payment) {

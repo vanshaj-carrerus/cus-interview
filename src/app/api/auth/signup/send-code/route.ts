@@ -64,7 +64,7 @@ export async function POST(request: Request) {
         attemptsLeft: 5,
         lastSentAt: now,
       },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
+      { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true }
     );
 
     let outcome: Awaited<ReturnType<typeof sendSignupVerificationEmail>>;

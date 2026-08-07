@@ -58,8 +58,8 @@ export default function SubscriptionPaywallModal({
 
           <p className="text-sm leading-relaxed text-slate-500">
             Practice problems, programming languages, compiler, ATS Resume Analyzer,
-            and mock interviews are included with our monthly (₹499) or quarterly
-            (₹1,299) plan. Start with a 14-day free trial — 1 mock interview per
+            and mock interviews are included with our monthly (₹499), quarterly
+            (₹1,299), or yearly (₹4,800) plan. Start with a 14-day free trial — 1 mock interview per
             day during trial, unlimited after.
           </p>
 
@@ -67,6 +67,7 @@ export default function SubscriptionPaywallModal({
             {[
               "Monthly plan — ₹499 / month",
               "Quarterly plan — ₹1,299 / quarter",
+              "Yearly plan — ₹4,800 / year",
               "ATS Resume Analyzer + AI improve",
               "₹2 today · 14-day free trial · then auto-billed",
               "1 mock interview/day during trial",

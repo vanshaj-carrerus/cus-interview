@@ -39,6 +39,7 @@ export type UserDashboardMetrics = {
   courseLevelsCompleted: number;
   startedCourses: number;
   completedCourses: number;
+  completedProjectsCount: number;
 };
 
 export type DashboardProgressCard = {
@@ -65,6 +66,8 @@ export type DashboardModel = {
   statTiles: { label: string; value: string; icon: "learn" | "practice" | "jobs" }[];
   progressCards: DashboardProgressCard[];
   profileStats: { label: string; value: string }[];
+  completedProjectsCount: number;
+  totalProjectsCount: number;
 };
 
 function sumCourseProgress(profile: UserLearningProfile, courseTrackIds: Set<string>) {
@@ -144,10 +147,7 @@ export function buildDashboardModel(
   const bestStreak = loginStreak.bestStreak;
   const codingPracticeTotal = platform.totalPracticeQuestions;
 
-  const projectsValue =
-    platform.totalTasks > 0
-      ? `${userMetrics.distinctTasksCompleted} / ${platform.totalTasks}`
-      : `0 / ${platform.totalPortfolioProjects}`;
+  const projectsValue = `${userMetrics.completedProjectsCount} / ${platform.totalPortfolioProjects}`;
 
   const statTiles: DashboardModel["statTiles"] = [
     {
@@ -206,8 +206,8 @@ export function buildDashboardModel(
   const profileStats = [
     { label: "Points", value: formatStatCount(points) },
     { label: "Problems Solved", value: formatStatCount(practiceSolvedCount) },
-    { label: "Solutions Submitted", value: formatStatCount(solutionsSubmitted) },
     { label: "Levels Completed", value: formatStatCount(levelsCompleted) },
+    { label: "Projects", value: `${userMetrics.completedProjectsCount}/${platform.totalPortfolioProjects}` },
   ];
 
   return {
@@ -229,11 +229,6 @@ export function buildDashboardModel(
         desc: "Get ATS score & feedback",
       },
       {
-        title: "Company Interviews",
-        href: "/dashboard/company-interviews",
-        desc: `${platform.totalPracticeTracks} practice tracks · ${COMPANY_INTERVIEW_GUIDE_COUNT} company guides`,
-      },
-      {
         title: "Projects",
         href: "/dashboard/projects",
         desc: `${platform.totalPortfolioProjects} portfolio project ideas`,
@@ -242,6 +237,8 @@ export function buildDashboardModel(
     statTiles,
     progressCards,
     profileStats,
+    completedProjectsCount: userMetrics.completedProjectsCount,
+    totalProjectsCount: platform.totalPortfolioProjects,
   };
 }
 
@@ -250,6 +247,7 @@ export async function getPlatformStats(): Promise<PlatformStats> {
   const { LearningTrack, LearningLevel, LearningQuestion, LearningTask } = await import(
     "@/models/learning"
   );
+  const { Project } = await import("@/models/Project");
 
   await connectDB();
 
@@ -261,13 +259,14 @@ export async function getPlatformStats(): Promise<PlatformStats> {
   const practiceTrackIds = practiceTracks.map((t) => t._id);
   const courseTrackIds = courseTracks.map((t) => String(t._id));
 
-  const [practiceLevels, courseLevels, totalQuestions, totalTasks] = await Promise.all([
+  const [practiceLevels, courseLevels, totalQuestions, totalTasks, totalDbProjects] = await Promise.all([
     LearningLevel.find({ trackId: { $in: practiceTrackIds }, status: "published" })
       .select({ _id: 1 })
       .lean(),
     LearningLevel.countDocuments({ trackId: { $in: courseTracks.map((t) => t._id) }, status: "published" }),
     LearningQuestion.countDocuments({ status: "published" }),
     LearningTask.countDocuments({ status: "published" }),
+    Project.countDocuments(),
   ]);
 
   const practiceLevelIds = practiceLevels.map((l) => String(l._id));
@@ -285,7 +284,7 @@ export async function getPlatformStats(): Promise<PlatformStats> {
     totalLevels: practiceLevels.length + courseLevels,
     totalCourseLevels: courseLevels,
     totalTasks,
-    totalPortfolioProjects: PORTFOLIO_PROJECT_COUNT,
+    totalPortfolioProjects: totalDbProjects > 0 ? totalDbProjects : PORTFOLIO_PROJECT_COUNT,
     courseTrackIds,
     practiceLevelIds,
   };
@@ -299,6 +298,10 @@ export async function getUserDashboardMetrics(
   const { getTrackingModels } = await import("@/models/learning");
   const tracking = await getTrackingModels();
   const { UserLearningAttempt } = tracking;
+  const { User } = await import("@/models/User");
+
+  const userDoc = await User.findById(userId).select("completedProjects").lean();
+  const completedProjectsCount = userDoc?.completedProjects?.length || 0;
 
   const courseTrackIdSet = new Set(platform.courseTrackIds);
   const courseProgress = sumCourseProgress(profile, courseTrackIdSet);
@@ -372,5 +375,6 @@ export async function getUserDashboardMetrics(
     solutionsSubmitted: Math.max(submissionsFromAttempts, submissionsFromProfile),
     levelsCompleted: profile.totals.totalLevelsCompleted,
     ...courseProgress,
+    completedProjectsCount,
   };
 }

@@ -70,7 +70,7 @@ export default function BottomCtaCards() {
         <CtaPanel
           title="For Developers"
           description="Join thousands of developers practicing problems, taking mock interviews, and landing their dream roles."
-          href="/signup"
+          href="/dashboard"
           cta="Join the Community"
         />
         <CtaPanel

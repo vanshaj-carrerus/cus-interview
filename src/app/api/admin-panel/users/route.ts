@@ -57,7 +57,7 @@ export async function PATCH(request: Request) {
     if (typeof body.data.email === "string") {
       updates.email = body.data.email.trim().toLowerCase();
     }
-    const updated = await User.findByIdAndUpdate(body.id, { $set: updates }, { new: true })
+    const updated = await User.findByIdAndUpdate(body.id, { $set: updates }, { returnDocument: 'after' })
       .select({ email: 1, name: 1, createdAt: 1, updatedAt: 1 })
       .lean();
 

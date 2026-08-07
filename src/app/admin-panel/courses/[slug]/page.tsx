@@ -44,7 +44,7 @@ async function addLevelAction(formData: FormData) {
   await LearningLevel.findOneAndUpdate(
     { trackId, levelNumber },
     { $set: { title, description, passScore, status: "published" } },
-    { upsert: true, new: true }
+    { upsert: true, returnDocument: 'after' }
   );
   revalidatePath("/admin-panel");
 }

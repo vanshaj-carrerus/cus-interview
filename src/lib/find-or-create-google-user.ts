@@ -51,7 +51,7 @@ export async function findOrCreateGoogleUser(
     const updated = await User.findByIdAndUpdate(
       existing._id,
       { $set: updates },
-      { new: true }
+      { returnDocument: 'after' }
     );
 
     if (!updated) {

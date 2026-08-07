@@ -3,6 +3,8 @@ import { ArrowRight, FolderKanban } from "lucide-react";
 import { connectDB } from "@/lib/mongodb";
 import { Project } from "@/models/Project";
 import ProjectList from "./ProjectList";
+import { getSessionPublicUser } from "@/lib/get-session-user";
+import { User } from "@/models/User";
 
 export const dynamic = "force-dynamic";
 
@@ -18,15 +20,19 @@ export default async function DashboardProjectsPage() {
     updatedAt: undefined,
   })) as any[];
 
+  // Fetch user completed projects
+  const sessionUser = await getSessionPublicUser();
+  let completedProjectIds: string[] = [];
+  if (sessionUser) {
+    const userDoc = await User.findById(sessionUser.id).select("completedProjects").lean();
+    if (userDoc && userDoc.completedProjects) {
+      completedProjectIds = userDoc.completedProjects.map((id: any) => id.toString());
+    }
+  }
+
   return (
     <div className="space-y-8">
       <header>
-        <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5">
-          <FolderKanban className="h-3.5 w-3.5 text-primary" />
-          <span className="text-[10px] font-bold uppercase tracking-widest text-primary">
-            Portfolio
-          </span>
-        </div>
         <h1 className="text-2xl font-extrabold text-secondary sm:text-3xl">Projects</h1>
         <p className="mt-2 max-w-2xl text-sm text-secondary/60">
           Build real-world projects to strengthen your resume and stand out in interviews. Use our
@@ -34,7 +40,7 @@ export default async function DashboardProjectsPage() {
         </p>
       </header>
 
-      <ProjectList projects={projects} />
+      <ProjectList projects={projects} initialCompletedIds={completedProjectIds} />
 
       <section className="rounded-xl border border-primary/15 bg-white p-6">
         <h3 className="font-bold text-secondary">Ready to build?</h3>

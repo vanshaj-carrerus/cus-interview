@@ -12,10 +12,9 @@ type NavItem =
   | { label: string; href: string; mega?: never }
   | { label: string; href?: never; mega: { left: { heading: string; items: MegaItem[] } } };
 
-/* ─── nav data ───────────────────────────────────────────── */
 const productMega = {
   left: {
-    heading : "Products",
+    heading: "Products",
     items: [
       {
         label: "Developer Dashboard",
@@ -23,12 +22,18 @@ const productMega = {
         icon: <LayoutDashboard className="h-[18px] w-[18px]" />,
         description: "Track your progress, stats & learning paths",
       },
+      {
+        label: "Developer Application",
+        href: "/for-developer",
+        icon: <UserRound className="h-[18px] w-[18px]" />,
+        description: "Apply for exclusive developer platform access",
+      },
     ],
   },
 };
 
 const navItems: NavItem[] = [
-  { label: "For Developer", mega: productMega },
+  { label: "For Developer", href: "/dashboard" },
   { label: "Pricing", href: "/pricing" },
   { label: "For Companies", href: "/for-companies" },
 ];
@@ -149,7 +154,7 @@ export default function Header() {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 border-b border-slate-100 bg-white">
+      <header className="fixed top-0 left-0 right-0 z-50 border-b border-slate-100/50 bg-white/70 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-6 lg:px-8">
           {/* Logo */}
           <div className="flex shrink-0 items-center">
@@ -198,7 +203,7 @@ export default function Header() {
                       <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Signed in</p>
                       <p className="mt-1 truncate text-sm font-semibold text-secondary">{user.name ?? user.email}</p>
                     </div>
-                    <Link href="/profile" role="menuitem" onClick={() => setUserMenuOpen(false)}
+                    <Link href="/dashboard/profile" role="menuitem" onClick={() => setUserMenuOpen(false)}
                       className="block px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-primary/5 hover:text-primary">
                       Profile
                     </Link>

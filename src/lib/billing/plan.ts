@@ -1,9 +1,9 @@
-export type BillingPlanId = "test" | "monthly" | "quarterly";
+export type BillingPlanId = "test" | "monthly" | "quarterly" | "yearly";
 
 /** Plans shown on the public pricing page (test plan is internal/legacy only). */
-export type PublicBillingPlanId = "monthly" | "quarterly";
+export type PublicBillingPlanId = "monthly" | "quarterly" | "yearly";
 
-export const PUBLIC_BILLING_PLAN_IDS: PublicBillingPlanId[] = ["monthly", "quarterly"];
+export const PUBLIC_BILLING_PLAN_IDS: PublicBillingPlanId[] = ["monthly", "quarterly", "yearly"];
 
 export const TRIAL_MINUTES = 10;
 export const PRE_DEBIT_HOURS = 24;
@@ -70,6 +70,18 @@ export const PRICING_PLANS = {
     razorpayInterval: 3,
     envPlanId: process.env.RAZORPAY_QUARTERLY_PLAN_ID ?? "",
   },
+  yearly: {
+    id: "yearly" as const,
+    name: "Full Access",
+    priceDisplay: "₹4,800",
+    originalPriceDisplay: "₹5,988",
+    periodSuffix: "/ Year",
+    periodLabel: "billed yearly",
+    amountPaise: 480000,
+    razorpayPeriod: "yearly" as const,
+    razorpayInterval: 1,
+    envPlanId: process.env.RAZORPAY_YEARLY_PLAN_ID ?? "",
+  },
 } satisfies Record<BillingPlanId, Record<string, unknown>>;
 
 export function getPricingPlan(planId: BillingPlanId) {
@@ -81,9 +93,9 @@ export function getTrialStartAtUnix(): number {
 }
 
 export function isBillingPlanId(value: unknown): value is BillingPlanId {
-  return value === "test" || value === "monthly" || value === "quarterly";
+  return value === "test" || value === "monthly" || value === "quarterly" || value === "yearly";
 }
 
 export function isPublicBillingPlanId(value: unknown): value is PublicBillingPlanId {
-  return value === "monthly" || value === "quarterly";
+  return value === "monthly" || value === "quarterly" || value === "yearly";
 }

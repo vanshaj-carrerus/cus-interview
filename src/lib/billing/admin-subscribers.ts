@@ -28,6 +28,8 @@ export type AdminPlatformSubscriber = {
   renewalLabel: string;
   cancelAtPeriodEnd: boolean;
   razorpaySubscriptionId: string;
+  payuMandateToken: string;
+  planAmount: number | null;
   accountJoinedAt: string;
 };
 
@@ -73,6 +75,8 @@ export async function getAdminPlatformSubscribers(): Promise<
       currentPeriodEnd: 1,
       cancelAtPeriodEnd: 1,
       razorpaySubscriptionId: 1,
+      payuMandateToken: 1,
+      planAmount: 1,
       createdAt: 1,
     })
     .sort({ subscribedAt: -1, updatedAt: -1 })
@@ -109,6 +113,8 @@ export async function getAdminPlatformSubscribers(): Promise<
       renewalLabel: renewal.renewalLabel,
       cancelAtPeriodEnd: Boolean(user.cancelAtPeriodEnd),
       razorpaySubscriptionId: String(user.razorpaySubscriptionId ?? "—"),
+      payuMandateToken: String(user.payuMandateToken ?? "—"),
+      planAmount: typeof user.planAmount === "number" ? user.planAmount : null,
       accountJoinedAt: formatAdminDate(user.createdAt),
     };
   });

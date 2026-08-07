@@ -66,6 +66,10 @@ const userSchema = new Schema(
     bestLoginStreak: { type: Number, default: 0 },
     /** Last visit date key (YYYY-MM-DD) in LOGIN_STREAK_TIMEZONE. */
     lastLoginDateKey: { type: String, default: "", trim: true },
+    completedProjects: {
+      type: [{ type: Schema.Types.ObjectId, ref: "Project" }],
+      default: [],
+    },
   },
   { timestamps: true }
 );

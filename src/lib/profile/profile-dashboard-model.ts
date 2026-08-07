@@ -39,6 +39,7 @@ export type ProfileDashboardModel = {
   user: {
     displayName: string;
     email: string;
+    avatarUrls: string[];
     role: "User" | "SuperAdmin";
     accountCreatedLabel: string;
     accountUpdatedLabel: string | null;
@@ -208,7 +209,9 @@ export function buildProfileDashboardModel(
   user: PublicUser,
   profile: UserLearningProfile,
   rollup: UserLearningActivityRollup,
-  accountUpdatedAtIso: string | null
+  accountUpdatedAtIso: string | null,
+  completedProjectsCount: number,
+  totalProjects: number
 ): ProfileDashboardModel {
   const displayName = user.name?.trim() || user.email.split("@")[0] || "Member";
   const totals = profile.totals;
@@ -250,6 +253,7 @@ export function buildProfileDashboardModel(
     { label: "Score awarded (sum)", value: String(rollup.totalScoreAwarded) },
     { label: "Current streak (days)", value: String(currentStreakDays) },
     { label: "Best streak (days)", value: String(maxStreakDays) },
+    { label: "Projects completed", value: `${completedProjectsCount} / ${totalProjects}` },
   ];
 
   const languages = (profile.languages ?? []).map(mapLanguage);
@@ -272,6 +276,7 @@ export function buildProfileDashboardModel(
     user: {
       displayName,
       email: user.email,
+      avatarUrls: user.image ? [user.image] : [],
       role: user.role,
       accountCreatedLabel: formatShortDate(user.createdAt),
       accountUpdatedLabel: accountUpdatedAtIso ? formatShortDate(accountUpdatedAtIso) : null,

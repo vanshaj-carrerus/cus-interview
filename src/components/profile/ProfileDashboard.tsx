@@ -2,6 +2,7 @@ import Link from "next/link";
 import { UserRound } from "lucide-react";
 import type { ProfileDashboardModel } from "@/lib/profile/profile-dashboard-model";
 import { ProfileRecentAttemptsTable } from "@/components/profile/ProfileRecentAttemptsTable";
+import DashboardProfileAvatar from "@/app/dashboard/components/dashboard-profile-avatar";
 
 function RingChart({
   percent,
@@ -127,14 +128,50 @@ export function ProfileDashboard({ model }: { model: ProfileDashboardModel }) {
     <div className="relative min-h-[calc(100vh-5rem)] pb-16 bg-white overflow-hidden font-sans text-slate-800">
 
       <div className="max-w-7xl mt-4 mx-auto px-4 sm:px-6 py-6 lg:py-8 relative z-10">
-        <h1 className="text-3xl md:text-4xl font-black text-slate-800 tracking-tight mb-18">
-          Welcome, <span className="text-sky-600 ">{user.displayName || "User"}</span>
-        </h1>
+        
+        {/* NEW PROFILE CARD HEADER */}
+        <div className="overflow-hidden rounded-xl border border-primary/15 bg-white mb-8 max-w-sm mx-auto sm:mx-0 shadow-sm">
+          <div className="bg-gradient-to-br from-violet-100 via-purple-50 to-fuchsia-100 px-5 pb-5 pt-8 flex flex-col items-center text-center">
+            <DashboardProfileAvatar
+              name={user.displayName}
+              email={user.email}
+              initialAvatarUrls={user.avatarUrls}
+            />
+            <div className="mt-4">
+              <h3 className="font-bold text-lg text-secondary">{user.displayName}</h3>
+              <p className="mt-0.5 text-sm text-secondary/60">{user.email}</p>
+            </div>
+          </div>
+          <div className="space-y-3 px-5 py-5 bg-white">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-secondary/60">Points</span>
+              <span className="font-semibold text-secondary">
+                {model.statTiles.find((s) => s.label === "Score awarded (sum)")?.value || "0"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-secondary/60">Problems Solved</span>
+              <span className="font-semibold text-secondary">
+                {model.statTiles.find((s) => s.label === "Correct answers")?.value || "0"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-secondary/60">Levels Completed</span>
+              <span className="font-semibold text-secondary">
+                {model.statTiles.find((s) => s.label === "Levels completed")?.value || "0"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-secondary/60">Projects</span>
+              <span className="font-semibold text-secondary">
+                {model.statTiles.find((s) => s.label === "Projects completed")?.value || "0/6"}
+              </span>
+            </div>
+          </div>
+        </div>
 
-       
-
-          {/* MAIN CONTENT AREA */}
-          <div className="flex-1 min-w-0 space-y-8">
+        {/* MAIN CONTENT AREA */}
+        <div className="flex-1 min-w-0 space-y-8">
             
             {/* STAT TILES */}
             <section>

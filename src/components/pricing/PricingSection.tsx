@@ -25,7 +25,7 @@ import {
   type PricingFeature,
 } from "@/lib/billing/plan";
 
-type BillingCycle = "monthly" | "quarterly";
+type BillingCycle = "monthly" | "quarterly" | "yearly";
 
 type CheckoutTarget =
   | { type: "plan"; id: PublicBillingPlanId }
@@ -235,7 +235,9 @@ export default function PricingSection() {
 
   const monthly = PRICING_PLANS.monthly;
   const quarterly = PRICING_PLANS.quarterly;
+  const yearly = PRICING_PLANS.yearly;
   const quarterlyPerMonth = Math.round(1299 / 3);
+  const yearlyPerMonth = Math.round(4800 / 12);
 
   return (
     <section className="relative overflow-hidden bg-[#f7f8fa] px-4 py-14 sm:px-6 sm:py-20">
@@ -277,8 +279,8 @@ export default function PricingSection() {
         {subscriptionRequired ? (
           <div className="mx-auto mb-8 max-w-2xl rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-center text-sm text-amber-900">
             Practice Problems, Programming Languages, Mock Interviews, ATS Resume
-            Analyzer, and Compiler are available with an active monthly (₹499) or
-            quarterly (₹1,299) plan.
+            Analyzer, and Compiler are available with an active monthly (₹499),
+            quarterly (₹1,299), or yearly (₹4,800) plan.
           </div>
         ) : null}
 
@@ -303,27 +305,43 @@ export default function PricingSection() {
             <button
               type="button"
               onClick={() => setBillingCycle("quarterly")}
-              className={`relative rounded-full px-5 py-2 text-sm font-semibold transition ${
+              className={`rounded-full px-5 py-2 text-sm font-semibold transition ${
                 billingCycle === "quarterly"
                   ? "bg-secondary text-white"
                   : "text-slate-600 hover:text-secondary"
               }`}
             >
               Quarterly
+            </button>
+            <button
+              type="button"
+              onClick={() => setBillingCycle("yearly")}
+              className={`relative rounded-full px-5 py-2 text-sm font-semibold transition ${
+                billingCycle === "yearly"
+                  ? "bg-secondary text-white"
+                  : "text-slate-600 hover:text-secondary"
+              }`}
+            >
+              Yearly
               <span className="absolute -top-3 right-0 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
-                Save ₹198
+                Save 20%
               </span>
             </button>
           </div>
 
-          {billingCycle === "quarterly" ? (
+          {billingCycle === "yearly" ? (
+            <div className="mx-auto mt-5 max-w-xl rounded-xl border border-primary/25 bg-primary/10 px-4 py-3 text-sm text-sky-900">
+              Yearly plans save you the most money — get 12 months for ₹4,800 instead of
+              ₹5,988.
+            </div>
+          ) : billingCycle === "quarterly" ? (
             <div className="mx-auto mt-5 max-w-xl rounded-xl border border-primary/25 bg-primary/10 px-4 py-3 text-sm text-sky-900">
               Quarterly plans save you money — get 3 months for ₹1,299 instead of
               ₹1,497.
             </div>
           ) : (
             <div className="mx-auto mt-5 max-w-xl rounded-xl border border-primary/25 bg-primary/10 px-4 py-3 text-sm text-sky-900">
-              Flexible month-to-month access. Switch to quarterly anytime to save.
+              Flexible month-to-month access. Switch to yearly anytime to save more.
             </div>
           )}
         </header>
@@ -352,13 +370,13 @@ export default function PricingSection() {
                   priceSuffix="/mo"
                   billedNote={`${getSubscriptionTotalDisplay("monthly")} with GST · billed monthly`}
                   featuresHeading="Everything you need to prepare:"
-                  featured
+                  featured={false}
                   planActive={Boolean(hasPlatformAccess)}
                   submitting={submittingKey === "plan:monthly"}
                   disabled={isBusy}
                   onBuy={() => handleCheckout({ type: "plan", id: "monthly" })}
                 />
-              ) : (
+              ) : billingCycle === "quarterly" ? (
                 <PlanCard
                   name="Quarterly"
                   accent="text-primary"
@@ -370,12 +388,31 @@ export default function PricingSection() {
                       ? quarterly.originalPriceDisplay
                       : undefined
                   }
-                  featuresHeading="Best value — full access for 3 months:"
-                  featured
+                  featuresHeading="Full access for 3 months:"
+                  featured={false}
                   planActive={Boolean(hasPlatformAccess)}
                   submitting={submittingKey === "plan:quarterly"}
                   disabled={isBusy}
                   onBuy={() => handleCheckout({ type: "plan", id: "quarterly" })}
+                />
+              ) : (
+                <PlanCard
+                  name="Yearly"
+                  accent="text-primary"
+                  price={`₹${yearlyPerMonth}`}
+                  priceSuffix="/mo"
+                  billedNote={`${yearly.priceDisplay} billed yearly · ${getSubscriptionTotalDisplay("yearly")} with GST`}
+                  originalPrice={
+                    "originalPriceDisplay" in yearly
+                      ? yearly.originalPriceDisplay
+                      : undefined
+                  }
+                  featuresHeading="Best value — full access for 1 year:"
+                  featured
+                  planActive={Boolean(hasPlatformAccess)}
+                  submitting={submittingKey === "plan:yearly"}
+                  disabled={isBusy}
+                  onBuy={() => handleCheckout({ type: "plan", id: "yearly" })}
                   badge="Popular"
                 />
               )}

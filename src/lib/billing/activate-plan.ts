@@ -3,7 +3,9 @@ import type { BillingPlanId } from "@/lib/billing/plan";
 
 export function getPlanPeriodEnd(planId: BillingPlanId, from = new Date()): Date {
   const end = new Date(from);
-  if (planId === "quarterly") {
+  if (planId === "yearly") {
+    end.setFullYear(end.getFullYear() + 1);
+  } else if (planId === "quarterly") {
     end.setMonth(end.getMonth() + 3);
   } else {
     end.setMonth(end.getMonth() + 1);

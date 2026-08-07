@@ -136,7 +136,7 @@ export async function POST(request: Request) {
             order: 0,
           },
         },
-        { upsert: true, new: true }
+        { upsert: true, returnDocument: 'after' }
       );
 
       const track = await LearningTrack.findOneAndUpdate(
@@ -151,7 +151,7 @@ export async function POST(request: Request) {
             order: 0,
           },
         },
-        { upsert: true, new: true }
+        { upsert: true, returnDocument: 'after' }
       );
 
       let insertedCount = 0;
@@ -169,7 +169,7 @@ export async function POST(request: Request) {
               status: "published",
             },
           },
-          { upsert: true, new: true }
+          { upsert: true, returnDocument: 'after' }
         );
 
         const remaining = requestedLimit - insertedCount;
@@ -235,7 +235,7 @@ export async function POST(request: Request) {
           status: "published",
         },
       },
-      { upsert: true, new: true }
+      { upsert: true, returnDocument: 'after' }
     );
 
     const created = await LearningTrack.create({
@@ -273,7 +273,7 @@ export async function PATCH(request: Request) {
     const updated = await LearningTrack.findByIdAndUpdate(
       body.id,
       { $set: body.data },
-      { new: true }
+      { returnDocument: 'after' }
     )
       .select({ _id: 1 })
       .lean();

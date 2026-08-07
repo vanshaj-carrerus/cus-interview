@@ -73,7 +73,7 @@ async function recordPermanentQuestionSolve(
         languages: [],
       },
     },
-    { upsert: true, new: true }
+    { upsert: true, returnDocument: 'after' }
   );
 
   if (updated) {
@@ -864,7 +864,7 @@ async function refreshUserProfile(userId: string) {
       },
       $setOnInsert: { userId: objectUserId },
     },
-    { upsert: true, new: true }
+    { upsert: true, returnDocument: 'after' }
   );
 }
 

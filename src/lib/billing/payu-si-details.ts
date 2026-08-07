@@ -14,7 +14,7 @@ function addYears(date: Date, years: number): Date {
 export type PayUSiDetailsPayload = {
   billingAmount: string;
   billingCurrency: "INR";
-  billingCycle: "MONTHLY";
+  billingCycle: "MONTHLY" | "YEARLY";
   billingInterval: number;
   billingRule: "MAX";
   paymentStartDate: string;
@@ -35,11 +35,11 @@ export function buildPayUSiDetailsPayload(
   return {
     billingAmount: totalAmount.toFixed(2),
     billingCurrency: "INR",
-    billingCycle: "MONTHLY",
+    billingCycle: planId === "yearly" ? "YEARLY" : "MONTHLY",
     billingInterval: planId === "quarterly" ? 3 : 1,
     billingRule: "MAX",
     paymentStartDate: formatDateYYYYMMDD(mandateStart),
-    paymentEndDate: formatDateYYYYMMDD(addYears(from, 1)),
+    paymentEndDate: formatDateYYYYMMDD(addYears(from, 10)),
   };
 }
 
