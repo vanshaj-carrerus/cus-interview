@@ -15,7 +15,7 @@ export function SidebarLabel({ label, collapsed, className = "" }: Props) {
 
   return (
     <span title={label} className={`min-w-0 truncate ${className}`}>
-      {label}
+     {label}
     </span>
   );
 }
