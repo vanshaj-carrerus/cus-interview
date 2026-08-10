@@ -1,6 +1,6 @@
 export function parseProblemPrompt(prompt: string): { title: string; description: string } {
   const trimmed = prompt.trim();
-  const colonMatch = trimmed.match(/^([^:]{3,80}):\s*(.+)$/s);
+  const colonMatch = trimmed.match(/^([^:]{3,80}):\s*([\s\S]+)$/);
   if (colonMatch) {
     return {
       title: colonMatch[1].trim(),

@@ -359,7 +359,7 @@ export async function getUserDashboardMetrics(
   const practiceSolved = Math.max(distinctPractice, allTimePracticeSolved);
 
   const permanentDistinct = Number(profile.totals?.distinctQuestionsSolved ?? 0);
-  const profileSolvedIdsLen = profile.solvedQuestionIds?.length ?? 0;
+  const profileSolvedIdsLen = (profile as any).solvedQuestionIds?.length ?? 0;
   const solvedQuestions = Math.max(distinctAll, permanentDistinct, profileSolvedIdsLen);
 
   const submissionsFromAttempts = Number(submissionAgg[0]?.total ?? 0);

@@ -6,6 +6,7 @@ type Props = {
   label: string;
   collapsed: boolean;
   className?: string;
+  index?: number;
 };
 
 export function SidebarLabel({ label, collapsed, className = "" }: Props) {

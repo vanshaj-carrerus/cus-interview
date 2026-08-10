@@ -19,7 +19,7 @@ export default async function Dashboard() {
     id: item.id,
     name: item.title,
     href: `/problems/${item.slug}`,
-    iconImage: item.iconImage,
+    iconImage: item.iconImage ?? "",
     levels: item.levels,
   }));
 

@@ -43,7 +43,7 @@ export async function GET() {
 
     return NextResponse.json({
       interviews: rows,
-      quota: await getMockInterviewQuota(sessionUser.subscription, sessionUser.id, sessionUser.isSuperAdmin),
+      quota: await getMockInterviewQuota(sessionUser.subscription, sessionUser.id, sessionUser.role === "SuperAdmin"),
     });
   } catch (error) {
     console.error("mock-interviews/ai-mock/history", error);

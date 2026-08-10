@@ -65,7 +65,8 @@ export function PracticeProblemsSkeleton() {
 }
 
 export async function PracticeProblemsSection() {
-  const tracks = await getTrackCards("track");
+  const rawTracks = await getTrackCards("track");
+  const tracks = rawTracks.map(t => ({ ...t, iconImage: t.iconImage ?? "" }));
   return <PracticeProblems tracks={tracks} />;
 }
 

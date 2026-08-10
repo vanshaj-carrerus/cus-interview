@@ -81,10 +81,11 @@ export function FastTrackCoursesSkeleton() {
 }
 
 export async function FastTrackCoursesSection() {
-  const [courses, sessionUser] = await Promise.all([
+  const [rawCourses, sessionUser] = await Promise.all([
     getTrackCards("course"),
     getSessionPublicUser(),
   ]);
+  const courses = rawCourses.map(c => ({ ...c, iconImage: c.iconImage ?? "" }));
   const profile = sessionUser
     ? await getUserLearningProfile(sessionUser.id, sessionUser.name || sessionUser.email)
     : null;
