@@ -91,12 +91,6 @@ export default function DeveloperSkillsSection() {
                 <p className="mt-4 max-w-md text-[15px] leading-relaxed text-slate-600">
                   {feature.description}
                 </p>
-                <Link
-                  href={feature.href}
-                  className="mt-6 inline-flex items-center text-[15px] font-semibold text-primary transition-colors hover:text-primary/80"
-                >
-                  Learn more →
-                </Link>
               </div>
 
               <div
