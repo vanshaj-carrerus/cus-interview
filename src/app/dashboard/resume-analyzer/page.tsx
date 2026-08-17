@@ -23,7 +23,7 @@ export default function DashboardResumeAnalyzerPage() {
         </div>
       </header>
 
-      <div className="mx-auto flex w-full max-w-6xl min-h-0 flex-1 flex-col pb-4">
+      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col pb-4">
         <ResumeAnalyzerPage variant="dashboard" />
       </div>
     </div>

@@ -495,12 +495,12 @@ export default function ResumeAnalyzerPage({
 
   return (
     <div
-      className={`relative overflow-hidden text-secondary ${
-        isDashboard ? "flex min-h-0 flex-1 flex-col bg-transparent" : "min-h-screen bg-white"
+      className={`relative text-secondary ${
+        isDashboard ? "flex flex-1 flex-col bg-transparent" : "min-h-screen bg-white"
       }`}
     >
       {!isDashboard ? (
-        <div className="pointer-events-none absolute inset-0">
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute -left-32 top-20 h-96 w-96 rounded-full bg-sky-500/[0.04] blur-3xl" />
           <div className="absolute -right-24 top-1/3 h-80 w-80 rounded-full bg-slate-100 blur-3xl" />
           <div className="absolute bottom-0 left-1/2 h-64 w-[600px] -translate-x-1/2 rounded-full bg-sky-500/[0.03] blur-3xl" />
@@ -508,7 +508,7 @@ export default function ResumeAnalyzerPage({
       ) : null}
 
       <div
-        className={`relative flex min-h-0 flex-1 flex-col ${
+        className={`relative flex flex-1 flex-col ${
           isDashboard ? "w-full" : "mx-auto max-w-6xl px-4 pb-8 sm:px-6 pt-4 lg:px-8"
         }`}
       >
