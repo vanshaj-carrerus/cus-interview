@@ -8,7 +8,7 @@ import {
 import { detectResumeFileKind } from "@/lib/resume-analyzer/extract-resume-text";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 export async function POST(request: Request) {
   try {

@@ -6,8 +6,12 @@ import {
   extractDocxTextWithGeminiVision,
   extractPdfTextWithGeminiVision,
 } from "@/lib/resume-analyzer/extract-pdf-vision";
+import { withTimeout } from "@/lib/resume-analyzer/with-timeout";
 
 export type ResumeFileKind = "pdf" | "docx";
+
+const IMAGE_LIKE_PDF_BYTES = 150_000;
+const IMAGE_LIKE_PDF_MAX_TEXT = 120;
 
 export function detectResumeFileKind(
   mimeType: string,
@@ -97,36 +101,85 @@ async function tryExtract(
   }
 }
 
+function looksLikeImagePdf(buffer: Buffer, text: string): boolean {
+  return buffer.length >= IMAGE_LIKE_PDF_BYTES && text.length < IMAGE_LIKE_PDF_MAX_TEXT;
+}
+
+async function extractPdfWithOcr(buffer: Buffer): Promise<ExtractionAttempt | null> {
+  try {
+    return await Promise.any([
+      tryExtract("mistral-ocr", true, () => extractPdfTextWithMistralOcr(buffer)).then(
+        (result) => {
+          if (!result) throw new Error("mistral-ocr returned too little text");
+          return result;
+        }
+      ),
+      tryExtract("gemini-pdf-ocr", true, () =>
+        extractPdfTextWithGeminiVision(buffer)
+      ).then((result) => {
+        if (!result) throw new Error("gemini-pdf-ocr returned too little text");
+        return result;
+      }),
+    ]);
+  } catch (error) {
+    console.warn(
+      "[resume-extract] OCR race failed:",
+      error instanceof Error ? error.message : error
+    );
+    return null;
+  }
+}
+
+async function extractPdfResumeText(
+  buffer: Buffer
+): Promise<ExtractionAttempt> {
+  let localText = "";
+  let localMethod = "pdf-text";
+
+  try {
+    const extracted = await extractPdfTextBestEffort(buffer);
+    localText = extracted.text;
+    localMethod = extracted.method;
+    if (
+      localText.length >= MIN_RESUME_TEXT_LENGTH &&
+      !looksLikeImagePdf(buffer, localText)
+    ) {
+      return { text: localText, usedVision: false, method: localMethod };
+    }
+  } catch (error) {
+    console.warn(
+      "[resume-extract] pdf best-effort failed:",
+      error instanceof Error ? error.message : error
+    );
+  }
+
+  const ocr = await extractPdfWithOcr(buffer);
+  if (ocr) return ocr;
+
+  if (localText.length >= MIN_RESUME_TEXT_LENGTH) {
+    return { text: localText, usedVision: false, method: localMethod };
+  }
+
+  throw new Error(
+    "Could not read your PDF. Please try again in a moment or upload DOCX."
+  );
+}
+
 export async function extractResumeText(
   buffer: Buffer,
   kind: ResumeFileKind
 ): Promise<{ text: string; usedVision: boolean; method: string }> {
   if (kind === "pdf") {
     try {
-      const { text, method } = await extractPdfTextBestEffort(buffer);
-      if (text.length >= MIN_RESUME_TEXT_LENGTH) {
-        return { text, usedVision: false, method };
-      }
+      return await withTimeout(extractPdfResumeText(buffer), 35_000, "pdf-extract");
     } catch (error) {
-      console.warn(
-        "[resume-extract] pdf best-effort failed:",
-        error instanceof Error ? error.message : error
-      );
+      if (error instanceof Error && /timed out/i.test(error.message)) {
+        throw new Error(
+          "Reading this PDF took too long. Please upload a DOCX or a smaller text-based PDF."
+        );
+      }
+      throw error;
     }
-
-    const mistral = await tryExtract("mistral-ocr", true, () =>
-      extractPdfTextWithMistralOcr(buffer)
-    );
-    if (mistral) return mistral;
-
-    const gemini = await tryExtract("gemini-pdf-ocr", true, () =>
-      extractPdfTextWithGeminiVision(buffer)
-    );
-    if (gemini) return gemini;
-
-    throw new Error(
-      "Could not read your PDF. Please try again in a moment or upload DOCX."
-    );
   }
 
   const docx = await tryExtract("mammoth", false, () => extractDocxText(buffer));

@@ -124,17 +124,28 @@ export default function ResumeAnalyzerPage({
         cache: "no-store",
       });
 
-      const data = (await response.json()) as {
+      let data: {
         error?: string;
         report?: ResumeAnalysisReport;
         meta?: { fileName?: string };
-      };
+      } = {};
+      const contentType = response.headers.get("content-type") ?? "";
+      if (contentType.includes("application/json")) {
+        data = (await response.json()) as typeof data;
+      } else {
+        await response.text().catch(() => "");
+      }
 
       if (!response.ok || !data.report) {
         if (response.status === 403) {
           setPhase("landing");
           openPaywall();
           return;
+        }
+        if (response.status === 504) {
+          throw new Error(
+            "Analysis timed out. Please upload a DOCX or a smaller text-based PDF."
+          );
         }
         throw new Error(data.error || "Failed to analyze resume.");
       }

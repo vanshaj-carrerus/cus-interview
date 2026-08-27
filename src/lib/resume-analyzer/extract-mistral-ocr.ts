@@ -9,6 +9,10 @@ type MistralOcrResponse = {
   pages?: MistralOcrPage[];
 };
 
+function apiKey(): string {
+  return (process.env.MISTRAL_API_KEY ?? "").trim().replace(/^["']|["']$/g, "");
+}
+
 function markdownToPlainText(markdown: string): string {
   return markdown
     .replace(/!\[[^\]]*\]\([^)]+\)/g, " ")
@@ -23,7 +27,8 @@ function markdownToPlainText(markdown: string): string {
 export async function extractPdfTextWithMistralOcr(
   buffer: Buffer
 ): Promise<string> {
-  if (!process.env.MISTRAL_API_KEY) {
+  const key = apiKey();
+  if (!key) {
     throw new Error("MISTRAL_API_KEY is not configured.");
   }
 
@@ -32,7 +37,7 @@ export async function extractPdfTextWithMistralOcr(
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${process.env.MISTRAL_API_KEY}`,
+      Authorization: `Bearer ${key}`,
     },
     body: JSON.stringify({
       model: "mistral-ocr-latest",
@@ -40,7 +45,10 @@ export async function extractPdfTextWithMistralOcr(
         type: "document_url",
         document_url: `data:application/pdf;base64,${base64}`,
       },
+      include_image_base64: false,
+      pages: [0, 1, 2, 3, 4, 5],
     }),
+    signal: AbortSignal.timeout(20_000),
   });
 
   if (!response.ok) {

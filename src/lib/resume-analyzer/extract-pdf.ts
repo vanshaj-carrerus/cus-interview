@@ -1,8 +1,9 @@
 import path from "node:path";
 import { createRequire } from "node:module";
-import { definePDFJSModule, extractText, getDocumentProxy } from "unpdf";
+import { extractText } from "unpdf";
+import { withTimeout } from "@/lib/resume-analyzer/with-timeout";
 
-let pdfJsReady: Promise<void> | null = null;
+const ENOUGH_TEXT_CHARS = 80;
 
 function cloneBuffer(buffer: Buffer): Buffer {
   return Buffer.from(buffer);
@@ -14,13 +15,9 @@ function bufferToUint8Array(buffer: Buffer): Uint8Array {
   return copy;
 }
 
-async function ensurePdfJsModule(): Promise<void> {
-  if (!pdfJsReady) {
-    pdfJsReady = definePDFJSModule(() =>
-      import("pdfjs-dist/legacy/build/pdf.mjs")
-    );
-  }
-  await pdfJsReady;
+function asPlainText(text: string | string[] | null | undefined): string {
+  if (!text) return "";
+  return (Array.isArray(text) ? text.join("\n") : text).trim();
 }
 
 export function isPdfBuffer(buffer: Buffer): boolean {
@@ -28,32 +25,11 @@ export function isPdfBuffer(buffer: Buffer): boolean {
 }
 
 export async function extractPdfTextWithUnpdf(buffer: Buffer): Promise<string> {
-  await ensurePdfJsModule();
   const bytes = bufferToUint8Array(cloneBuffer(buffer));
-  const errors: string[] = [];
-
-  const attempts = [
-    async () => {
-      const { text } = await extractText(bytes, { mergePages: true });
-      return (text ?? "").trim();
-    },
-    async () => {
-      const pdf = await getDocumentProxy(bytes);
-      const { text } = await extractText(pdf, { mergePages: true });
-      return (text ?? "").trim();
-    },
-  ];
-
-  for (const attempt of attempts) {
-    try {
-      const text = await attempt();
-      if (text.length > 0) return text;
-    } catch (error) {
-      errors.push(error instanceof Error ? error.message : "unpdf attempt failed");
-    }
-  }
-
-  throw new Error(errors.join(" | ") || "unpdf returned empty text");
+  const { text } = await extractText(bytes, { mergePages: true });
+  const result = asPlainText(text);
+  if (!result) throw new Error("unpdf returned empty text");
+  return result;
 }
 
 export async function extractPdfTextWithPdfParse(
@@ -65,35 +41,12 @@ export async function extractPdfTextWithPdfParse(
   ) => Promise<{ text?: string }>;
 
   const data = await pdfParse(cloneBuffer(buffer));
-  return (data.text ?? "").trim();
+  const text = (data.text ?? "").trim();
+  if (!text) throw new Error("pdf-parse returned empty text");
+  return text;
 }
 
-export async function extractPdfTextWithPdfJs(
-  buffer: Buffer
-): Promise<string> {
-  await ensurePdfJsModule();
-  const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
-  const doc = await pdfjs.getDocument({
-    data: bufferToUint8Array(cloneBuffer(buffer)),
-    useSystemFonts: true,
-    disableFontFace: true,
-  }).promise;
-
-  const parts: string[] = [];
-  for (let pageNum = 1; pageNum <= doc.numPages; pageNum++) {
-    const page = await doc.getPage(pageNum);
-    const content = await page.getTextContent();
-    const pageText = content.items
-      .map((item) => ("str" in item && typeof item.str === "string" ? item.str : ""))
-      .join(" ");
-    parts.push(pageText);
-    page.cleanup();
-  }
-
-  return parts.join("\n").trim();
-}
-
-/** Run every local PDF extractor and return the longest non-empty result. */
+/** Try local text-layer extractors and stop as soon as we have enough text. */
 export async function extractPdfTextBestEffort(buffer: Buffer): Promise<{
   text: string;
   method: string;
@@ -102,27 +55,32 @@ export async function extractPdfTextBestEffort(buffer: Buffer): Promise<{
     throw new Error("The uploaded file is not a valid PDF.");
   }
 
-  const extractors: Array<{ label: string; fn: (buf: Buffer) => Promise<string> }> =
-    [
-      { label: "pdf-parse", fn: extractPdfTextWithPdfParse },
-      { label: "unpdf", fn: extractPdfTextWithUnpdf },
-      { label: "pdfjs", fn: extractPdfTextWithPdfJs },
-    ];
+  const extractors: Array<{
+    label: string;
+    fn: (buf: Buffer) => Promise<string>;
+    timeoutMs: number;
+  }> = [
+    { label: "unpdf", fn: extractPdfTextWithUnpdf, timeoutMs: 8000 },
+    { label: "pdf-parse", fn: extractPdfTextWithPdfParse, timeoutMs: 6000 },
+  ];
 
   let bestText = "";
   let bestMethod = "";
-  const errors: string[] = [];
 
-  for (const { label, fn } of extractors) {
+  for (const { label, fn, timeoutMs } of extractors) {
     try {
-      const text = (await fn(buffer)).trim();
+      const text = (await withTimeout(fn(buffer), timeoutMs, label)).trim();
       if (text.length > bestText.length) {
         bestText = text;
         bestMethod = label;
       }
+      if (bestText.length >= ENOUGH_TEXT_CHARS) {
+        return { text: bestText, method: bestMethod };
+      }
     } catch (error) {
-      errors.push(
-        `${label}: ${error instanceof Error ? error.message : "failed"}`
+      console.warn(
+        `[resume-extract] ${label} failed:`,
+        error instanceof Error ? error.message : error
       );
     }
   }
@@ -131,5 +89,5 @@ export async function extractPdfTextBestEffort(buffer: Buffer): Promise<{
     return { text: bestText, method: bestMethod };
   }
 
-  throw new Error(errors.join(" | ") || "All PDF extractors returned empty text");
+  throw new Error("All PDF extractors returned empty text");
 }

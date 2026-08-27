@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/components/providers/auth-provider";
+import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 
 type Step = "email" | "verify";
 
@@ -83,7 +84,25 @@ export default function SignupPage() {
           </p>
 
           {step === "email" ? (
-            <form onSubmit={handleSendCode} className="space-y-5">
+            <>
+              <GoogleSignInButton
+                nextPath="/dashboard"
+                onError={setError}
+                className="mb-6 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-3 text-sm font-semibold text-secondary transition hover:bg-slate-50"
+              />
+
+              <div className="relative mb-6">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-slate-200" />
+                </div>
+                <div className="relative flex justify-center">
+                  <span className="bg-white px-3 text-[11px] font-semibold tracking-wider text-slate-400">
+                    OR CONTINUE WITH EMAIL
+                  </span>
+                </div>
+              </div>
+
+              <form onSubmit={handleSendCode} className="space-y-5">
               {error ? (
                 <p
                   className="text-sm font-semibold text-red-600 bg-red-50 rounded-lg px-3 py-2"
@@ -120,6 +139,7 @@ export default function SignupPage() {
                 {submitting ? "Sending code…" : "Send verification code"}
               </button>
             </form>
+            </>
           ) : (
             <form onSubmit={handleCompleteSignup} className="space-y-5">
               {info ? (

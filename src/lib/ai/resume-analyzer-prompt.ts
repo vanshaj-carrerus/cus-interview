@@ -30,7 +30,7 @@ async function tryGroq<T>(prompt: string): Promise<EngineResult<T>> {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+        Authorization: `Bearer ${(process.env.GROQ_API_KEY ?? "").trim().replace(/^["']|["']$/g, "")}`,
       },
       body: JSON.stringify({
         model: modelId,
@@ -38,6 +38,7 @@ async function tryGroq<T>(prompt: string): Promise<EngineResult<T>> {
         response_format: { type: "json_object" },
         temperature: 0.1,
       }),
+      signal: AbortSignal.timeout(15_000),
     });
 
     if (!res.ok) continue;
@@ -67,7 +68,7 @@ async function tryMistral<T>(prompt: string): Promise<EngineResult<T>> {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.MISTRAL_API_KEY}`,
+        Authorization: `Bearer ${(process.env.MISTRAL_API_KEY ?? "").trim().replace(/^["']|["']$/g, "")}`,
       },
       body: JSON.stringify({
         model: modelId,
@@ -75,6 +76,7 @@ async function tryMistral<T>(prompt: string): Promise<EngineResult<T>> {
         response_format: { type: "json_object" },
         temperature: 0.1,
       }),
+      signal: AbortSignal.timeout(15_000),
     });
 
     if (!res.ok) continue;
