@@ -1,6 +1,7 @@
 import { hasPlatformPlanAccess, hasSubscriptionAccess } from "@/lib/billing/access";
 import { getMockInterviewDailyLimit, isTrialingSubscription } from "@/lib/billing/trial-limits";
 import { isBillingPlanId } from "@/lib/billing/plan";
+import { toPublicFeatureCredits, type FeatureCreditsLike } from "@/lib/billing/feature-credits";
 import type { PublicSubscription, PublicUser, SubscriptionStatus } from "@/types/auth";
 
 type UserLike = {
@@ -15,6 +16,7 @@ type UserLike = {
   trialEndsAt?: Date | string | null;
   currentPeriodEnd?: Date | string | null;
   cancelAtPeriodEnd?: boolean;
+  featureCredits?: FeatureCreditsLike | null;
 };
 
 function toIsoDate(value?: Date | string | null): string | null {
@@ -47,6 +49,7 @@ function toPublicSubscription(user: UserLike): PublicSubscription {
     planId,
     isTrialing: isTrialingSubscription(limitInput),
     mockInterviewsDailyLimit: getMockInterviewDailyLimit(limitInput),
+    featureCredits: toPublicFeatureCredits(user.featureCredits),
   };
 }
 

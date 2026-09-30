@@ -1,5 +1,6 @@
 import { connectDB } from "@/lib/mongodb";
 import { Coupon, type CouponDocument } from "@/models/Coupon";
+import { User } from "@/models/User";
 import { CouponRedemption } from "@/models/CouponRedemption";
 import { getPlanPeriodEnd } from "@/lib/billing/activate-plan";
 import { GST_RATE } from "@/lib/billing/order-amount";
@@ -59,9 +60,27 @@ export type CouponQuote = {
   label: string;
 };
 
-export function describeCoupon(
-  coupon: Pick<CouponDocument, "discountType" | "discountValue" | "freeAccessDays">
-): string {
+type DescribableCoupon = Pick<
+  CouponDocument,
+  | "discountType"
+  | "discountValue"
+  | "freeAccessDays"
+  | "mockInterviewCredits"
+  | "resumeAnalyzerCredits"
+>;
+
+export function describeCoupon(coupon: DescribableCoupon): string {
+  if (coupon.discountType === "credits") {
+    const parts: string[] = [];
+    if (coupon.mockInterviewCredits) {
+      parts.push(`${coupon.mockInterviewCredits} AI mock interview${coupon.mockInterviewCredits === 1 ? "" : "s"}`);
+    }
+    if (coupon.resumeAnalyzerCredits) {
+      parts.push(`${coupon.resumeAnalyzerCredits} resume analys${coupon.resumeAnalyzerCredits === 1 ? "is" : "es"}`);
+    }
+    const validity = coupon.freeAccessDays ? ` (valid ${coupon.freeAccessDays} days)` : "";
+    return `${parts.join(" + ")} free${validity}`;
+  }
   if (coupon.discountType === "free") {
     return coupon.freeAccessDays
       ? `Free access for ${coupon.freeAccessDays} days`
@@ -75,14 +94,14 @@ export function describeCoupon(
 
 /** Discount is taken off the base price; GST is charged on what remains. */
 export function computeCouponQuote(
-  coupon: Pick<CouponDocument, "code" | "discountType" | "discountValue" | "freeAccessDays">,
+  coupon: DescribableCoupon & Pick<CouponDocument, "code">,
   target: CouponTarget
 ): CouponQuote {
   const baseAmount = getTargetBaseAmount(target);
   const value = coupon.discountValue ?? 0;
 
   let discountAmount: number;
-  if (coupon.discountType === "free") {
+  if (coupon.discountType === "free" || coupon.discountType === "credits") {
     discountAmount = baseAmount;
   } else if (coupon.discountType === "percent") {
     discountAmount = (baseAmount * Math.min(Math.max(value, 0), 100)) / 100;
@@ -158,6 +177,9 @@ export async function checkCouponForCheckout(
   if (coupon.maxUses != null && coupon.usedCount >= coupon.maxUses) {
     return { ok: false, error: "This coupon has reached its usage limit." };
   }
+  if (coupon.discountType === "credits" && target.type !== "plan") {
+    return { ok: false, error: "Redeem this coupon from a plan on the pricing page." };
+  }
   if (coupon.appliesTo.length > 0 && !coupon.appliesTo.includes(target.id)) {
     return { ok: false, error: "This coupon does not apply to this purchase." };
   }
@@ -191,6 +213,54 @@ export async function claimCouponUse(couponId: CouponDocument["_id"]): Promise<b
     { $inc: { usedCount: 1 } }
   );
   return Boolean(updated);
+}
+
+/**
+ * Adds a `credits` coupon's free uses to the user's balance (stacks with any
+ * unexpired balance). Validity comes from the coupon's `freeAccessDays`.
+ */
+export async function grantCouponCredits(
+  userId: string,
+  coupon: Pick<
+    CouponDocument,
+    "code" | "freeAccessDays" | "mockInterviewCredits" | "resumeAnalyzerCredits"
+  >
+): Promise<void> {
+  await connectDB();
+  const user = await User.findById(userId);
+  if (!user) return;
+
+  const now = new Date();
+  const current = user.featureCredits;
+  const currentExpiry = current?.expiresAt ?? null;
+  const stillValid = Boolean(
+    current && (!currentExpiry || currentExpiry.getTime() > now.getTime())
+  );
+  const newExpiry = coupon.freeAccessDays
+    ? new Date(now.getTime() + coupon.freeAccessDays * 24 * 60 * 60 * 1000)
+    : null;
+
+  // Keep whichever expiry is later (null = never expires).
+  let expiresAt: Date | null = newExpiry;
+  if (stillValid) {
+    if (!currentExpiry || !newExpiry) {
+      expiresAt = null;
+    } else {
+      expiresAt = currentExpiry > newExpiry ? currentExpiry : newExpiry;
+    }
+  }
+
+  const mock = coupon.mockInterviewCredits ?? 0;
+  const resume = coupon.resumeAnalyzerCredits ?? 0;
+  user.set("featureCredits", {
+    mockInterviewRemaining: (stillValid ? current?.mockInterviewRemaining ?? 0 : 0) + mock,
+    mockInterviewTotal: (stillValid ? current?.mockInterviewTotal ?? 0 : 0) + mock,
+    resumeAnalyzerRemaining: (stillValid ? current?.resumeAnalyzerRemaining ?? 0 : 0) + resume,
+    resumeAnalyzerTotal: (stillValid ? current?.resumeAnalyzerTotal ?? 0 : 0) + resume,
+    expiresAt,
+    couponCode: coupon.code,
+  });
+  await user.save();
 }
 
 type RecordRedemptionInput = {

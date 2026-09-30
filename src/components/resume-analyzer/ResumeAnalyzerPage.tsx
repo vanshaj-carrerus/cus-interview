@@ -19,6 +19,7 @@ import SubscriptionPaywallModal from "@/components/billing/SubscriptionPaywallMo
 import ProcessingAnimation from "@/components/resume-analyzer/ProcessingAnimation";
 import ResultsDashboard from "@/components/resume-analyzer/ResultsDashboard";
 import { useSubscriptionGate } from "@/hooks/use-subscription-gate";
+import { useAuth } from "@/components/providers/auth-provider";
 import {
   ACCEPTED_FILE_TYPES,
   MAX_FILE_SIZE_MB,
@@ -42,8 +43,11 @@ export default function ResumeAnalyzerPage({
   variant?: "default" | "dashboard";
 }) {
   const isDashboard = variant === "dashboard";
-  const { checkAccess, paywallOpen, closePaywall, openPaywall } =
-    useSubscriptionGate();
+  const { checkAccess, paywallOpen, closePaywall, openPaywall, featureCredits } =
+    useSubscriptionGate("resumeAnalyzer");
+  const { user, refreshUser } = useAuth();
+  const showCreditsNotice =
+    Boolean(featureCredits) && !user?.subscription.hasPlatformAccess && user?.role !== "SuperAdmin";
   const [phase, setPhase] = useState<PagePhase>("landing");
   const [activeStep, setActiveStep] = useState(0);
   const [report, setReport] = useState<ResumeAnalysisReport | null>(null);
@@ -155,6 +159,8 @@ export default function ResumeAnalyzerPage({
       setAnalyzedFileName(data.meta?.fileName ?? file.name);
       setReport(data.report);
       setPhase("results");
+      // Updates the coupon free-uses count shown on the page.
+      void refreshUser();
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") {
         return;
@@ -166,7 +172,7 @@ export default function ResumeAnalyzerPage({
       );
       setPhase("landing");
     }
-  }, [openPaywall]);
+  }, [openPaywall, refreshUser]);
 
   const handleFile = (file: File, autoAnalyze = !isDashboard) => {
     const error = validateFile(file);
@@ -387,6 +393,25 @@ export default function ResumeAnalyzerPage({
       </div>
     ) : null;
 
+  const renderCreditsNotice = () =>
+    showCreditsNotice && featureCredits ? (
+      <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+        Free resume analyses left:{" "}
+        <span className="font-semibold">
+          {featureCredits.remaining} / {featureCredits.total}
+        </span>
+        {featureCredits.remaining === 0 ? (
+          <>
+            {" · "}
+            <a href="/pricing" className="font-semibold underline">
+              Buy a plan
+            </a>{" "}
+            for unlimited analyses.
+          </>
+        ) : null}
+      </div>
+    ) : null;
+
   const renderDashboardLanding = () => (
     <section ref={uploadRef} className="flex min-h-0 flex-1 flex-col">
       <motion.div
@@ -396,6 +421,7 @@ export default function ResumeAnalyzerPage({
         className="flex min-h-0 flex-1 flex-col"
       >
         {renderProcessingError()}
+        {renderCreditsNotice()}
 
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-sky-500/10 bg-white shadow-sm">
           <div className="grid min-h-0 flex-1 gap-0 lg:grid-cols-[1.15fr_0.85fr]">
@@ -485,6 +511,7 @@ export default function ResumeAnalyzerPage({
       {phase === "landing" ? (
         <section ref={uploadRef} className="pb-20">
           {renderProcessingError()}
+          {renderCreditsNotice()}
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}

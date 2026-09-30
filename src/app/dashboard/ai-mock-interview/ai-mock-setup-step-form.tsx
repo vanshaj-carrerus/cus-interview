@@ -142,8 +142,16 @@ export default function AiMockSetupStepForm({
   fullscreen?: boolean;
 }) {
   const router = useRouter();
-  const { checkAccess, gatedNavigate, paywallOpen, closePaywall, openPaywall } =
-    useSubscriptionGate();
+  const {
+    checkAccess,
+    gatedNavigate,
+    paywallOpen,
+    closePaywall,
+    openPaywall,
+    hasPlan,
+    featureCredits,
+  } = useSubscriptionGate("mockInterview");
+  const onCouponCredits = !hasPlan && Boolean(featureCredits);
 
   const [step, setStep] = useState(0);
   const [trialLimitOpen, setTrialLimitOpen] = useState(false);
@@ -264,7 +272,11 @@ export default function AiMockSetupStepForm({
 
     checkAccess(async () => {
       if (mockQuota && !mockQuota.unlimited && (mockQuota.remainingToday ?? 0) <= 0) {
-        setTrialLimitOpen(true);
+        if (onCouponCredits) {
+          openPaywall();
+        } else {
+          setTrialLimitOpen(true);
+        }
         return;
       }
 
@@ -415,7 +427,14 @@ export default function AiMockSetupStepForm({
           <div
             className={`px-6 py-6 sm:px-8 sm:py-7 ${fullscreen ? "min-h-0 flex-1 overflow-y-auto" : ""}`}
           >
-            {mockQuota && !mockQuota.unlimited && step === 2 ? (
+            {onCouponCredits && featureCredits ? (
+            <div className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+              <p className="font-semibold">Free AI mock interviews</p>
+              <p className="mt-1 opacity-80">
+                {featureCredits.remaining} of {featureCredits.total} left. Buy a plan for unlimited interviews.
+              </p>
+            </div>
+          ) : mockQuota && !mockQuota.unlimited && step === 2 ? (
               <div className="mb-6 rounded-xl border border-sky-500/15 bg-sky-500/5 px-4 py-3 text-sm text-secondary">
                 <p className="font-semibold">Free trial limit</p>
                 <p className="mt-1 text-secondary/65">{buildTrialMockLimitMessage()}</p>

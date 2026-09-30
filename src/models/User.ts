@@ -47,6 +47,16 @@ const userSchema = new Schema(
     cancelAtPeriodEnd: { type: Boolean, default: false },
     /** Coupon used for the current plan purchase, if any. */
     appliedCouponCode: { type: String, default: "" },
+    /** Free uses granted by a `credits` coupon (no plan needed for these features). */
+    featureCredits: {
+      mockInterviewRemaining: { type: Number, default: 0 },
+      mockInterviewTotal: { type: Number, default: 0 },
+      resumeAnalyzerRemaining: { type: Number, default: 0 },
+      resumeAnalyzerTotal: { type: Number, default: 0 },
+      /** null = no expiry. */
+      expiresAt: { type: Date, default: null },
+      couponCode: { type: String, default: "" },
+    },
     /** PayU mandate token (`mihpayid`) from ₹2 SI registration — used for auto-debit. */
     payuMandateToken: { type: String, sparse: true },
     /** @deprecated Alias — kept in sync with payuMandateToken for older records. */

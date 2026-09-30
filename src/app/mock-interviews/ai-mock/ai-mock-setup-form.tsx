@@ -147,8 +147,16 @@ export function AiMockSetupForm({
   interviewBasePath?: string;
 }) {
   const router = useRouter();
-  const { checkAccess, gatedNavigate, paywallOpen, closePaywall, openPaywall } =
-    useSubscriptionGate();
+  const {
+    checkAccess,
+    gatedNavigate,
+    paywallOpen,
+    closePaywall,
+    openPaywall,
+    hasPlan,
+    featureCredits,
+  } = useSubscriptionGate("mockInterview");
+  const onCouponCredits = !hasPlan && Boolean(featureCredits);
   const [trialLimitOpen, setTrialLimitOpen] = useState(false);
   const [mockQuota, setMockQuota] = useState<MockInterviewQuota | null>(null);
   const [languages, setLanguages] = useState<string[]>([]);
@@ -272,7 +280,11 @@ export function AiMockSetupForm({
         !mockQuota.unlimited &&
         (mockQuota.remainingToday ?? 0) <= 0
       ) {
-        setTrialLimitOpen(true);
+        if (onCouponCredits) {
+          openPaywall();
+        } else {
+          setTrialLimitOpen(true);
+        }
         return;
       }
 
@@ -352,7 +364,14 @@ export function AiMockSetupForm({
             We use this profile to pick question depth, examples, and time
             boxes. You can change it anytime before a run.
           </p>
-          {mockQuota && !mockQuota.unlimited ? (
+          {onCouponCredits && featureCredits ? (
+            <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm leading-relaxed text-emerald-900">
+              <p className="font-semibold">Free AI mock interviews</p>
+              <p className="mt-1 opacity-80">
+                {featureCredits.remaining} of {featureCredits.total} left. Buy a plan for unlimited interviews.
+              </p>
+            </div>
+          ) : mockQuota && !mockQuota.unlimited ? (
             <div className="mt-5 rounded-2xl border border-sky-100 bg-sky-50/80 px-4 py-3 text-sm leading-relaxed text-sky-900">
               <p className="font-semibold">Free trial mock interview limit</p>
               <p className="mt-1 text-sky-800/90">

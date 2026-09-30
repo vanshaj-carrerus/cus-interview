@@ -75,7 +75,7 @@ const faqItems = [
 ];
 
 export default function MockInterviewPage() {
-  const { gatedNavigate, paywallOpen, closePaywall } = useSubscriptionGate();
+  const { gatedNavigate, paywallOpen, closePaywall } = useSubscriptionGate("mockInterview");
   const [activeRole, setActiveRole] = useState("backend");
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [email, setEmail] = useState("");

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import { assertCanCreateMockInterview } from "@/lib/billing/mock-interview-quota";
-import { getPlatformAccessSession } from "@/lib/billing/require-platform-access";
+import { consumeFeatureCredit, getFeatureAccessSession } from "@/lib/billing/feature-credits";
 import { AiMockInterview } from "@/models/AiMockInterview";
 
 type CreateAiMockInterviewBody = {
@@ -17,7 +17,7 @@ const NOTE_MAX_LENGTH = 100;
 
 export async function POST(request: Request) {
   try {
-    const access = await getPlatformAccessSession();
+    const access = await getFeatureAccessSession("mockInterview");
     if ("error" in access) {
       return access.error;
     }
@@ -47,30 +47,46 @@ export async function POST(request: Request) {
       );
     }
 
-    const createLimit = await assertCanCreateMockInterview(
-      sessionUser.subscription,
-      sessionUser.id,
-      sessionUser.role === "SuperAdmin"
-    );
-    if (!createLimit.allowed) {
-      return NextResponse.json(
-        { error: createLimit.message, code: createLimit.code },
-        { status: 429 }
+    // Coupon-credit users spend one credit per interview; plan users keep the trial/daily rules.
+    let refundCredit: (() => Promise<void>) | null = null;
+    if (access.via === "credits") {
+      const consumed = await consumeFeatureCredit(sessionUser.id, "mockInterview");
+      if ("error" in consumed) {
+        return consumed.error;
+      }
+      refundCredit = consumed.refund;
+    } else {
+      const createLimit = await assertCanCreateMockInterview(
+        sessionUser.subscription,
+        sessionUser.id,
+        sessionUser.role === "SuperAdmin"
       );
+      if (!createLimit.allowed) {
+        return NextResponse.json(
+          { error: createLimit.message, code: createLimit.code },
+          { status: 429 }
+        );
+      }
     }
 
     await connectDB();
-    const interview = await AiMockInterview.create({
-      userId: sessionUser.id,
-      showToUser: true,
-      languages,
-      framework,
-      role,
-      seniority,
-      focusAreas,
-      notes,
-      status: "created",
-    });
+    let interview;
+    try {
+      interview = await AiMockInterview.create({
+        userId: sessionUser.id,
+        showToUser: true,
+        languages,
+        framework,
+        role,
+        seniority,
+        focusAreas,
+        notes,
+        status: "created",
+      });
+    } catch (error) {
+      await refundCredit?.();
+      throw error;
+    }
 
     return NextResponse.json({
       interview: { id: interview._id.toString() },

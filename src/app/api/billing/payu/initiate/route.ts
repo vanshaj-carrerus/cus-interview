@@ -30,6 +30,7 @@ import {
   checkCouponForCheckout,
   claimCouponUse,
   getCouponPlanPeriodEnd,
+  grantCouponCredits,
   normalizeCouponCode,
   recordCouponRedemption,
   type CouponCheckResult,
@@ -83,7 +84,11 @@ async function activateFreeCheckout({
 
   const txnid = `free${Date.now()}${Math.floor(Math.random() * 1000)}`;
 
-  if (target.type === "plan") {
+  if (coupon.discountType === "credits") {
+    // Credits coupon: no plan, just free uses of specific features.
+    await user.save();
+    await grantCouponCredits(user._id.toString(), coupon);
+  } else if (target.type === "plan") {
     const periodEnd = getCouponPlanPeriodEnd(coupon, target.id);
     user.billingPlanId = target.id;
     user.subscribedAt = new Date();
@@ -130,7 +135,10 @@ async function activateFreeCheckout({
 
   return NextResponse.json({
     free: true,
-    redirectUrl: `/pricing/success?type=${target.type}&product=${target.id}`,
+    redirectUrl:
+      coupon.discountType === "credits"
+        ? "/pricing/success?type=credits"
+        : `/pricing/success?type=${target.type}&product=${target.id}`,
   });
 }
 

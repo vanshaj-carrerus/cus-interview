@@ -1,12 +1,27 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
-import { getMockInterviewQuota } from "@/lib/billing/mock-interview-quota";
-import { getPlatformAccessSession } from "@/lib/billing/require-platform-access";
+import { getMockInterviewQuota, type MockInterviewQuota } from "@/lib/billing/mock-interview-quota";
+import type { PublicUser } from "@/types/auth";
+import { getFeatureAccessSession } from "@/lib/billing/feature-credits";
 import { AiMockInterview } from "@/models/AiMockInterview";
+
+/** Coupon-credit users see their credit balance in place of the daily trial quota. */
+async function getQuota(via: "plan" | "credits", user: PublicUser): Promise<MockInterviewQuota> {
+  const credits = user.subscription.featureCredits?.mockInterview;
+  if (via === "credits" && credits) {
+    return {
+      dailyLimit: credits.total,
+      usedToday: credits.total - credits.remaining,
+      remainingToday: credits.remaining,
+      unlimited: false,
+    };
+  }
+  return getMockInterviewQuota(user.subscription, user.id, user.role === "SuperAdmin");
+}
 
 export async function GET() {
   try {
-    const access = await getPlatformAccessSession();
+    const access = await getFeatureAccessSession("mockInterview");
     if ("error" in access) {
       return access.error;
     }
@@ -43,7 +58,7 @@ export async function GET() {
 
     return NextResponse.json({
       interviews: rows,
-      quota: await getMockInterviewQuota(sessionUser.subscription, sessionUser.id, sessionUser.role === "SuperAdmin"),
+      quota: await getQuota(access.via, sessionUser),
     });
   } catch (error) {
     console.error("mock-interviews/ai-mock/history", error);

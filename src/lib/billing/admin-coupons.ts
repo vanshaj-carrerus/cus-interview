@@ -1,11 +1,32 @@
 import { connectDB } from "@/lib/mongodb";
 import { Coupon, COUPON_DISCOUNT_TYPES, type CouponDiscountType } from "@/models/Coupon";
+import { CouponRedemption } from "@/models/CouponRedemption";
+import { User } from "@/models/User";
 import {
   COUPON_PRODUCT_IDS,
   describeCoupon,
   isValidCouponCode,
   normalizeCouponCode,
 } from "@/lib/billing/coupons";
+
+export type AdminCouponRedemption = {
+  id: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  productId: string;
+  amountPaid: number;
+  discountAmount: number;
+  usedAt: string;
+  /** User's current coupon free-uses balance (credits coupons), or null if none. */
+  creditUsage: {
+    mockInterviewUsed: number;
+    mockInterviewTotal: number;
+    resumeAnalyzerUsed: number;
+    resumeAnalyzerTotal: number;
+    expiresAt: string | null;
+  } | null;
+};
 
 export type AdminCouponRecord = {
   id: string;
@@ -14,6 +35,8 @@ export type AdminCouponRecord = {
   discountType: CouponDiscountType;
   discountValue: number;
   freeAccessDays: number | null;
+  mockInterviewCredits: number;
+  resumeAnalyzerCredits: number;
   appliesTo: string[];
   validFrom: string | null;
   expiresAt: string | null;
@@ -23,6 +46,7 @@ export type AdminCouponRecord = {
   isActive: boolean;
   label: string;
   createdAt: string;
+  redemptions: AdminCouponRedemption[];
 };
 
 export type CouponInput = {
@@ -31,6 +55,8 @@ export type CouponInput = {
   discountType: CouponDiscountType;
   discountValue: number;
   freeAccessDays: number | null;
+  mockInterviewCredits: number;
+  resumeAnalyzerCredits: number;
   appliesTo: string[];
   validFrom: Date | null;
   expiresAt: Date | null;
@@ -45,7 +71,50 @@ function toIso(value?: Date | null): string | null {
 
 export async function getAdminCoupons(): Promise<AdminCouponRecord[]> {
   await connectDB();
-  const coupons = await Coupon.find().sort({ createdAt: -1 }).lean();
+  const [coupons, redemptions] = await Promise.all([
+    Coupon.find().sort({ createdAt: -1 }).lean(),
+    CouponRedemption.find().sort({ createdAt: -1 }).lean(),
+  ]);
+
+  const userIds = [...new Set(redemptions.map((r) => r.userId.toString()))];
+  const users = await User.find({ _id: { $in: userIds } })
+    .select({ name: 1, firstName: 1, lastName: 1, email: 1, featureCredits: 1 })
+    .lean();
+  const userById = new Map(users.map((u) => [u._id.toString(), u]));
+
+  const redemptionsByCoupon = new Map<string, AdminCouponRedemption[]>();
+  for (const r of redemptions) {
+    const user = userById.get(r.userId.toString());
+    const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(" ");
+    const credits = user?.featureCredits;
+    const hasCredits =
+      (credits?.mockInterviewTotal ?? 0) > 0 || (credits?.resumeAnalyzerTotal ?? 0) > 0;
+    const list = redemptionsByCoupon.get(r.couponId.toString()) ?? [];
+    list.push({
+      id: r._id.toString(),
+      userId: r.userId.toString(),
+      userName: user?.name || fullName || "Deleted user",
+      userEmail: user?.email ?? "",
+      productId: r.productId,
+      amountPaid: r.amountPaid,
+      discountAmount: r.discountAmount,
+      usedAt: toIso(r.createdAt as Date) ?? "",
+      creditUsage:
+        credits && hasCredits
+          ? {
+              mockInterviewUsed:
+                (credits.mockInterviewTotal ?? 0) - (credits.mockInterviewRemaining ?? 0),
+              mockInterviewTotal: credits.mockInterviewTotal ?? 0,
+              resumeAnalyzerUsed:
+                (credits.resumeAnalyzerTotal ?? 0) - (credits.resumeAnalyzerRemaining ?? 0),
+              resumeAnalyzerTotal: credits.resumeAnalyzerTotal ?? 0,
+              expiresAt: toIso(credits.expiresAt),
+            }
+          : null,
+    });
+    redemptionsByCoupon.set(r.couponId.toString(), list);
+  }
+
   return coupons.map((coupon) => ({
     id: coupon._id.toString(),
     code: coupon.code,
@@ -53,6 +122,8 @@ export async function getAdminCoupons(): Promise<AdminCouponRecord[]> {
     discountType: coupon.discountType,
     discountValue: coupon.discountValue ?? 0,
     freeAccessDays: coupon.freeAccessDays ?? null,
+    mockInterviewCredits: coupon.mockInterviewCredits ?? 0,
+    resumeAnalyzerCredits: coupon.resumeAnalyzerCredits ?? 0,
     appliesTo: coupon.appliesTo ?? [],
     validFrom: toIso(coupon.validFrom),
     expiresAt: toIso(coupon.expiresAt),
@@ -62,6 +133,7 @@ export async function getAdminCoupons(): Promise<AdminCouponRecord[]> {
     isActive: coupon.isActive ?? true,
     label: describeCoupon(coupon),
     createdAt: toIso(coupon.createdAt as Date) ?? new Date().toISOString(),
+    redemptions: redemptionsByCoupon.get(coupon._id.toString()) ?? [],
   }));
 }
 
@@ -96,6 +168,8 @@ export function parseCouponInput(
 
   let discountValue = 0;
   let freeAccessDays: number | null = null;
+  let mockInterviewCredits = 0;
+  let resumeAnalyzerCredits = 0;
   if (discountType === "percent") {
     discountValue = Number(body.discountValue);
     if (!Number.isFinite(discountValue) || discountValue <= 0 || discountValue > 100) {
@@ -109,9 +183,25 @@ export function parseCouponInput(
   } else {
     const days = parseOptionalPositiveInt(body.freeAccessDays);
     if (days === "invalid") {
-      return { ok: false, error: "Free access days must be a whole number, or empty for lifetime." };
+      return {
+        ok: false,
+        error: "Days must be a whole number, or empty for lifetime / no expiry.",
+      };
     }
     freeAccessDays = days;
+  }
+
+  if (discountType === "credits") {
+    const mock = Number(body.mockInterviewCredits || 0);
+    const resume = Number(body.resumeAnalyzerCredits || 0);
+    if (!Number.isInteger(mock) || !Number.isInteger(resume) || mock < 0 || resume < 0) {
+      return { ok: false, error: "Free uses must be whole numbers." };
+    }
+    if (mock === 0 && resume === 0) {
+      return { ok: false, error: "Give at least one free mock interview or resume analysis." };
+    }
+    mockInterviewCredits = mock;
+    resumeAnalyzerCredits = resume;
   }
 
   const appliesTo = Array.isArray(body.appliesTo)
@@ -148,6 +238,8 @@ export function parseCouponInput(
       discountType,
       discountValue,
       freeAccessDays,
+      mockInterviewCredits,
+      resumeAnalyzerCredits,
       appliesTo,
       validFrom,
       expiresAt,

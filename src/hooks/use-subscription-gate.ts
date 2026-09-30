@@ -2,14 +2,23 @@
 
 import { useCallback, useState } from "react";
 import { useAuth } from "@/components/providers/auth-provider";
+import type { CreditFeature } from "@/types/auth";
 
-export function useSubscriptionGate() {
+/**
+ * Pass `feature` on pages a coupon's free uses unlock (mock interview, resume analyzer):
+ * users with credits left for it get through without a plan.
+ */
+export function useSubscriptionGate(feature?: CreditFeature) {
   const { user, loading } = useAuth();
   const [paywallOpen, setPaywallOpen] = useState(false);
 
+  const featureCredits =
+    feature ? user?.subscription.featureCredits?.[feature] ?? null : null;
+
+  const hasPlan =
+    user?.role === "SuperAdmin" || Boolean(user?.subscription.hasPlatformAccess);
   const hasPlatformAccess =
-    user?.role === "SuperAdmin" ||
-    Boolean(user?.subscription.hasPlatformAccess);
+    hasPlan || Boolean(featureCredits && featureCredits.total > 0);
 
   const closePaywall = useCallback(() => setPaywallOpen(false), []);
 
@@ -53,6 +62,10 @@ export function useSubscriptionGate() {
     checkAccess,
     gatedNavigate,
     hasPlatformAccess,
+    /** Full plan (or admin), as opposed to access through coupon free uses only. */
+    hasPlan,
+    /** Coupon free uses for `feature`, when the user has any. */
+    featureCredits,
     loading,
   };
 }

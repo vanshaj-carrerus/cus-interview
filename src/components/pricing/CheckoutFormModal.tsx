@@ -82,6 +82,8 @@ export default function CheckoutFormModal({
 
   const summary = getProductSummary(target);
   const isFreeCheckout = couponQuote?.isFree ?? false;
+  // Credits coupons give free uses of some features, not the plan itself.
+  const isCreditsCoupon = couponQuote?.discountType === "credits";
 
   async function applyCoupon() {
     const code = couponInput.trim().toUpperCase();
@@ -345,13 +347,17 @@ export default function CheckoutFormModal({
                 <p className="mt-1 text-xs text-slate-500">
                   +{GST_RATE * 100}% GST
                 </p>
-                {couponQuote ? (
+                {couponQuote && !isCreditsCoupon ? (
                   <p className="mt-1 text-xs font-medium text-emerald-700">
                     Coupon: −{formatInrAmount(couponQuote.discountAmount)}
                   </p>
                 ) : null}
                 <p className="mt-2 text-xs leading-relaxed text-slate-400">
-                  {isFreeCheckout ? "No payment needed with this coupon." : summary.note}
+                  {isCreditsCoupon
+                    ? `You get ${couponQuote?.label}. The plan itself is not included — buy it any time for unlimited access.`
+                    : isFreeCheckout
+                      ? "No payment needed with this coupon."
+                      : summary.note}
                 </p>
               </div>
               <div className="text-right">
@@ -421,7 +427,9 @@ export default function CheckoutFormModal({
               ? isFreeCheckout
                 ? "Activating…"
                 : "Opening PayU…"
-              : isFreeCheckout
+              : isCreditsCoupon
+                ? "Redeem Free Uses"
+                : isFreeCheckout
                 ? "Activate for Free"
                 : "Proceed to Secure Payment"}
           </button>

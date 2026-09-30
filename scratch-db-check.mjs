@@ -1,0 +1,13 @@
+import mongoose from "mongoose";
+import fs from "fs";
+const env = fs.readFileSync(".env", "utf8");
+const uri = env.match(/^\s*MONGODB_URI\s*=\s*(.+)$/m)[1].trim().replace(/^["']|["']$/g, "");
+await mongoose.connect(uri);
+const db = mongoose.connection.db;
+const coupons = await db.collection("coupons").find({}, { projection: { code: 1, discountType: 1, discountValue: 1, freeAccessDays: 1, appliesTo: 1, usedCount: 1, isActive: 1, expiresAt: 1 } }).toArray();
+console.log("COUPONS", JSON.stringify(coupons, null, 1));
+const users = await db.collection("users").find({ updatedAt: { $gte: new Date(Date.now() - 3 * 864e5) }, billingPlanId: { $exists: true } }, { projection: { email: 1, billingPlanId: 1, planAmount: 1, subscriptionStatus: 1, appliedCouponCode: 1, updatedAt: 1 } }).sort({ updatedAt: -1 }).limit(5).toArray();
+console.log("RECENT USERS", JSON.stringify(users, null, 1));
+const payments = await db.collection("payments").find({ createdAt: { $gte: new Date(Date.now() - 3 * 864e5) } }, { projection: { productId: 1, amount: 1, couponCode: 1, status: 1, createdAt: 1 } }).sort({ createdAt: -1 }).limit(5).toArray();
+console.log("RECENT PAYMENTS", JSON.stringify(payments, null, 1));
+await mongoose.disconnect();

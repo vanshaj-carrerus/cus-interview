@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
-import { getPlatformAccessSession } from "@/lib/billing/require-platform-access";
+import { getFeatureAccessSession } from "@/lib/billing/feature-credits";
 import { AiMockInterview } from "@/models/AiMockInterview";
 import { runMockInterviewPrompt } from "@/lib/ai/mock-interview-engine";
 
@@ -40,7 +40,7 @@ Return JSON only:
 
 export async function POST(request: Request, context: Context) {
   try {
-    const access = await getPlatformAccessSession();
+    const access = await getFeatureAccessSession("mockInterview");
     if ("error" in access) {
       return access.error;
     }

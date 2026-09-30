@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { Fragment, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import type { AdminCouponRecord } from "@/lib/billing/admin-coupons";
 import { HUMAN_SERVICES, HUMAN_SERVICE_IDS } from "@/lib/billing/human-services";
@@ -31,6 +31,8 @@ type FormState = {
   discountType: DiscountType;
   discountValue: string;
   freeAccessDays: string;
+  mockInterviewCredits: string;
+  resumeAnalyzerCredits: string;
   appliesTo: string[];
   validFrom: string;
   expiresAt: string;
@@ -44,6 +46,8 @@ const EMPTY_FORM: FormState = {
   discountType: "percent",
   discountValue: "",
   freeAccessDays: "30",
+  mockInterviewCredits: "10",
+  resumeAnalyzerCredits: "5",
   appliesTo: [],
   validFrom: "",
   expiresAt: "",
@@ -93,6 +97,7 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
   const [saving, setSaving] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [openUsageId, setOpenUsageId] = useState<string | null>(null);
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -117,6 +122,8 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
       discountType: coupon.discountType,
       discountValue: coupon.discountValue ? String(coupon.discountValue) : "",
       freeAccessDays: coupon.freeAccessDays ? String(coupon.freeAccessDays) : "",
+      mockInterviewCredits: String(coupon.mockInterviewCredits),
+      resumeAnalyzerCredits: String(coupon.resumeAnalyzerCredits),
       appliesTo: coupon.appliesTo,
       validFrom: toDateInput(coupon.validFrom),
       expiresAt: toDateInput(coupon.expiresAt),
@@ -228,12 +235,40 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
               <option value="percent">% off</option>
               <option value="flat">Flat ₹ off</option>
               <option value="free">Free access</option>
+              <option value="credits">Free uses (mock interviews / resume)</option>
             </select>
           </div>
 
-          {form.discountType === "free" ? (
+          {form.discountType === "credits" ? (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className={LABEL_CLASS}>Free mock interviews</label>
+                <input
+                  type="number"
+                  min={0}
+                  value={form.mockInterviewCredits}
+                  onChange={(event) => update("mockInterviewCredits", event.target.value)}
+                  className={INPUT_CLASS}
+                />
+              </div>
+              <div>
+                <label className={LABEL_CLASS}>Free resume analyses</label>
+                <input
+                  type="number"
+                  min={0}
+                  value={form.resumeAnalyzerCredits}
+                  onChange={(event) => update("resumeAnalyzerCredits", event.target.value)}
+                  className={INPUT_CLASS}
+                />
+              </div>
+            </div>
+          ) : null}
+
+          {form.discountType === "free" || form.discountType === "credits" ? (
             <div>
-              <label className={LABEL_CLASS}>Free access for</label>
+              <label className={LABEL_CLASS}>
+                {form.discountType === "credits" ? "Free uses valid for" : "Free access for"}
+              </label>
               <div className="mt-1 flex flex-wrap gap-1.5">
                 {FREE_DURATION_PRESETS.map((preset) => (
                   <button
@@ -246,7 +281,7 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
                         : "border-primary/20 text-secondary/70 hover:border-primary"
                     }`}
                   >
-                    {preset.label}
+                    {form.discountType === "credits" && preset.days === "" ? "No expiry" : preset.label}
                   </button>
                 ))}
               </div>
@@ -255,7 +290,7 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
                 min={1}
                 value={form.freeAccessDays}
                 onChange={(event) => update("freeAccessDays", event.target.value)}
-                placeholder="Days (empty = lifetime)"
+                placeholder={form.discountType === "credits" ? "Days (empty = no expiry)" : "Days (empty = lifetime)"}
                 className={INPUT_CLASS}
               />
             </div>
@@ -399,8 +434,10 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
             ) : (
               coupons.map((coupon) => {
                 const state = couponState(coupon);
+                const usageOpen = openUsageId === coupon.id;
                 return (
-                  <tr key={coupon.id} className="border-b border-primary/5 text-sm text-secondary">
+                  <Fragment key={coupon.id}>
+                  <tr className="border-b border-primary/5 text-sm text-secondary">
                     <td className="px-3 py-3">
                       <p className="font-mono font-semibold">{coupon.code}</p>
                       {coupon.description ? (
@@ -418,6 +455,15 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
                       {coupon.usedCount}
                       {coupon.maxUses != null ? ` / ${coupon.maxUses}` : ""}
                       <span className="block text-secondary/50">{coupon.perUserLimit}× per user</span>
+                      {coupon.redemptions.length > 0 ? (
+                        <button
+                          type="button"
+                          onClick={() => setOpenUsageId(usageOpen ? null : coupon.id)}
+                          className="mt-1 font-semibold text-primary hover:underline"
+                        >
+                          {usageOpen ? "Hide users" : `View users (${coupon.redemptions.length})`}
+                        </button>
+                      ) : null}
                     </td>
                     <td className="px-3 py-3">
                       <span
@@ -453,6 +499,76 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
                       </button>
                     </td>
                   </tr>
+                  {usageOpen ? (() => {
+                    const isCredits = coupon.discountType === "credits";
+                    return (
+                    <tr className="border-b border-primary/5 bg-primary/[0.02]">
+                      <td colSpan={7} className="px-3 py-3">
+                        <table className="w-full text-left text-xs text-secondary">
+                          <thead>
+                            <tr className="text-[10px] font-semibold uppercase tracking-wider text-secondary/50">
+                              <th className="px-2 py-1.5">User</th>
+                              <th className="px-2 py-1.5">Email</th>
+                              {isCredits ? (
+                                <>
+                                  <th className="px-2 py-1.5">AI mock interviews used</th>
+                                  <th className="px-2 py-1.5">Resume analyses used</th>
+                                  <th className="px-2 py-1.5">Free uses expire</th>
+                                </>
+                              ) : (
+                                <>
+                                  <th className="px-2 py-1.5">Used on</th>
+                                  <th className="px-2 py-1.5">Discount</th>
+                                  <th className="px-2 py-1.5">Paid</th>
+                                </>
+                              )}
+                              <th className="px-2 py-1.5">Date</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {coupon.redemptions.map((r) => (
+                              <tr key={r.id} className="border-t border-primary/5">
+                                <td className="px-2 py-1.5 font-medium">{r.userName}</td>
+                                <td className="px-2 py-1.5">{r.userEmail || "—"}</td>
+                                {isCredits ? (
+                                  <>
+                                    <td className="px-2 py-1.5">
+                                      {r.creditUsage
+                                        ? `${r.creditUsage.mockInterviewUsed} / ${r.creditUsage.mockInterviewTotal}`
+                                        : "—"}
+                                    </td>
+                                    <td className="px-2 py-1.5">
+                                      {r.creditUsage
+                                        ? `${r.creditUsage.resumeAnalyzerUsed} / ${r.creditUsage.resumeAnalyzerTotal}`
+                                        : "—"}
+                                    </td>
+                                    <td className="px-2 py-1.5">
+                                      {r.creditUsage
+                                        ? r.creditUsage.expiresAt
+                                          ? formatDate(r.creditUsage.expiresAt)
+                                          : "No expiry"
+                                        : "—"}
+                                    </td>
+                                  </>
+                                ) : (
+                                  <>
+                                    <td className="px-2 py-1.5">{productLabel([r.productId])}</td>
+                                    <td className="px-2 py-1.5">₹{r.discountAmount.toLocaleString("en-IN")}</td>
+                                    <td className="px-2 py-1.5">
+                                      {r.amountPaid === 0 ? "Free" : `₹${r.amountPaid.toLocaleString("en-IN")}`}
+                                    </td>
+                                  </>
+                                )}
+                                <td className="px-2 py-1.5">{formatDate(r.usedAt || null)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </td>
+                    </tr>
+                    );
+                  })() : null}
+                  </Fragment>
                 );
               })
             )}

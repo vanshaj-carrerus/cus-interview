@@ -27,6 +27,7 @@ export default function PricingSuccessContent() {
     isHumanServiceId(productId);
   const isPlan =
     purchaseType === "plan" && productId && isBillingPlanId(productId);
+  const isCredits = purchaseType === "credits";
   const serviceName = isService ? HUMAN_SERVICES[productId].name : null;
   const planLabel = isPlan ? PRICING_PLANS[productId].priceDisplay : null;
   const planTotalWithGst =
@@ -43,13 +44,18 @@ export default function PricingSuccessContent() {
           className="text-xs font-semibold uppercase tracking-wider"
           style={{ color: BRAND_BLUE }}
         >
-          Payment successful
+          {isCredits ? "Coupon applied" : "Payment successful"}
         </p>
         <h1 className="mt-3 text-2xl font-bold text-slate-900">
           You&apos;re all set
         </h1>
         <p className="mt-3 text-sm leading-relaxed text-slate-500">
-          {isService ? (
+          {isCredits ? (
+            <>
+              Your free AI mock interviews and resume analyses are ready to use.
+              When they run out, pick a plan for unlimited access.
+            </>
+          ) : isService ? (
             <>
               Your <span className="font-medium text-slate-700">{serviceName}</span>{" "}
               booking is confirmed. Our team will contact you within 24 hours to
@@ -72,11 +78,11 @@ export default function PricingSuccessContent() {
           )}
         </p>
         <Link
-          href={isService ? "/contact" : "/practice"}
+          href={isService ? "/contact" : isCredits ? "/dashboard" : "/practice"}
           className="mt-8 inline-flex rounded-xl px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90"
           style={{ backgroundColor: BRAND_BLUE }}
         >
-          {isService ? "Contact us" : "Start practicing"}
+          {isService ? "Contact us" : isCredits ? "Go to dashboard" : "Start practicing"}
         </Link>
       </div>
     </section>

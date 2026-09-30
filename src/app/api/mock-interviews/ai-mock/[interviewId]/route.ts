@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
-import { getPlatformAccessSession } from "@/lib/billing/require-platform-access";
+import { getFeatureAccessSession } from "@/lib/billing/feature-credits";
 import { AiMockInterview } from "@/models/AiMockInterview";
 
 type Context = {
@@ -9,7 +9,7 @@ type Context = {
 
 export async function GET(_: Request, context: Context) {
   try {
-    const access = await getPlatformAccessSession();
+    const access = await getFeatureAccessSession("mockInterview");
     if ("error" in access) {
       return access.error;
     }
@@ -53,7 +53,7 @@ export async function GET(_: Request, context: Context) {
 
 export async function DELETE(_: Request, context: Context) {
   try {
-    const access = await getPlatformAccessSession();
+    const access = await getFeatureAccessSession("mockInterview");
     if ("error" in access) {
       return access.error;
     }

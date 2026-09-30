@@ -8,6 +8,14 @@ export type SubscriptionStatus =
   | "canceled"
   | "unpaid";
 
+export type CreditFeature = "mockInterview" | "resumeAnalyzer";
+
+export type PublicFeatureCredits = {
+  mockInterview: { remaining: number; total: number };
+  resumeAnalyzer: { remaining: number; total: number };
+  expiresAt: string | null;
+};
+
 export type PublicSubscription = {
   status: SubscriptionStatus;
   trialEndsAt: string | null;
@@ -19,6 +27,8 @@ export type PublicSubscription = {
   isTrialing: boolean;
   /** `1` during trial, `null` when unlimited (active paid plan). */
   mockInterviewsDailyLimit: number | null;
+  /** Coupon free uses, or null when none / expired. */
+  featureCredits: PublicFeatureCredits | null;
 };
 
 export type PublicUser = {

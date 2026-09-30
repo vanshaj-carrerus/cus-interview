@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { improveResumeWithAi } from "@/lib/ai/resume-actions-engine";
-import { getPlatformAccessSession } from "@/lib/billing/require-platform-access";
+import { getFeatureAccessSession } from "@/lib/billing/feature-credits";
 import {
   ACCEPTED_FILE_TYPES,
   MAX_FILE_SIZE_BYTES,
@@ -14,7 +14,7 @@ export const maxDuration = 60;
 
 export async function POST(request: Request) {
   try {
-    const access = await getPlatformAccessSession();
+    const access = await getFeatureAccessSession("resumeAnalyzer");
     if ("error" in access) {
       return access.error;
     }
