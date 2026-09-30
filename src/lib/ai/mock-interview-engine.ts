@@ -15,25 +15,45 @@ async function tryGemini<T>(prompt: string): Promise<EngineResult<T>> {
     throw new Error("GEMINI_API_KEY is not configured.");
   }
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-  const model = genAI.getGenerativeModel({
-    model: "gemini-2.0-flash",
-    generationConfig: { responseMimeType: "application/json" },
-  });
-  const result = await model.generateContent(prompt);
-  return {
-    data: parseJsonSafely<T>(result.response.text()),
-    model: "gemini-2.0-flash",
-  };
+  // gemini-flash-lite-latest is Google's auto-updating alias (LTS anchor) — it keeps
+  // pointing at a current Flash Lite model so this entry shouldn't need updating.
+  const models = [
+    "gemini-flash-lite-latest",
+    "gemini-3.5-flash-lite",
+    "gemini-3.1-flash-lite",
+    "gemini-3.8-flash",
+  ];
+
+  for (const modelId of models) {
+    try {
+      const model = genAI.getGenerativeModel({
+        model: modelId,
+        generationConfig: { responseMimeType: "application/json" },
+      });
+      const result = await model.generateContent(prompt);
+      return {
+        data: parseJsonSafely<T>(result.response.text()),
+        model: `gemini-${modelId}`,
+      };
+    } catch {
+      // try next model
+    }
+  }
+
+  throw new Error("Gemini chain exhausted.");
 }
 
 async function tryGroqChain<T>(prompt: string): Promise<EngineResult<T>> {
   if (!process.env.GROQ_API_KEY) {
     throw new Error("GROQ_API_KEY is not configured.");
   }
+  // openai/gpt-oss-20b is the LTS anchor (undated open-weight id, currently working on
+  // this org's key). The rest need enabling at console.groq.com/settings/limits.
   const models = [
-    "llama-3.3-70b-versatile",
-    "mixtral-8x7b-32768",
-    "llama-3.1-8b-instant",
+    "openai/gpt-oss-20b",
+    "openai/gpt-oss-120b",
+    "qwen/qwen3.8-27b",
+    "qwen/qwen3.6-27b",
   ];
 
   for (const modelId of models) {
@@ -115,7 +135,14 @@ async function tryOpenRouter<T>(prompt: string): Promise<EngineResult<T>> {
   if (!process.env.OPENROUTER_API_KEY) {
     throw new Error("OPENROUTER_API_KEY is not configured.");
   }
-  const models = ["google/gemma-4-26b-a4b-it:free", "google/gemma-4-31b-it:free", "nousresearch/hermes-3-llama-3.1-405b:free"];
+  // minimax/minimax-m3:free is the heaviest-used free model on OpenRouter (most likely
+  // to stay in the catalog long-term) — treated as the LTS anchor for this chain.
+  const models = [
+    "minimax/minimax-m3:free",
+    "nvidia/nemotron-3.5-lightning:free",
+    "z-ai/glm-5.2:free",
+    "google/gemma-4-31b-it:free",
+  ];
   for (const modelId of models) {
     try {
       const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {

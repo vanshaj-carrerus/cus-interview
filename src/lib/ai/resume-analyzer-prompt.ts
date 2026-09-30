@@ -19,10 +19,13 @@ async function tryGroq<T>(prompt: string): Promise<EngineResult<T>> {
   if (!process.env.GROQ_API_KEY) {
     throw new Error("GROQ_API_KEY is not configured.");
   }
+  // openai/gpt-oss-20b is the LTS anchor (undated open-weight id, currently working on
+  // this org's key). The rest need enabling at console.groq.com/settings/limits.
   const models = [
-    "llama-3.3-70b-versatile",
-    "llama-3.1-8b-instant",
-    "mixtral-8x7b-32768",
+    "openai/gpt-oss-20b",
+    "openai/gpt-oss-120b",
+    "qwen/qwen3.8-27b",
+    "qwen/qwen3.6-27b",
   ];
 
   for (const modelId of models) {
