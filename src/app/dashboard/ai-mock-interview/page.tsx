@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import AiMockSetupStepForm from "./ai-mock-setup-step-form";
+import FreeUsesBadge from "@/components/billing/FreeUsesBadge";
 
 export default function DashboardAiMockInterviewPage() {
   return (
@@ -21,6 +22,7 @@ export default function DashboardAiMockInterviewPage() {
             Practice with AI-powered interviews tailored to your role, stack, and seniority.
           </p>
         </div>
+        <FreeUsesBadge feature="mockInterview" />
       </header>
 
       <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col pb-6">

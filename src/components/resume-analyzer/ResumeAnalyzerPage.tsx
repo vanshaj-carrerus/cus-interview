@@ -43,11 +43,10 @@ export default function ResumeAnalyzerPage({
   variant?: "default" | "dashboard";
 }) {
   const isDashboard = variant === "dashboard";
-  const { checkAccess, paywallOpen, closePaywall, openPaywall, featureCredits } =
+  const { checkAccess, paywallOpen, closePaywall, openPaywall, featureCredits, creditLimited } =
     useSubscriptionGate("resumeAnalyzer");
-  const { user, refreshUser } = useAuth();
-  const showCreditsNotice =
-    Boolean(featureCredits) && !user?.subscription.hasPlatformAccess && user?.role !== "SuperAdmin";
+  const { refreshUser } = useAuth();
+  const showCreditsNotice = creditLimited;
   const [phase, setPhase] = useState<PagePhase>("landing");
   const [activeStep, setActiveStep] = useState(0);
   const [report, setReport] = useState<ResumeAnalysisReport | null>(null);
@@ -421,7 +420,6 @@ export default function ResumeAnalyzerPage({
         className="flex min-h-0 flex-1 flex-col"
       >
         {renderProcessingError()}
-        {renderCreditsNotice()}
 
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-sky-500/10 bg-white shadow-sm">
           <div className="grid min-h-0 flex-1 gap-0 lg:grid-cols-[1.15fr_0.85fr]">

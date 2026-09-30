@@ -19,6 +19,12 @@ export function useSubscriptionGate(feature?: CreditFeature) {
     user?.role === "SuperAdmin" || Boolean(user?.subscription.hasPlatformAccess);
   const hasPlatformAccess =
     hasPlan || Boolean(featureCredits && featureCredits.total > 0);
+  /** Uses of `feature` count against coupon credits (no plan, or a capped free-access plan). */
+  const creditLimited =
+    user?.role !== "SuperAdmin" &&
+    Boolean(featureCredits && featureCredits.total > 0) &&
+    (!user?.subscription.hasPlatformAccess ||
+      Boolean(user?.subscription.featureCredits?.planLimited));
 
   const closePaywall = useCallback(() => setPaywallOpen(false), []);
 
@@ -66,6 +72,7 @@ export function useSubscriptionGate(feature?: CreditFeature) {
     hasPlan,
     /** Coupon free uses for `feature`, when the user has any. */
     featureCredits,
+    creditLimited,
     loading,
   };
 }

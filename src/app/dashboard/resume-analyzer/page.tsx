@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import ResumeAnalyzerPage from "@/components/resume-analyzer/ResumeAnalyzerPage";
+import FreeUsesBadge from "@/components/billing/FreeUsesBadge";
 
 export default function DashboardResumeAnalyzerPage() {
   return (
@@ -21,6 +22,7 @@ export default function DashboardResumeAnalyzerPage() {
             ATS scoring, keyword gaps, and AI-powered tips — upload a PDF or DOCX to start.
           </p>
         </div>
+        <FreeUsesBadge feature="resumeAnalyzer" />
       </header>
 
       <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col pb-4">

@@ -69,22 +69,38 @@ type DescribableCoupon = Pick<
   | "resumeAnalyzerCredits"
 >;
 
+function describeCreditParts(coupon: DescribableCoupon): string[] {
+  const parts: string[] = [];
+  if (coupon.mockInterviewCredits) {
+    parts.push(`${coupon.mockInterviewCredits} AI mock interview${coupon.mockInterviewCredits === 1 ? "" : "s"}`);
+  }
+  if (coupon.resumeAnalyzerCredits) {
+    parts.push(`${coupon.resumeAnalyzerCredits} resume analys${coupon.resumeAnalyzerCredits === 1 ? "is" : "es"}`);
+  }
+  return parts;
+}
+
+/** Free-access coupon that caps mock interviews and/or resume analyses. */
+export function hasPlanLimits(
+  coupon: Pick<CouponDocument, "discountType" | "mockInterviewCredits" | "resumeAnalyzerCredits">
+): boolean {
+  return (
+    coupon.discountType === "free" &&
+    ((coupon.mockInterviewCredits ?? 0) > 0 || (coupon.resumeAnalyzerCredits ?? 0) > 0)
+  );
+}
+
 export function describeCoupon(coupon: DescribableCoupon): string {
   if (coupon.discountType === "credits") {
-    const parts: string[] = [];
-    if (coupon.mockInterviewCredits) {
-      parts.push(`${coupon.mockInterviewCredits} AI mock interview${coupon.mockInterviewCredits === 1 ? "" : "s"}`);
-    }
-    if (coupon.resumeAnalyzerCredits) {
-      parts.push(`${coupon.resumeAnalyzerCredits} resume analys${coupon.resumeAnalyzerCredits === 1 ? "is" : "es"}`);
-    }
     const validity = coupon.freeAccessDays ? ` (valid ${coupon.freeAccessDays} days)` : "";
-    return `${parts.join(" + ")} free${validity}`;
+    return `${describeCreditParts(coupon).join(" + ")} free${validity}`;
   }
   if (coupon.discountType === "free") {
-    return coupon.freeAccessDays
+    const base = coupon.freeAccessDays
       ? `Free access for ${coupon.freeAccessDays} days`
       : "Free lifetime access";
+    const limits = describeCreditParts(coupon);
+    return limits.length > 0 ? `${base} (includes ${limits.join(" + ")})` : base;
   }
   if (coupon.discountType === "percent") {
     return `${coupon.discountValue}% off`;

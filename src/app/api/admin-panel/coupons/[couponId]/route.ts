@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import { connectDB } from "@/lib/mongodb";
 import { Coupon } from "@/models/Coupon";
 import { getSessionPublicUser } from "@/lib/get-session-user";
-import { parseCouponInput } from "@/lib/billing/admin-coupons";
+import { parseCouponInput, setCouponGrantsSuspended } from "@/lib/billing/admin-coupons";
 
 export const dynamic = "force-dynamic";
 
@@ -36,7 +36,8 @@ export async function PATCH(request: Request, { params }: Props) {
       if (!updated) {
         return NextResponse.json({ error: "Coupon not found." }, { status: 404 });
       }
-      return NextResponse.json({ ok: true });
+      const affectedUsers = await setCouponGrantsSuspended(updated.code, !body.isActive);
+      return NextResponse.json({ ok: true, affectedUsers });
     }
 
     const parsed = parseCouponInput(body);
@@ -49,7 +50,10 @@ export async function PATCH(request: Request, { params }: Props) {
       return NextResponse.json({ error: "A coupon with this code already exists." }, { status: 409 });
     }
 
-    const updated = await Coupon.findByIdAndUpdate(couponId, parsed.input);
+    // On/off is handled by the toggle above, so an edit never flips it.
+    const { isActive: _ignored, ...editable } = parsed.input;
+    void _ignored;
+    const updated = await Coupon.findByIdAndUpdate(couponId, editable);
     if (!updated) {
       return NextResponse.json({ error: "Coupon not found." }, { status: 404 });
     }
@@ -72,8 +76,9 @@ export async function DELETE(_: Request, { params }: Props) {
     }
 
     await connectDB();
-    await Coupon.findByIdAndDelete(couponId);
-    return NextResponse.json({ ok: true });
+    const deleted = await Coupon.findByIdAndDelete(couponId);
+    const affectedUsers = deleted ? await setCouponGrantsSuspended(deleted.code, true) : 0;
+    return NextResponse.json({ ok: true, affectedUsers });
   } catch (error) {
     console.error("admin-coupons-delete", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

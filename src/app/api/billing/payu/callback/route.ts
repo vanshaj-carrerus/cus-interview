@@ -212,6 +212,8 @@ async function handlePayUCallback(request: Request) {
         trialEndsAt: null,
         cancelAtPeriodEnd: false,
         appliedCouponCode: coupon?.code ?? "",
+        // A paid plan is unlimited — drop caps left over from a free-access coupon.
+        "featureCredits.planLimited": false,
         ...(mihpayid?.trim() ? { payuMandateToken: mihpayid.trim() } : {}),
       },
       $unset: {

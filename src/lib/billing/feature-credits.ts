@@ -11,6 +11,8 @@ export type FeatureCreditsLike = {
   resumeAnalyzerTotal?: number | null;
   expiresAt?: Date | string | null;
   couponCode?: string | null;
+  suspended?: boolean | null;
+  planLimited?: boolean | null;
 };
 
 const REMAINING_FIELD: Record<CreditFeature, string> = {
@@ -27,7 +29,7 @@ const FEATURE_LABEL: Record<CreditFeature, string> = {
 export function toPublicFeatureCredits(
   credits?: FeatureCreditsLike | null
 ): PublicFeatureCredits | null {
-  if (!credits) return null;
+  if (!credits || credits.suspended) return null;
   const mockTotal = credits.mockInterviewTotal ?? 0;
   const resumeTotal = credits.resumeAnalyzerTotal ?? 0;
   if (mockTotal <= 0 && resumeTotal <= 0) return null;
@@ -45,7 +47,20 @@ export function toPublicFeatureCredits(
       total: resumeTotal,
     },
     expiresAt: expiresAt ? expiresAt.toISOString() : null,
+    planLimited: Boolean(credits.planLimited),
   };
+}
+
+/**
+ * True when this user's use of `feature` is counted against coupon credits:
+ * either they have no plan (free-uses coupon), or their free-access coupon capped it.
+ */
+export function isFeatureCreditLimited(user: PublicUser, feature: CreditFeature): boolean {
+  if (user.role === "SuperAdmin") return false;
+  const credits = user.subscription.featureCredits;
+  const featureCredits = credits?.[feature];
+  if (!credits || !featureCredits || featureCredits.total <= 0) return false;
+  return !user.subscription.hasPlatformAccess || credits.planLimited;
 }
 
 function hasFullAccess(user: PublicUser): boolean {
@@ -78,16 +93,15 @@ export async function getFeatureAccessSession(
     return { error: NextResponse.json({ error: "Unauthorized." }, { status: 401 }) };
   }
 
+  if (isFeatureCreditLimited(user, feature)) {
+    return { user, via: "credits" };
+  }
+
   if (hasFullAccess(user)) {
     return { user, via: "plan" };
   }
 
-  const credits = user.subscription.featureCredits?.[feature];
-  if (!credits || credits.total <= 0) {
-    return { error: creditsError(feature, false) };
-  }
-
-  return { user, via: "credits" };
+  return { error: creditsError(feature, false) };
 }
 
 /**
@@ -104,6 +118,7 @@ export async function consumeFeatureCredit(
     {
       _id: userId,
       [field]: { $gt: 0 },
+      "featureCredits.suspended": { $ne: true },
       $or: [
         { "featureCredits.expiresAt": null },
         { "featureCredits.expiresAt": { $gt: new Date() } },

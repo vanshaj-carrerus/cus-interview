@@ -153,10 +153,10 @@ export function AiMockSetupForm({
     paywallOpen,
     closePaywall,
     openPaywall,
-    hasPlan,
+    creditLimited,
     featureCredits,
   } = useSubscriptionGate("mockInterview");
-  const onCouponCredits = !hasPlan && Boolean(featureCredits);
+  const onCouponCredits = creditLimited;
   const [trialLimitOpen, setTrialLimitOpen] = useState(false);
   const [mockQuota, setMockQuota] = useState<MockInterviewQuota | null>(null);
   const [languages, setLanguages] = useState<string[]>([]);

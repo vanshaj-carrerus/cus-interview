@@ -14,6 +14,8 @@ export type PublicFeatureCredits = {
   mockInterview: { remaining: number; total: number };
   resumeAnalyzer: { remaining: number; total: number };
   expiresAt: string | null;
+  /** Caps apply on top of an active (free-coupon) plan. */
+  planLimited: boolean;
 };
 
 export type PublicSubscription = {

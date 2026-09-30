@@ -47,6 +47,8 @@ const userSchema = new Schema(
     cancelAtPeriodEnd: { type: Boolean, default: false },
     /** Coupon used for the current plan purchase, if any. */
     appliedCouponCode: { type: String, default: "" },
+    /** True while a free-access coupon's plan is paused because the admin turned the coupon off. */
+    couponAccessSuspended: { type: Boolean, default: false },
     /** Free uses granted by a `credits` coupon (no plan needed for these features). */
     featureCredits: {
       mockInterviewRemaining: { type: Number, default: 0 },
@@ -56,6 +58,10 @@ const userSchema = new Schema(
       /** null = no expiry. */
       expiresAt: { type: Date, default: null },
       couponCode: { type: String, default: "" },
+      /** True while the coupon that granted these is turned off. */
+      suspended: { type: Boolean, default: false },
+      /** Set by a free-access coupon with limits: caps these features even though the plan is active. */
+      planLimited: { type: Boolean, default: false },
     },
     /** PayU mandate token (`mihpayid`) from ₹2 SI registration — used for auto-debit. */
     payuMandateToken: { type: String, sparse: true },

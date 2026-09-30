@@ -31,6 +31,7 @@ import {
   claimCouponUse,
   getCouponPlanPeriodEnd,
   grantCouponCredits,
+  hasPlanLimits,
   normalizeCouponCode,
   recordCouponRedemption,
   type CouponCheckResult,
@@ -98,6 +99,21 @@ async function activateFreeCheckout({
     user.set("trialEndsAt", undefined);
     user.cancelAtPeriodEnd = false;
     user.appliedCouponCode = coupon.code;
+    if (hasPlanLimits(coupon)) {
+      // Full portal, but mock interviews / resume analyses are capped for this free period.
+      const mock = coupon.mockInterviewCredits ?? 0;
+      const resume = coupon.resumeAnalyzerCredits ?? 0;
+      user.set("featureCredits", {
+        mockInterviewRemaining: mock,
+        mockInterviewTotal: mock,
+        resumeAnalyzerRemaining: resume,
+        resumeAnalyzerTotal: resume,
+        expiresAt: periodEnd,
+        couponCode: coupon.code,
+        suspended: false,
+        planLimited: true,
+      });
+    }
     await user.save();
   } else {
     const service = getHumanService(target.id);

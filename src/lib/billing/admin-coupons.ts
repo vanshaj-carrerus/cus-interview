@@ -28,6 +28,37 @@ export type AdminCouponRedemption = {
   } | null;
 };
 
+/**
+ * Turning a coupon off pauses what it gave away for free; turning it on again restores it.
+ * - free-access coupons: users on a ₹0 plan from this code lose (or regain) the plan
+ * - free-uses coupons: users' credits from this code are paused (or resumed)
+ * Paid purchases that used a % / flat discount are never touched.
+ * Returns how many users were affected.
+ */
+export async function setCouponGrantsSuspended(
+  code: string,
+  suspended: boolean
+): Promise<number> {
+  await connectDB();
+
+  const plans = suspended
+    ? await User.updateMany(
+        { appliedCouponCode: code, planAmount: 0, subscriptionStatus: "active" },
+        { $set: { subscriptionStatus: "canceled", couponAccessSuspended: true } }
+      )
+    : await User.updateMany(
+        { appliedCouponCode: code, planAmount: 0, couponAccessSuspended: true },
+        { $set: { subscriptionStatus: "active", couponAccessSuspended: false } }
+      );
+
+  const credits = await User.updateMany(
+    { "featureCredits.couponCode": code },
+    { $set: { "featureCredits.suspended": suspended } }
+  );
+
+  return plans.modifiedCount + credits.modifiedCount;
+}
+
 export type AdminCouponRecord = {
   id: string;
   code: string;
@@ -191,13 +222,14 @@ export function parseCouponInput(
     freeAccessDays = days;
   }
 
-  if (discountType === "credits") {
+  // credits: the free uses themselves. free: optional caps on the plan (0 = unlimited).
+  if (discountType === "credits" || discountType === "free") {
     const mock = Number(body.mockInterviewCredits || 0);
     const resume = Number(body.resumeAnalyzerCredits || 0);
     if (!Number.isInteger(mock) || !Number.isInteger(resume) || mock < 0 || resume < 0) {
-      return { ok: false, error: "Free uses must be whole numbers." };
+      return { ok: false, error: "Limits must be whole numbers." };
     }
-    if (mock === 0 && resume === 0) {
+    if (discountType === "credits" && mock === 0 && resume === 0) {
       return { ok: false, error: "Give at least one free mock interview or resume analysis." };
     }
     mockInterviewCredits = mock;

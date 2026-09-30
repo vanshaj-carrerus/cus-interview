@@ -175,6 +175,18 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
   }
 
   async function toggleActive(coupon: AdminCouponRecord) {
+    const givesFreeAccess =
+      coupon.discountType === "free" || coupon.discountType === "credits";
+    if (
+      coupon.isActive &&
+      givesFreeAccess &&
+      coupon.usedCount > 0 &&
+      !window.confirm(
+        `Turn off ${coupon.code}? Users who got free access from it will lose it until you turn it back on.`
+      )
+    ) {
+      return;
+    }
     setBusyId(coupon.id);
     await fetch(`/api/admin-panel/coupons/${coupon.id}`, {
       method: "PATCH",
@@ -186,7 +198,13 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
   }
 
   async function deleteCoupon(coupon: AdminCouponRecord) {
-    if (!window.confirm(`Delete coupon ${coupon.code}? This cannot be undone.`)) return;
+    const givesFreeAccess =
+      coupon.discountType === "free" || coupon.discountType === "credits";
+    const warning =
+      givesFreeAccess && coupon.usedCount > 0
+        ? " Users who got free access from it will lose it permanently."
+        : "";
+    if (!window.confirm(`Delete coupon ${coupon.code}? This cannot be undone.${warning}`)) return;
     setBusyId(coupon.id);
     await fetch(`/api/admin-panel/coupons/${coupon.id}`, { method: "DELETE" });
     setBusyId(null);
@@ -239,10 +257,12 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
             </select>
           </div>
 
-          {form.discountType === "credits" ? (
+          {form.discountType === "credits" || form.discountType === "free" ? (
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className={LABEL_CLASS}>Free mock interviews</label>
+                <label className={LABEL_CLASS}>
+                  {form.discountType === "free" ? "Mock interview limit (0 = unlimited)" : "Free mock interviews"}
+                </label>
                 <input
                   type="number"
                   min={0}
@@ -252,7 +272,9 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
                 />
               </div>
               <div>
-                <label className={LABEL_CLASS}>Free resume analyses</label>
+                <label className={LABEL_CLASS}>
+                  {form.discountType === "free" ? "Resume analysis limit (0 = unlimited)" : "Free resume analyses"}
+                </label>
                 <input
                   type="number"
                   min={0}
@@ -500,7 +522,10 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
                     </td>
                   </tr>
                   {usageOpen ? (() => {
-                    const isCredits = coupon.discountType === "credits";
+                    const isCredits =
+                      coupon.discountType === "credits" ||
+                      (coupon.discountType === "free" &&
+                        (coupon.mockInterviewCredits > 0 || coupon.resumeAnalyzerCredits > 0));
                     return (
                     <tr className="border-b border-primary/5 bg-primary/[0.02]">
                       <td colSpan={7} className="px-3 py-3">
