@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   buildGoogleAuthUrl,
   getGoogleOAuthConfig,
+  getGoogleRedirectUri,
+  getOAuthOrigin,
   getSafeNextPath,
 } from "@/lib/google-oauth";
 import {
@@ -22,8 +24,9 @@ export async function GET(request: NextRequest) {
   }
 
   const nextPath = getSafeNextPath(request.nextUrl.searchParams.get("next"));
-  const { state, cookieValue } = createGoogleOAuthState(nextPath);
+  const redirectUri = getGoogleRedirectUri(getOAuthOrigin(request));
+  const { state, cookieValue } = createGoogleOAuthState(nextPath, redirectUri);
   await setGoogleOAuthStateCookie(cookieValue);
 
-  return NextResponse.redirect(buildGoogleAuthUrl(state));
+  return NextResponse.redirect(buildGoogleAuthUrl(state, redirectUri));
 }

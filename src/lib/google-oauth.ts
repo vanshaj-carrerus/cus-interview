@@ -19,6 +19,26 @@ export function getAppOrigin(): string {
   return "http://localhost:3000";
 }
 
+/** Origin of the current request — this is what Google must receive as redirect_uri. */
+export function getOAuthOrigin(request: { nextUrl: URL; headers: Headers }): string {
+  const forwardedHost = request.headers.get("x-forwarded-host")?.split(",")[0]?.trim();
+  const forwardedProto = request.headers
+    .get("x-forwarded-proto")
+    ?.split(",")[0]
+    ?.trim();
+
+  if (forwardedHost) {
+    const proto =
+      forwardedProto ||
+      (forwardedHost.startsWith("localhost") || forwardedHost.startsWith("127.0.0.1")
+        ? "http"
+        : "https");
+    return `${proto}://${forwardedHost}`.replace(/\/$/, "");
+  }
+
+  return request.nextUrl.origin.replace(/\/$/, "");
+}
+
 export function getGoogleOAuthConfig(): GoogleOAuthConfig | null {
   const clientId = process.env.GOOGLE_CLIENT_ID?.trim();
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET?.trim();
@@ -26,11 +46,11 @@ export function getGoogleOAuthConfig(): GoogleOAuthConfig | null {
   return { clientId, clientSecret };
 }
 
-export function getGoogleRedirectUri(): string {
-  return `${getAppOrigin()}/api/auth/google/callback`;
+export function getGoogleRedirectUri(origin?: string): string {
+  return `${(origin ?? getAppOrigin()).replace(/\/$/, "")}/api/auth/google/callback`;
 }
 
-export function buildGoogleAuthUrl(state: string): string {
+export function buildGoogleAuthUrl(state: string, redirectUri: string): string {
   const config = getGoogleOAuthConfig();
   if (!config) {
     throw new Error("Google OAuth is not configured.");
@@ -38,7 +58,7 @@ export function buildGoogleAuthUrl(state: string): string {
 
   const url = new URL("https://accounts.google.com/o/oauth2/v2/auth");
   url.searchParams.set("client_id", config.clientId);
-  url.searchParams.set("redirect_uri", getGoogleRedirectUri());
+  url.searchParams.set("redirect_uri", redirectUri);
   url.searchParams.set("response_type", "code");
   url.searchParams.set("scope", "openid email profile");
   url.searchParams.set("state", state);
@@ -47,7 +67,10 @@ export function buildGoogleAuthUrl(state: string): string {
   return url.toString();
 }
 
-export async function exchangeGoogleAuthCode(code: string): Promise<{ access_token: string }> {
+export async function exchangeGoogleAuthCode(
+  code: string,
+  redirectUri: string
+): Promise<{ access_token: string }> {
   const config = getGoogleOAuthConfig();
   if (!config) {
     throw new Error("Google OAuth is not configured.");
@@ -61,7 +84,7 @@ export async function exchangeGoogleAuthCode(code: string): Promise<{ access_tok
       code,
       client_id: config.clientId,
       client_secret: config.clientSecret,
-      redirect_uri: getGoogleRedirectUri(),
+      redirect_uri: redirectUri,
       grant_type: "authorization_code",
     }),
   });

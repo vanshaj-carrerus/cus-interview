@@ -45,6 +45,8 @@ const userSchema = new Schema(
     trialEndsAt: { type: Date },
     currentPeriodEnd: { type: Date },
     cancelAtPeriodEnd: { type: Boolean, default: false },
+    /** Coupon used for the current plan purchase, if any. */
+    appliedCouponCode: { type: String, default: "" },
     /** PayU mandate token (`mihpayid`) from ₹2 SI registration — used for auto-debit. */
     payuMandateToken: { type: String, sparse: true },
     /** @deprecated Alias — kept in sync with payuMandateToken for older records. */

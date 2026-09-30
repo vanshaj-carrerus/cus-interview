@@ -1,6 +1,7 @@
+import type { HydratedDocument } from "mongoose";
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
-import { User } from "@/models/User";
+import { User, type UserDocument } from "@/models/User";
 import { Payment } from "@/models/Payment";
 import { getSessionPublicUser } from "@/lib/get-session-user";
 import { getBillingSetupError } from "@/lib/billing/config";
@@ -22,8 +23,20 @@ import {
 import {
   getCheckoutFullName,
   parseCheckoutDetails,
+  type CheckoutDetails,
   type CheckoutDetailsInput,
 } from "@/lib/billing/checkout-details";
+import {
+  checkCouponForCheckout,
+  claimCouponUse,
+  getCouponPlanPeriodEnd,
+  normalizeCouponCode,
+  recordCouponRedemption,
+  type CouponCheckResult,
+  type CouponQuote,
+  type CouponTarget,
+} from "@/lib/billing/coupons";
+import type { CouponDocument } from "@/models/Coupon";
 
 export const dynamic = "force-dynamic";
 
@@ -38,6 +51,87 @@ function sanitizePhone(phone: string): string {
     return digits.slice(-10);
   }
   return "9999999999";
+}
+
+type UserDoc = HydratedDocument<UserDocument>;
+
+/** Coupon brought the total to ₹0 — activate straight away, no PayU. */
+async function activateFreeCheckout({
+  user,
+  target,
+  coupon,
+  quote,
+  email,
+  fullName,
+  checkout,
+}: {
+  user: UserDoc;
+  target: CouponTarget;
+  coupon: CouponDocument;
+  quote: CouponQuote;
+  email: string;
+  fullName: string;
+  checkout: CheckoutDetails;
+}) {
+  const claimed = await claimCouponUse(coupon._id);
+  if (!claimed) {
+    return NextResponse.json(
+      { error: "This coupon has reached its usage limit." },
+      { status: 400 }
+    );
+  }
+
+  const txnid = `free${Date.now()}${Math.floor(Math.random() * 1000)}`;
+
+  if (target.type === "plan") {
+    const periodEnd = getCouponPlanPeriodEnd(coupon, target.id);
+    user.billingPlanId = target.id;
+    user.subscribedAt = new Date();
+    user.subscriptionStatus = "active";
+    user.planAmount = 0;
+    user.set("currentPeriodEnd", periodEnd ?? undefined);
+    user.set("trialEndsAt", undefined);
+    user.cancelAtPeriodEnd = false;
+    user.appliedCouponCode = coupon.code;
+    await user.save();
+  } else {
+    const service = getHumanService(target.id);
+    await user.save();
+    await Payment.create({
+      orderId: txnid,
+      baseAmount: quote.baseAmount,
+      gstAmount: 0,
+      amount: 0,
+      currency: "INR",
+      status: "SUCCESS",
+      purchaseType: "service",
+      productId: target.id,
+      productName: service.name,
+      userId: user._id,
+      userEmail: email,
+      userName: fullName,
+      firstName: checkout.firstName,
+      lastName: checkout.lastName,
+      phone: checkout.contact,
+      couponCode: coupon.code,
+      discountAmount: quote.discountAmount,
+    });
+  }
+
+  await recordCouponRedemption({
+    coupon,
+    userId: user._id.toString(),
+    target,
+    quote,
+    amountPaid: 0,
+    txnid,
+    incrementUsage: false,
+  });
+
+  return NextResponse.json({
+    free: true,
+    redirectUrl: `/pricing/success?type=${target.type}&product=${target.id}`,
+  });
 }
 
 export async function POST(request: Request) {
@@ -95,6 +189,38 @@ export async function POST(request: Request) {
     user.lastName = checkout.lastName;
     user.phone = checkout.contact;
 
+    const target: CouponTarget = billingPlanId
+      ? { type: "plan", id: billingPlanId }
+      : { type: "service", id: serviceId! };
+
+    const couponCode = normalizeCouponCode(body.couponCode);
+    let appliedCoupon: Extract<CouponCheckResult, { ok: true }> | null = null;
+    if (couponCode) {
+      if (target.type === "plan" && sessionUser.subscription.hasPlatformAccess) {
+        return NextResponse.json(
+          { error: "Your platform plan is already active." },
+          { status: 400 }
+        );
+      }
+      const couponResult = await checkCouponForCheckout(couponCode, target, sessionUser.id);
+      if (!couponResult.ok) {
+        return NextResponse.json({ error: couponResult.error }, { status: 400 });
+      }
+      appliedCoupon = couponResult;
+    }
+
+    if (appliedCoupon?.quote.isFree) {
+      return activateFreeCheckout({
+        user,
+        target,
+        coupon: appliedCoupon.coupon,
+        quote: appliedCoupon.quote,
+        email: checkout.email || user.email,
+        fullName,
+        checkout,
+      });
+    }
+
     const txnid = `tx${Date.now()}${Math.floor(Math.random() * 1000)}`;
     const origin = getAppOrigin();
     const surl = `${origin}/api/billing/payu/callback`;
@@ -114,7 +240,7 @@ export async function POST(request: Request) {
       const selectedPlan = getPricingPlan(planId);
       const amounts = getSubscriptionAmounts(planId);
 
-      totalAmount = amounts.totalAmount;
+      totalAmount = appliedCoupon?.quote.totalAmount ?? amounts.totalAmount;
       productinfo = sanitizeString(`${selectedPlan.name} ${planId}`, "Platform Access");
       udf2 = planId;
       udf3 = "plan";
@@ -122,12 +248,14 @@ export async function POST(request: Request) {
       user.billingPlanId = planId;
       user.planAmount = totalAmount;
       user.subscriptionStatus = "pending";
+      user.appliedCouponCode = appliedCoupon?.coupon.code ?? "";
     } else {
       const id: HumanServiceId = serviceId!;
       const service = getHumanService(id);
       const amounts = getServiceOrderAmounts(id);
+      const quote = appliedCoupon?.quote;
 
-      totalAmount = amounts.totalAmount;
+      totalAmount = quote?.totalAmount ?? amounts.totalAmount;
       productinfo = sanitizeString(service.name, "Expert Service");
       udf2 = id;
       udf3 = "service";
@@ -135,8 +263,8 @@ export async function POST(request: Request) {
       await Payment.create({
         orderId: txnid,
         baseAmount: amounts.baseAmount,
-        gstAmount: amounts.gstAmount,
-        amount: amounts.totalAmount,
+        gstAmount: quote?.gstAmount ?? amounts.gstAmount,
+        amount: totalAmount,
         currency: amounts.currency,
         status: "PENDING",
         purchaseType: "service",
@@ -148,6 +276,8 @@ export async function POST(request: Request) {
         firstName: checkout.firstName,
         lastName: checkout.lastName,
         phone: checkout.contact,
+        couponCode: appliedCoupon?.coupon.code ?? "",
+        discountAmount: quote?.discountAmount ?? 0,
       });
     }
 
@@ -165,6 +295,7 @@ export async function POST(request: Request) {
       udf1: user._id.toString(),
       udf2,
       udf3,
+      udf4: appliedCoupon?.coupon.code ?? "",
     };
 
     const { hash, key, actionUrl } = generatePayUHash(payuParams);

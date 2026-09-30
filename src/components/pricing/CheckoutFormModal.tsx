@@ -10,10 +10,12 @@ import {
 } from "@/lib/billing/checkout-details";
 import { HUMAN_SERVICES, type HumanServiceId } from "@/lib/billing/human-services";
 import {
+  formatInrAmount,
   getServiceTotalDisplay,
   getSubscriptionTotalDisplay,
   GST_RATE,
 } from "@/lib/billing/order-amount";
+import type { CouponQuote } from "@/lib/billing/coupons";
 import {
   PRICING_PLANS,
   type PublicBillingPlanId,
@@ -32,7 +34,7 @@ type CheckoutFormModalProps = {
   defaultEmail?: string;
   defaultName?: string;
   onClose: () => void;
-  onConfirm: (details: CheckoutDetails) => void;
+  onConfirm: (details: CheckoutDetails, couponCode?: string) => void;
 };
 
 function getProductSummary(target: CheckoutFormTarget) {
@@ -73,8 +75,55 @@ export default function CheckoutFormModal({
   const [phone, setPhone] = useState("");
   const [agreed, setAgreed] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [couponInput, setCouponInput] = useState("");
+  const [couponQuote, setCouponQuote] = useState<CouponQuote | null>(null);
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [checkingCoupon, setCheckingCoupon] = useState(false);
 
   const summary = getProductSummary(target);
+  const isFreeCheckout = couponQuote?.isFree ?? false;
+
+  async function applyCoupon() {
+    const code = couponInput.trim().toUpperCase();
+    if (!code) {
+      setCouponError("Enter a coupon code.");
+      return;
+    }
+
+    setCheckingCoupon(true);
+    setCouponError(null);
+    try {
+      const res = await fetch("/api/billing/coupon/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({
+          code,
+          ...(target.type === "plan" ? { plan: target.id } : { service: target.id }),
+        }),
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        quote?: CouponQuote;
+        error?: string;
+      };
+      if (!res.ok || !data.quote) {
+        setCouponQuote(null);
+        setCouponError(data.error ?? "Could not apply coupon.");
+        return;
+      }
+      setCouponQuote(data.quote);
+    } catch {
+      setCouponError("Could not apply coupon.");
+    } finally {
+      setCheckingCoupon(false);
+    }
+  }
+
+  function removeCoupon() {
+    setCouponQuote(null);
+    setCouponInput("");
+    setCouponError(null);
+  }
 
   useEffect(() => {
     const parsed = splitFullName(defaultName);
@@ -84,6 +133,9 @@ export default function CheckoutFormModal({
     setPhone("");
     setAgreed(false);
     setFormError(null);
+    setCouponInput("");
+    setCouponQuote(null);
+    setCouponError(null);
   }, [defaultEmail, defaultName, target]);
 
   function handleSubmit(event: FormEvent) {
@@ -107,7 +159,7 @@ export default function CheckoutFormModal({
     }
 
     setFormError(null);
-    onConfirm(parsed.details);
+    onConfirm(parsed.details, couponQuote?.code);
   }
 
   return (
@@ -225,6 +277,65 @@ export default function CheckoutFormModal({
             />
           </div>
 
+          <div>
+            <label
+              htmlFor="checkout-coupon"
+              className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400"
+            >
+              Coupon code
+            </label>
+            {couponQuote ? (
+              <div className="mt-2 flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+                <p className="text-sm text-emerald-800">
+                  <span className="font-mono font-semibold">{couponQuote.code}</span>
+                  {" applied · "}
+                  {couponQuote.label}
+                </p>
+                <button
+                  type="button"
+                  onClick={removeCoupon}
+                  disabled={submitting}
+                  className="text-xs font-semibold text-emerald-800 hover:underline"
+                >
+                  Remove
+                </button>
+              </div>
+            ) : (
+              <div className="mt-2 flex gap-2">
+                <input
+                  id="checkout-coupon"
+                  type="text"
+                  value={couponInput}
+                  onChange={(event) => {
+                    setCouponInput(
+                      event.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, "").slice(0, 30)
+                    );
+                    setCouponError(null);
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      void applyCoupon();
+                    }
+                  }}
+                  placeholder="Have a code?"
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 font-mono text-sm uppercase text-slate-900 outline-none transition focus:border-[#00a6f4] focus:ring-2 focus:ring-[#00a6f4]/15"
+                />
+                <button
+                  type="button"
+                  onClick={() => void applyCoupon()}
+                  disabled={checkingCoupon || submitting}
+                  className="shrink-0 rounded-xl border border-slate-200 px-5 text-sm font-semibold text-slate-700 transition hover:border-[#00a6f4] hover:text-[#00a6f4] disabled:opacity-60"
+                >
+                  {checkingCoupon ? "Checking…" : "Apply"}
+                </button>
+              </div>
+            )}
+            {couponError ? (
+              <p className="mt-2 text-xs text-red-600">{couponError}</p>
+            ) : null}
+          </div>
+
           <div className="rounded-2xl border border-slate-100 bg-slate-50/80 px-4 py-4">
             <div className="flex items-start justify-between gap-4">
               <div>
@@ -234,16 +345,32 @@ export default function CheckoutFormModal({
                 <p className="mt-1 text-xs text-slate-500">
                   +{GST_RATE * 100}% GST
                 </p>
+                {couponQuote ? (
+                  <p className="mt-1 text-xs font-medium text-emerald-700">
+                    Coupon: −{formatInrAmount(couponQuote.discountAmount)}
+                  </p>
+                ) : null}
                 <p className="mt-2 text-xs leading-relaxed text-slate-400">
-                  {summary.note}
+                  {isFreeCheckout ? "No payment needed with this coupon." : summary.note}
                 </p>
               </div>
-              <p
-                className="text-2xl font-bold tracking-tight"
-                style={{ color: BRAND_BLUE }}
-              >
-                {summary.totalDisplay}
-              </p>
+              <div className="text-right">
+                {couponQuote ? (
+                  <p className="text-sm text-slate-400 line-through">
+                    {summary.totalDisplay}
+                  </p>
+                ) : null}
+                <p
+                  className="text-2xl font-bold tracking-tight"
+                  style={{ color: BRAND_BLUE }}
+                >
+                  {couponQuote
+                    ? isFreeCheckout
+                      ? "FREE"
+                      : formatInrAmount(couponQuote.totalAmount)
+                    : summary.totalDisplay}
+                </p>
+              </div>
             </div>
           </div>
 
@@ -290,7 +417,13 @@ export default function CheckoutFormModal({
             className="w-full rounded-full py-4 text-sm font-bold uppercase tracking-[0.12em] text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
             style={{ backgroundColor: BRAND_BLUE }}
           >
-            {submitting ? "Opening PayU…" : "Proceed to Secure Payment"}
+            {submitting
+              ? isFreeCheckout
+                ? "Activating…"
+                : "Opening PayU…"
+              : isFreeCheckout
+                ? "Activate for Free"
+                : "Proceed to Secure Payment"}
           </button>
         </form>
       </div>

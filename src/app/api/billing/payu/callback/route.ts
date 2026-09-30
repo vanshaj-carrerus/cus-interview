@@ -6,7 +6,15 @@ import { verifyPayUResponseHash, getAppOrigin } from "@/lib/payu";
 import { getPlanPeriodEnd } from "@/lib/billing/activate-plan";
 import { getSubscriptionAmounts } from "@/lib/billing/order-amount";
 import { isHumanServiceId } from "@/lib/billing/human-services";
-import { isBillingPlanId, type BillingPlanId } from "@/lib/billing/plan";
+import { isBillingPlanId, isPublicBillingPlanId, type BillingPlanId } from "@/lib/billing/plan";
+import {
+  computeCouponQuote,
+  getCouponPlanPeriodEnd,
+  normalizeCouponCode,
+  recordCouponRedemption,
+  type CouponTarget,
+} from "@/lib/billing/coupons";
+import { Coupon } from "@/models/Coupon";
 
 export const dynamic = "force-dynamic";
 
@@ -48,6 +56,35 @@ export async function GET(request: Request) {
   return handlePayUCallback(request);
 }
 
+/** Logs a coupon use for a paid checkout (udf4 = coupon code). Never blocks the payment. */
+async function recordPaidCouponUse(
+  rawCode: string | undefined,
+  userId: string,
+  target: CouponTarget,
+  amountPaid: number,
+  txnid: string
+) {
+  const code = normalizeCouponCode(rawCode);
+  if (!code) return null;
+  try {
+    const coupon = await Coupon.findOne({ code });
+    if (!coupon) return null;
+    await recordCouponRedemption({
+      coupon,
+      userId,
+      target,
+      quote: computeCouponQuote(coupon, target),
+      amountPaid,
+      txnid,
+      incrementUsage: true,
+    });
+    return coupon;
+  } catch (err) {
+    console.error("payu-callback-coupon-record-error", { code, txnid, err });
+    return null;
+  }
+}
+
 /** PayU success redirect — activates platform plan or records expert service payment. */
 async function handlePayUCallback(request: Request) {
   const origin = getAppOrigin();
@@ -63,6 +100,8 @@ async function handlePayUCallback(request: Request) {
       udf1: userId,
       udf2: productId,
       udf3: checkoutType = "plan",
+      udf4: couponCode,
+      amount: paidAmount,
       error_Message,
     } = params;
 
@@ -125,6 +164,14 @@ async function handlePayUCallback(request: Request) {
         { upsert: false }
       );
 
+      await recordPaidCouponUse(
+        couponCode,
+        user._id.toString(),
+        { type: "service", id: productId },
+        Number(paidAmount) || 0,
+        txnid
+      );
+
       console.log("payu-callback-service-success", {
         userId: user._id.toString(),
         serviceId: productId,
@@ -138,8 +185,22 @@ async function handlePayUCallback(request: Request) {
     }
 
     const planId: BillingPlanId = isBillingPlanId(productId) ? productId : "monthly";
-    const { totalAmount } = getSubscriptionAmounts(planId);
-    const periodEnd = getPlanPeriodEnd(planId);
+    const { totalAmount: listTotal } = getSubscriptionAmounts(planId);
+    const totalAmount = couponCode ? Number(paidAmount) || listTotal : listTotal;
+    const coupon =
+      isPublicBillingPlanId(planId)
+        ? await recordPaidCouponUse(
+            couponCode,
+            user._id.toString(),
+            { type: "plan", id: planId },
+            totalAmount,
+            txnid
+          )
+        : null;
+    const periodEnd =
+      coupon && isPublicBillingPlanId(planId)
+        ? getCouponPlanPeriodEnd(coupon, planId)
+        : getPlanPeriodEnd(planId);
 
     await User.findByIdAndUpdate(userId, {
       $set: {
@@ -150,6 +211,7 @@ async function handlePayUCallback(request: Request) {
         currentPeriodEnd: periodEnd,
         trialEndsAt: null,
         cancelAtPeriodEnd: false,
+        appliedCouponCode: coupon?.code ?? "",
         ...(mihpayid?.trim() ? { payuMandateToken: mihpayid.trim() } : {}),
       },
       $unset: {

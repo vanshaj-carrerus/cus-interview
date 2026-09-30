@@ -7,6 +7,7 @@ const STATE_MAX_AGE_SECONDS = 60 * 10;
 type OAuthStatePayload = {
   state: string;
   nextPath: string;
+  redirectUri: string;
 };
 
 function encodePayload(payload: OAuthStatePayload): string {
@@ -19,20 +20,24 @@ function decodePayload(value: string): OAuthStatePayload | null {
       Buffer.from(value, "base64url").toString("utf8")
     ) as OAuthStatePayload;
     if (!parsed.state || typeof parsed.nextPath !== "string") return null;
+    if (typeof parsed.redirectUri !== "string" || !parsed.redirectUri) return null;
     return parsed;
   } catch {
     return null;
   }
 }
 
-export function createGoogleOAuthState(nextPath: string): {
+export function createGoogleOAuthState(
+  nextPath: string,
+  redirectUri: string
+): {
   state: string;
   cookieValue: string;
 } {
   const state = crypto.randomBytes(24).toString("hex");
   return {
     state,
-    cookieValue: encodePayload({ state, nextPath }),
+    cookieValue: encodePayload({ state, nextPath, redirectUri }),
   };
 }
 
@@ -49,7 +54,7 @@ export async function setGoogleOAuthStateCookie(cookieValue: string): Promise<vo
 
 export async function consumeGoogleOAuthState(
   stateFromQuery: string
-): Promise<string | null> {
+): Promise<{ nextPath: string; redirectUri: string } | null> {
   const store = await cookies();
   const raw = store.get(GOOGLE_OAUTH_STATE_COOKIE)?.value;
   store.delete(GOOGLE_OAUTH_STATE_COOKIE);
@@ -57,7 +62,7 @@ export async function consumeGoogleOAuthState(
   if (!raw) return null;
   const payload = decodePayload(raw);
   if (!payload || payload.state !== stateFromQuery) return null;
-  return payload.nextPath;
+  return { nextPath: payload.nextPath, redirectUri: payload.redirectUri };
 }
 
 export async function clearGoogleOAuthStateCookie(): Promise<void> {

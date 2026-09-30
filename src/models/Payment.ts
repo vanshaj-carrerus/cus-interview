@@ -33,6 +33,8 @@ const paymentSchema = new Schema(
     firstName: { type: String, default: "", trim: true },
     lastName: { type: String, default: "", trim: true },
     phone: { type: String, default: "", trim: true },
+    couponCode: { type: String, default: "" },
+    discountAmount: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

@@ -4,6 +4,8 @@ import { findOrCreateGoogleUser } from "@/lib/find-or-create-google-user";
 import {
   exchangeGoogleAuthCode,
   fetchGoogleUserInfo,
+  getGoogleRedirectUri,
+  getOAuthOrigin,
   getSafeNextPath,
 } from "@/lib/google-oauth";
 import {
@@ -41,10 +43,13 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const nextPath = (await consumeGoogleOAuthState(state)) ?? fallbackNext;
+  const consumed = await consumeGoogleOAuthState(state);
+  const nextPath = consumed?.nextPath ?? fallbackNext;
+  const redirectUri =
+    consumed?.redirectUri ?? getGoogleRedirectUri(getOAuthOrigin(request));
 
   try {
-    const token = await exchangeGoogleAuthCode(code);
+    const token = await exchangeGoogleAuthCode(code, redirectUri);
     const googleUser = await fetchGoogleUserInfo(token.access_token);
     const user = await findOrCreateGoogleUser(googleUser);
 

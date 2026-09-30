@@ -27,6 +27,14 @@ import {
 
 type BillingCycle = "monthly" | "quarterly";
 
+type InitiateResponse = {
+  actionUrl?: string;
+  params?: Record<string, string>;
+  free?: boolean;
+  redirectUrl?: string;
+  error?: string;
+};
+
 type CheckoutTarget =
   | { type: "plan"; id: PublicBillingPlanId }
   | { type: "service"; id: HumanServiceId };
@@ -97,7 +105,8 @@ export default function PricingSection() {
 
   async function handlePlanCheckout(
     target: Extract<CheckoutTarget, { type: "plan" }>,
-    details: CheckoutDetails
+    details: CheckoutDetails,
+    couponCode?: string
   ): Promise<boolean> {
     const res = await fetch("/api/billing/payu/initiate", {
       method: "POST",
@@ -109,13 +118,15 @@ export default function PricingSection() {
         lastName: details.lastName,
         email: details.email,
         contact: details.contact,
+        couponCode,
       }),
     });
-    const data = (await res.json()) as {
-      actionUrl?: string;
-      params?: Record<string, string>;
-      error?: string;
-    };
+    const data = (await res.json()) as InitiateResponse;
+
+    if (res.ok && data.free && data.redirectUrl) {
+      window.location.href = data.redirectUrl;
+      return true;
+    }
 
     if (!res.ok || !data.actionUrl || !data.params) {
       const message = data.error ?? "Could not start PayU checkout.";
@@ -136,7 +147,8 @@ export default function PricingSection() {
 
   async function handleServiceCheckout(
     target: Extract<CheckoutTarget, { type: "service" }>,
-    details: CheckoutDetails
+    details: CheckoutDetails,
+    couponCode?: string
   ): Promise<boolean> {
     const res = await fetch("/api/billing/payu/initiate", {
       method: "POST",
@@ -148,13 +160,15 @@ export default function PricingSection() {
         lastName: details.lastName,
         email: details.email,
         contact: details.contact,
+        couponCode,
       }),
     });
-    const data = (await res.json()) as {
-      actionUrl?: string;
-      params?: Record<string, string>;
-      error?: string;
-    };
+    const data = (await res.json()) as InitiateResponse;
+
+    if (res.ok && data.free && data.redirectUrl) {
+      window.location.href = data.redirectUrl;
+      return true;
+    }
 
     if (!res.ok || !data.actionUrl || !data.params) {
       const message = data.error ?? "Could not start PayU checkout.";
@@ -191,7 +205,7 @@ export default function PricingSection() {
     setPendingCheckout(target);
   }
 
-  async function confirmCheckout(details: CheckoutDetails) {
+  async function confirmCheckout(details: CheckoutDetails, couponCode?: string) {
     if (!pendingCheckout) {
       return;
     }
@@ -204,8 +218,8 @@ export default function PricingSection() {
     try {
       const opened =
         pendingCheckout.type === "plan"
-          ? await handlePlanCheckout(pendingCheckout, details)
-          : await handleServiceCheckout(pendingCheckout, details);
+          ? await handlePlanCheckout(pendingCheckout, details, couponCode)
+          : await handleServiceCheckout(pendingCheckout, details, couponCode);
 
       if (opened) {
         setPendingCheckout(null);
