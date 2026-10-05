@@ -5,8 +5,9 @@ import mongoose, { Schema, type InferSchemaType, type Model } from "mongoose";
  * - pending: no account yet — access is granted when they sign up with this email
  * - activated: access granted
  * - failed: coupon was off / expired / used up when they signed up
+ * - paused: admin paused it — access is off (or won't turn on at signup) until resumed
  */
-export const COUPON_INVITE_STATUSES = ["pending", "activated", "failed"] as const;
+export const COUPON_INVITE_STATUSES = ["pending", "activated", "failed", "paused"] as const;
 export type CouponInviteStatus = (typeof COUPON_INVITE_STATUSES)[number];
 
 const couponInviteSchema = new Schema(
@@ -19,6 +20,8 @@ const couponInviteSchema = new Schema(
     failureReason: { type: String, default: "" },
     userId: { type: Schema.Types.ObjectId, ref: "User", default: null },
     activatedAt: { type: Date, default: null },
+    /** While paused: the status to go back to on resume. */
+    statusBeforePause: { type: String, enum: ["pending", "activated"], default: null },
     lastEmailedAt: { type: Date, default: null },
     invitedBy: { type: Schema.Types.ObjectId, ref: "User" },
   },

@@ -151,6 +151,16 @@ export async function inviteEmailsToCoupon(
       { upsert: true, new: true }
     );
 
+    if (invite.status === "paused") {
+      results.push({
+        email,
+        status: "failed",
+        emailSent: false,
+        message: "Invite is paused — resume it first.",
+      });
+      continue;
+    }
+
     const user = await User.findOne({ email }).select({ _id: 1 }).lean();
     let status: InviteSendResult["status"] = "pending";
     let message: string | undefined;
@@ -217,6 +227,132 @@ export async function activatePendingInvitesForUser(userId: string, email: strin
     // Signup must still succeed — the admin can re-send the invite to retry.
     console.error("activate-coupon-invites", userId, err);
   }
+}
+
+/** Turns one user's free plan / free uses from this coupon off or back on. */
+async function setUserCouponAccessSuspended(
+  userId: string,
+  code: string,
+  suspended: boolean
+): Promise<void> {
+  await User.updateOne(
+    suspended
+      ? { _id: userId, appliedCouponCode: code, planAmount: 0, subscriptionStatus: "active" }
+      : { _id: userId, appliedCouponCode: code, planAmount: 0, couponAccessSuspended: true },
+    suspended
+      ? { $set: { subscriptionStatus: "canceled", couponAccessSuspended: true } }
+      : { $set: { subscriptionStatus: "active", couponAccessSuspended: false } }
+  );
+  await User.updateOne(
+    { _id: userId, "featureCredits.couponCode": code },
+    { $set: { "featureCredits.suspended": suspended } }
+  );
+}
+
+type InviteActionResult = { ok: true } | { ok: false; error: string; status: number };
+
+async function findInvite(couponId: string, inviteId: string) {
+  await connectDB();
+  return CouponInvite.findOne({ _id: inviteId, couponId });
+}
+
+/**
+ * Pause: the user loses this coupon's access (or won't get it at signup) until resumed.
+ * Resume: access comes back — unless the whole coupon is turned off, in which case
+ * it comes back when the coupon is turned on again.
+ */
+export async function setInvitePaused(
+  couponId: string,
+  inviteId: string,
+  paused: boolean
+): Promise<InviteActionResult> {
+  const invite = await findInvite(couponId, inviteId);
+  if (!invite) return { ok: false, error: "Invite not found.", status: 404 };
+
+  if (paused) {
+    if (invite.status === "paused") return { ok: true };
+    if (invite.status === "failed") {
+      return { ok: false, error: "This invite never gave access.", status: 400 };
+    }
+    if (invite.status === "activated" && invite.userId) {
+      await setUserCouponAccessSuspended(invite.userId.toString(), invite.code, true);
+    }
+    await CouponInvite.updateOne(
+      { _id: invite._id },
+      { $set: { status: "paused", statusBeforePause: invite.status } }
+    );
+    return { ok: true };
+  }
+
+  if (invite.status !== "paused") return { ok: true };
+  const restoreTo = invite.statusBeforePause === "activated" ? "activated" : "pending";
+  if (restoreTo === "activated" && invite.userId) {
+    const coupon = await Coupon.findById(couponId).select({ isActive: 1 }).lean();
+    if (coupon?.isActive) {
+      await setUserCouponAccessSuspended(invite.userId.toString(), invite.code, false);
+    }
+  }
+  await CouponInvite.updateOne(
+    { _id: invite._id },
+    { $set: { status: restoreTo, statusBeforePause: null } }
+  );
+
+  // Paused before they signed up, and they've signed up since: grant now.
+  if (restoreTo === "pending") {
+    const user = await User.findOne({ email: invite.email }).select({ _id: 1 }).lean();
+    if (user) await activatePendingInvitesForUser(user._id.toString(), invite.email);
+  }
+  return { ok: true };
+}
+
+/** Removes the invite and takes away the access it gave. The email can be invited again later. */
+export async function deleteInvite(couponId: string, inviteId: string): Promise<InviteActionResult> {
+  const invite = await findInvite(couponId, inviteId);
+  if (!invite) return { ok: false, error: "Invite not found.", status: 404 };
+
+  const gaveAccess =
+    invite.userId &&
+    (invite.status === "activated" ||
+      (invite.status === "paused" && invite.statusBeforePause === "activated"));
+  if (gaveAccess && invite.userId) {
+    const userId = invite.userId.toString();
+    // Clear the coupon code too, so turning the coupon off/on never brings this access back.
+    await User.updateOne(
+      { _id: userId, appliedCouponCode: invite.code, planAmount: 0 },
+      {
+        $set: {
+          subscriptionStatus: "canceled",
+          couponAccessSuspended: false,
+          appliedCouponCode: "",
+        },
+      }
+    );
+    await User.updateOne(
+      { _id: userId, "featureCredits.couponCode": invite.code },
+      { $set: { "featureCredits.suspended": true, "featureCredits.couponCode": "" } }
+    );
+
+    // Free up the use, so re-inviting this email later grants access again.
+    const removed = await CouponRedemption.deleteOne({ txnid: `invite-${invite._id.toString()}` });
+    if (removed.deletedCount > 0) {
+      await Coupon.updateOne(
+        { _id: invite.couponId, usedCount: { $gt: 0 } },
+        { $inc: { usedCount: -1 } }
+      );
+    }
+  }
+
+  await CouponInvite.deleteOne({ _id: invite._id });
+  return { ok: true };
+}
+
+/** Users whose invite to this coupon is paused — turning the coupon on must not restore them. */
+export async function getPausedInviteUserIds(code: string): Promise<string[]> {
+  await connectDB();
+  const paused = await CouponInvite.find({ code, status: "paused", userId: { $ne: null } })
+    .select({ userId: 1 })
+    .lean();
+  return paused.map((invite) => invite.userId!.toString());
 }
 
 export type AdminCouponInvite = {

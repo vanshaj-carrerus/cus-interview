@@ -80,6 +80,7 @@ const INVITE_STATUS: Record<
   pending: { label: "Waiting for signup", tone: "bg-sky-100 text-sky-700" },
   activated: { label: "Access active", tone: "bg-emerald-100 text-emerald-700" },
   failed: { label: "Not granted", tone: "bg-red-100 text-red-700" },
+  paused: { label: "Paused", tone: "bg-amber-100 text-amber-700" },
 };
 
 function toDateInput(iso: string | null): string {
@@ -128,6 +129,7 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
   const [openInviteId, setOpenInviteId] = useState<string | null>(null);
   const [inviteEmails, setInviteEmails] = useState("");
   const [inviting, setInviting] = useState(false);
+  const [busyInviteId, setBusyInviteId] = useState<string | null>(null);
   const [inviteMessage, setInviteMessage] = useState<{ tone: "ok" | "error"; text: string } | null>(
     null
   );
@@ -279,6 +281,44 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
     setOpenInviteId(openInviteId === coupon.id ? null : coupon.id);
     setInviteEmails("");
     setInviteMessage(null);
+  }
+
+  async function changeInvite(
+    coupon: AdminCouponRecord,
+    invite: AdminCouponRecord["invites"][number],
+    action: "pause" | "resume" | "delete"
+  ) {
+    if (
+      action === "delete" &&
+      !window.confirm(
+        `Delete the invite for ${invite.email}?${
+          invite.status === "activated" || invite.status === "paused"
+            ? " Their free access from this coupon will be removed."
+            : ""
+        }`
+      )
+    ) {
+      return;
+    }
+    setBusyInviteId(invite.id);
+    setInviteMessage(null);
+    try {
+      const res = await fetch(`/api/admin-panel/coupons/${coupon.id}/invites/${invite.id}`, {
+        method: action === "delete" ? "DELETE" : "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: action === "delete" ? undefined : JSON.stringify({ paused: action === "pause" }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        setInviteMessage({ tone: "error", text: data.error ?? "Could not update invite." });
+        return;
+      }
+      router.refresh();
+    } catch {
+      setInviteMessage({ tone: "error", text: "Could not update invite." });
+    } finally {
+      setBusyInviteId(null);
+    }
   }
 
   async function sendInvites(couponId: string, emails = inviteEmails) {
@@ -773,14 +813,40 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
                                   </td>
                                   <td className="px-2 py-1.5">{formatDate(invite.invitedAt || null)}</td>
                                   <td className="px-2 py-1.5">{formatDate(invite.lastEmailedAt)}</td>
-                                  <td className="px-2 py-1.5 text-right">
+                                  <td className="whitespace-nowrap px-2 py-1.5 text-right">
+                                    {invite.status !== "paused" ? (
+                                      <button
+                                        type="button"
+                                        onClick={() => sendInvites(coupon.id, invite.email)}
+                                        disabled={inviting || busyInviteId === invite.id || !coupon.isActive}
+                                        className="mr-3 font-semibold text-primary hover:underline disabled:opacity-50"
+                                      >
+                                        Resend
+                                      </button>
+                                    ) : null}
+                                    {invite.status !== "failed" ? (
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          changeInvite(
+                                            coupon,
+                                            invite,
+                                            invite.status === "paused" ? "resume" : "pause"
+                                          )
+                                        }
+                                        disabled={busyInviteId === invite.id}
+                                        className="mr-3 font-semibold text-secondary/70 hover:underline disabled:opacity-50"
+                                      >
+                                        {invite.status === "paused" ? "Resume" : "Pause"}
+                                      </button>
+                                    ) : null}
                                     <button
                                       type="button"
-                                      onClick={() => sendInvites(coupon.id, invite.email)}
-                                      disabled={inviting || !coupon.isActive}
-                                      className="font-semibold text-primary hover:underline disabled:opacity-50"
+                                      onClick={() => changeInvite(coupon, invite, "delete")}
+                                      disabled={busyInviteId === invite.id}
+                                      className="font-semibold text-red-600 hover:underline disabled:opacity-50"
                                     >
-                                      Resend
+                                      Delete
                                     </button>
                                   </td>
                                 </tr>

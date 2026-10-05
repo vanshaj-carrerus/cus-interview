@@ -205,7 +205,12 @@ export async function checkCouponForCheckout(
   if (coupon.inviteOnly) {
     const user = await User.findById(userId).select({ email: 1 }).lean();
     const invited =
-      user && (await CouponInvite.exists({ couponId: coupon._id, email: user.email }));
+      user &&
+      (await CouponInvite.exists({
+        couponId: coupon._id,
+        email: user.email,
+        status: { $ne: "paused" },
+      }));
     if (!invited) {
       return { ok: false, error: "This coupon is only for invited emails." };
     }

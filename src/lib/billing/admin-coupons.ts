@@ -2,7 +2,11 @@ import { connectDB } from "@/lib/mongodb";
 import { Coupon, COUPON_DISCOUNT_TYPES, type CouponDiscountType } from "@/models/Coupon";
 import { CouponRedemption } from "@/models/CouponRedemption";
 import { CouponInvite } from "@/models/CouponInvite";
-import { toAdminCouponInvite, type AdminCouponInvite } from "@/lib/billing/coupon-invites";
+import {
+  getPausedInviteUserIds,
+  toAdminCouponInvite,
+  type AdminCouponInvite,
+} from "@/lib/billing/coupon-invites";
 import { User } from "@/models/User";
 import {
   COUPON_PRODUCT_IDS,
@@ -42,6 +46,8 @@ export async function setCouponGrantsSuspended(
   suspended: boolean
 ): Promise<number> {
   await connectDB();
+  // Invites the admin paused one by one stay off when the coupon is turned back on.
+  const pausedUserIds = suspended ? [] : await getPausedInviteUserIds(code);
 
   const plans = suspended
     ? await User.updateMany(
@@ -49,12 +55,19 @@ export async function setCouponGrantsSuspended(
         { $set: { subscriptionStatus: "canceled", couponAccessSuspended: true } }
       )
     : await User.updateMany(
-        { appliedCouponCode: code, planAmount: 0, couponAccessSuspended: true },
+        {
+          appliedCouponCode: code,
+          planAmount: 0,
+          couponAccessSuspended: true,
+          _id: { $nin: pausedUserIds },
+        },
         { $set: { subscriptionStatus: "active", couponAccessSuspended: false } }
       );
 
   const credits = await User.updateMany(
-    { "featureCredits.couponCode": code },
+    suspended
+      ? { "featureCredits.couponCode": code }
+      : { "featureCredits.couponCode": code, _id: { $nin: pausedUserIds } },
     { $set: { "featureCredits.suspended": suspended } }
   );
 
