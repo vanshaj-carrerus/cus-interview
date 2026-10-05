@@ -197,7 +197,9 @@ export default function PricingSection() {
       return;
     }
 
-    if (target.type === "plan" && user.subscription.hasAccess) {
+    const upgrading =
+      user.subscription.hasPlatformAccess && Boolean(user.subscription.featureCredits?.planLimited);
+    if (target.type === "plan" && user.subscription.hasAccess && !upgrading) {
       setError("Your platform plan is already active.");
       return;
     }
@@ -242,6 +244,11 @@ export default function PricingSection() {
   }
 
   const hasPlatformAccess = user?.subscription.hasPlatformAccess;
+  // Free-access coupon plan with capped mock interviews / resume analyses — can buy a paid plan.
+  const canUpgrade = Boolean(
+    hasPlatformAccess && user?.subscription.featureCredits?.planLimited
+  );
+  const freeCredits = user?.subscription.featureCredits;
   const isBusy = submittingKey !== null || pendingCheckout !== null;
   const pendingSubmittingKey = pendingCheckout
     ? `${pendingCheckout.type}:${pendingCheckout.id}`
@@ -346,7 +353,28 @@ export default function PricingSection() {
           <p className="mt-16 text-center text-sm text-slate-400">Loading…</p>
         ) : (
           <>
-            {hasPlatformAccess ? (
+            {canUpgrade && freeCredits ? (
+              <div className="mx-auto mt-8 max-w-xl rounded-2xl border border-amber-200 bg-amber-50 px-7 py-6 text-center text-amber-900">
+                <p className="text-sm font-semibold">
+                  You&apos;re on a free plan with limited uses.
+                </p>
+                <p className="mt-1.5 text-sm">
+                  {[
+                    freeCredits.mockInterview.total > 0
+                      ? `AI mock interviews: ${freeCredits.mockInterview.remaining} / ${freeCredits.mockInterview.total} left`
+                      : null,
+                    freeCredits.resumeAnalyzer.total > 0
+                      ? `Resume analyses: ${freeCredits.resumeAnalyzer.remaining} / ${freeCredits.resumeAnalyzer.total} left`
+                      : null,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </p>
+                <p className="mt-3 text-sm font-semibold">
+                  Upgrade below for unlimited access to everything.
+                </p>
+              </div>
+            ) : hasPlatformAccess ? (
               <div className="mx-auto mt-8 max-w-md rounded-2xl border border-slate-200 bg-white px-7 py-6 text-center">
                 <p className="text-sm font-semibold text-secondary">
                   Your platform plan is active.
@@ -367,7 +395,8 @@ export default function PricingSection() {
                   billedNote={`${getSubscriptionTotalDisplay("monthly")} with GST · billed monthly`}
                   featuresHeading="Everything you need to prepare:"
                   featured
-                  planActive={Boolean(hasPlatformAccess)}
+                  planActive={Boolean(hasPlatformAccess) && !canUpgrade}
+                  upgrade={canUpgrade}
                   submitting={submittingKey === "plan:monthly"}
                   disabled={isBusy}
                   onBuy={() => handleCheckout({ type: "plan", id: "monthly" })}
@@ -386,7 +415,8 @@ export default function PricingSection() {
                   }
                   featuresHeading="Best value — full access for 3 months:"
                   featured
-                  planActive={Boolean(hasPlatformAccess)}
+                  planActive={Boolean(hasPlatformAccess) && !canUpgrade}
+                  upgrade={canUpgrade}
                   submitting={submittingKey === "plan:quarterly"}
                   disabled={isBusy}
                   onBuy={() => handleCheckout({ type: "plan", id: "quarterly" })}
@@ -490,6 +520,7 @@ function PlanCard({
   featuresHeading,
   featured,
   planActive,
+  upgrade = false,
   submitting,
   disabled,
   onBuy,
@@ -504,6 +535,8 @@ function PlanCard({
   featuresHeading: string;
   featured: boolean;
   planActive: boolean;
+  /** On a limited free plan — the button offers the upgrade to unlimited. */
+  upgrade?: boolean;
   submitting: boolean;
   disabled: boolean;
   onBuy: () => void;
@@ -606,7 +639,7 @@ function PlanCard({
                 : "border border-secondary text-secondary hover:bg-secondary hover:text-white"
             }`}
           >
-            {submitting ? "Opening PayU…" : "Buy Now"}
+            {submitting ? "Opening PayU…" : upgrade ? "Upgrade to Unlimited" : "Buy Now"}
           </button>
         )}
       </div>

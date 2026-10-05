@@ -45,7 +45,7 @@ export default function FreeUsesBadge({ feature }: { feature: CreditFeature }) {
       </p>
       {usedUp ? (
         <Link href="/pricing" className="text-xs font-semibold underline">
-          Buy a plan for unlimited
+          {planLimited ? "Upgrade for unlimited access" : "Buy a plan for unlimited"}
         </Link>
       ) : expiresAt ? (
         <p className="text-xs opacity-70">

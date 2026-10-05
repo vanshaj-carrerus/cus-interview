@@ -126,7 +126,12 @@ async function handlePayUCallback(request: Request) {
             { status: "FAILED", ...(mihpayid?.trim() ? { paymentId: mihpayid.trim() } : {}) }
           );
         } else {
-          await User.findByIdAndUpdate(userId, { subscriptionStatus: "failed" });
+          // Only a checkout that put the plan in "pending" fails it — a failed upgrade from
+          // a free-access coupon plan keeps that plan active.
+          await User.updateOne(
+            { _id: userId, subscriptionStatus: "pending" },
+            { subscriptionStatus: "failed" }
+          );
         }
       }
 
@@ -214,6 +219,8 @@ async function handlePayUCallback(request: Request) {
         appliedCouponCode: coupon?.code ?? "",
         // A paid plan is unlimited — drop caps left over from a free-access coupon.
         "featureCredits.planLimited": false,
+        couponAccessStartsAt: null,
+        couponAccessSuspended: false,
         ...(mihpayid?.trim() ? { payuMandateToken: mihpayid.trim() } : {}),
       },
       $unset: {

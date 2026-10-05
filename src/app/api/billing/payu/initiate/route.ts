@@ -193,10 +193,21 @@ export async function POST(request: Request) {
       ? { type: "plan", id: billingPlanId }
       : { type: "service", id: serviceId! };
 
+    // Free-access coupon plan with capped mock interviews / resume analyses: they may buy
+    // a paid plan to go unlimited. Their free plan stays as-is until the payment succeeds.
+    const upgradingFromFreePlan =
+      target.type === "plan" &&
+      sessionUser.subscription.hasPlatformAccess &&
+      Boolean(sessionUser.subscription.featureCredits?.planLimited);
+
     const couponCode = normalizeCouponCode(body.couponCode);
     let appliedCoupon: Extract<CouponCheckResult, { ok: true }> | null = null;
     if (couponCode) {
-      if (target.type === "plan" && sessionUser.subscription.hasPlatformAccess) {
+      if (
+        target.type === "plan" &&
+        sessionUser.subscription.hasPlatformAccess &&
+        !upgradingFromFreePlan
+      ) {
         return NextResponse.json(
           { error: "Your platform plan is already active." },
           { status: 400 }
@@ -245,10 +256,14 @@ export async function POST(request: Request) {
       udf2 = planId;
       udf3 = "plan";
 
-      user.billingPlanId = planId;
-      user.planAmount = totalAmount;
-      user.subscriptionStatus = "pending";
-      user.appliedCouponCode = appliedCoupon?.coupon.code ?? "";
+      // Upgrading: don't touch the active free plan yet — the callback switches it on success,
+      // and an abandoned / failed payment leaves the free access as it was.
+      if (!upgradingFromFreePlan) {
+        user.billingPlanId = planId;
+        user.planAmount = totalAmount;
+        user.subscriptionStatus = "pending";
+        user.appliedCouponCode = appliedCoupon?.coupon.code ?? "";
+      }
     } else {
       const id: HumanServiceId = serviceId!;
       const service = getHumanService(id);
