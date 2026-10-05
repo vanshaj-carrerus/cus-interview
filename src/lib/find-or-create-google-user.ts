@@ -5,6 +5,7 @@ import { normalizeEmail } from "@/lib/email-validation";
 import { splitFullName } from "@/lib/billing/checkout-details";
 import type { GoogleUserInfo } from "@/lib/google-oauth";
 import { ensureUserLearningProfileInitialized } from "@/lib/learning/service";
+import { activatePendingInvitesForUser } from "@/lib/billing/coupon-invites";
 import { User, type UserDocument } from "@/models/User";
 
 export async function findOrCreateGoogleUser(
@@ -74,6 +75,7 @@ export async function findOrCreateGoogleUser(
   });
 
   await ensureUserLearningProfileInitialized(user._id.toString());
+  await activatePendingInvitesForUser(user._id.toString(), user.email);
 
-  return user;
+  return (await User.findById(user._id)) ?? user;
 }

@@ -10,6 +10,7 @@ import { splitFullName } from "@/lib/billing/checkout-details";
 import { normalizeVerificationCode } from "@/lib/signup-code";
 import { scheduleUserAvatarSync } from "@/lib/sync-user-avatar";
 import { ensureUserLearningProfileInitialized } from "@/lib/learning/service";
+import { activatePendingInvitesForUser } from "@/lib/billing/coupon-invites";
 
 export async function POST(request: Request) {
   try {
@@ -118,10 +119,14 @@ export async function POST(request: Request) {
       throw createErr;
     }
 
-    const response = NextResponse.json({ user: toPublicUser(user) });
+    // Admin-invited email: turn on the free access before the session is issued.
+    await activatePendingInvitesForUser(user._id.toString(), user.email);
+    const freshUser = (await User.findById(user._id)) ?? user;
+
+    const response = NextResponse.json({ user: toPublicUser(freshUser) });
     scheduleUserAvatarSync(user._id.toString(), user.email);
     await ensureUserLearningProfileInitialized(user._id.toString());
-    await setAuthCookieFromUser(response, user);
+    await setAuthCookieFromUser(response, freshUser);
     return response;
   } catch (err) {
     console.error("signup/complete", err);

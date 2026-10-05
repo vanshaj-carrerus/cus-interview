@@ -225,3 +225,85 @@ export async function sendDemoRequestNotification(
 
   return { channel: "remote", provider };
 }
+
+export type CouponInviteEmailDetails = {
+  code: string;
+  /** e.g. "Free access for 30 days" */
+  offerLabel: string;
+  /** true = account exists and access is already on; false = they need to sign up. */
+  alreadyActive: boolean;
+  actionUrl: string;
+};
+
+/** Invitation to CareerUs Interview with a free-access coupon from the admin panel. */
+export async function sendCouponInviteEmail(
+  to: string,
+  details: CouponInviteEmailDetails
+): Promise<SendSignupVerificationOutcome> {
+  const { transporter, provider } = getTransporter();
+
+  if (!transporter || !provider) {
+    if (process.env.NODE_ENV === "development") {
+      console.info(`[email] Coupon invite for ${to}:`, details);
+      return { channel: "dev_console" };
+    }
+    throw new Error(
+      "Email not configured. Set EMAIL_USER/EMAIL_PASS or SMTP settings."
+    );
+  }
+
+  const from =
+    process.env.EMAIL_FROM?.trim() ||
+    (process.env.EMAIL_USER
+      ? `"CareerUs Interview" <${process.env.EMAIL_USER}>`
+      : '"CareerUs Interview" <noreply@localhost>');
+
+  const subject = details.alreadyActive
+    ? `Your free CareerUs Interview access is active — ${details.offerLabel}`
+    : `You're invited to CareerUs Interview — ${details.offerLabel}`;
+  const intro = details.alreadyActive
+    ? "Good news — free access has been added to your CareerUs Interview account. Just log in and start practising."
+    : `You've been invited to CareerUs Interview. Sign up with <strong>${to}</strong> and your free access turns on automatically — no payment needed.`;
+  const buttonLabel = details.alreadyActive ? "Go to dashboard" : "Create my free account";
+  const text = details.alreadyActive
+    ? `Free access (${details.offerLabel}) has been added to your CareerUs Interview account. Log in: ${details.actionUrl}`
+    : `You're invited to CareerUs Interview (${details.offerLabel}). Sign up with ${to} and your free access turns on automatically: ${details.actionUrl}\nInvite code: ${details.code}`;
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${subject}</title>
+</head>
+<body style="margin:0;padding:20px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;background-color:#f4f4f4;color:#333333;">
+  <table role="presentation" style="border-collapse:collapse;width:100%;max-width:600px;margin:20px auto;background-color:#ffffff;border-radius:8px;">
+    <tr>
+      <td style="background-color:#007bff;color:#ffffff;padding:20px;text-align:center;border-top-left-radius:8px;border-top-right-radius:8px;">
+        <h1 style="margin:0;font-size:22px;">${details.alreadyActive ? "Your free access is active" : "You're invited!"}</h1>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:30px;text-align:center;">
+        <p>Hello,</p>
+        <p>${intro}</p>
+        <div style="font-size:18px;font-weight:bold;color:#007bff;margin:20px 0;padding:12px 16px;background-color:#f0f6ff;border-radius:4px;display:inline-block;">${details.offerLabel}</div>
+        <p style="margin:24px 0;">
+          <a href="${details.actionUrl}" style="background-color:#007bff;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:6px;font-weight:bold;display:inline-block;">${buttonLabel}</a>
+        </p>
+        <p style="font-size:13px;color:#666666;">Invite code: <strong style="letter-spacing:0.1em;">${details.code}</strong></p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:20px;text-align:center;font-size:12px;color:#666666;background-color:#f4f4f4;border-bottom-left-radius:8px;border-bottom-right-radius:8px;">
+        <p>This is an automated message. Please do not reply directly to this email.</p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+  await transporter.sendMail({ from, to, subject, text, html });
+
+  return { channel: "remote", provider };
+}

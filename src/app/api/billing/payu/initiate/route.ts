@@ -28,10 +28,9 @@ import {
 } from "@/lib/billing/checkout-details";
 import {
   checkCouponForCheckout,
+  applyFreeCouponPlan,
   claimCouponUse,
-  getCouponPlanPeriodEnd,
   grantCouponCredits,
-  hasPlanLimits,
   normalizeCouponCode,
   recordCouponRedemption,
   type CouponCheckResult,
@@ -90,30 +89,7 @@ async function activateFreeCheckout({
     await user.save();
     await grantCouponCredits(user._id.toString(), coupon);
   } else if (target.type === "plan") {
-    const periodEnd = getCouponPlanPeriodEnd(coupon, target.id);
-    user.billingPlanId = target.id;
-    user.subscribedAt = new Date();
-    user.subscriptionStatus = "active";
-    user.planAmount = 0;
-    user.set("currentPeriodEnd", periodEnd ?? undefined);
-    user.set("trialEndsAt", undefined);
-    user.cancelAtPeriodEnd = false;
-    user.appliedCouponCode = coupon.code;
-    if (hasPlanLimits(coupon)) {
-      // Full portal, but mock interviews / resume analyses are capped for this free period.
-      const mock = coupon.mockInterviewCredits ?? 0;
-      const resume = coupon.resumeAnalyzerCredits ?? 0;
-      user.set("featureCredits", {
-        mockInterviewRemaining: mock,
-        mockInterviewTotal: mock,
-        resumeAnalyzerRemaining: resume,
-        resumeAnalyzerTotal: resume,
-        expiresAt: periodEnd,
-        couponCode: coupon.code,
-        suspended: false,
-        planLimited: true,
-      });
-    }
+    applyFreeCouponPlan(user, coupon, target.id);
     await user.save();
   } else {
     const service = getHumanService(target.id);

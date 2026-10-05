@@ -1,7 +1,9 @@
+import type { HydratedDocument } from "mongoose";
 import { connectDB } from "@/lib/mongodb";
 import { Coupon, type CouponDocument } from "@/models/Coupon";
-import { User } from "@/models/User";
+import { User, type UserDocument } from "@/models/User";
 import { CouponRedemption } from "@/models/CouponRedemption";
+import { CouponInvite } from "@/models/CouponInvite";
 import { getPlanPeriodEnd } from "@/lib/billing/activate-plan";
 import { GST_RATE } from "@/lib/billing/order-amount";
 import {
@@ -200,6 +202,15 @@ export async function checkCouponForCheckout(
     return { ok: false, error: "This coupon does not apply to this purchase." };
   }
 
+  if (coupon.inviteOnly) {
+    const user = await User.findById(userId).select({ email: 1 }).lean();
+    const invited =
+      user && (await CouponInvite.exists({ couponId: coupon._id, email: user.email }));
+    if (!invited) {
+      return { ok: false, error: "This coupon is only for invited emails." };
+    }
+  }
+
   const perUserLimit = coupon.perUserLimit ?? 1;
   if (perUserLimit > 0) {
     const usedByUser = await CouponRedemption.countDocuments({
@@ -277,6 +288,45 @@ export async function grantCouponCredits(
     couponCode: coupon.code,
   });
   await user.save();
+}
+
+/**
+ * Puts the user on a ₹0 plan from a `free` coupon (period from `freeAccessDays`).
+ * Sets fields on the document only — the caller saves it.
+ */
+export function applyFreeCouponPlan(
+  user: HydratedDocument<UserDocument>,
+  coupon: Pick<
+    CouponDocument,
+    "code" | "discountType" | "freeAccessDays" | "mockInterviewCredits" | "resumeAnalyzerCredits"
+  >,
+  planId: PublicBillingPlanId
+): void {
+  const periodEnd = getCouponPlanPeriodEnd(coupon, planId);
+  user.billingPlanId = planId;
+  user.subscribedAt = new Date();
+  user.subscriptionStatus = "active";
+  user.planAmount = 0;
+  user.set("currentPeriodEnd", periodEnd ?? undefined);
+  user.set("trialEndsAt", undefined);
+  user.cancelAtPeriodEnd = false;
+  user.appliedCouponCode = coupon.code;
+  user.couponAccessSuspended = false;
+  if (hasPlanLimits(coupon)) {
+    // Full portal, but mock interviews / resume analyses are capped for this free period.
+    const mock = coupon.mockInterviewCredits ?? 0;
+    const resume = coupon.resumeAnalyzerCredits ?? 0;
+    user.set("featureCredits", {
+      mockInterviewRemaining: mock,
+      mockInterviewTotal: mock,
+      resumeAnalyzerRemaining: resume,
+      resumeAnalyzerTotal: resume,
+      expiresAt: periodEnd,
+      couponCode: coupon.code,
+      suspended: false,
+      planLimited: true,
+    });
+  }
 }
 
 type RecordRedemptionInput = {

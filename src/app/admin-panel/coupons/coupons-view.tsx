@@ -38,6 +38,9 @@ type FormState = {
   expiresAt: string;
   maxUses: string;
   perUserLimit: string;
+  inviteOnly: boolean;
+  /** Emails to invite once the coupon is saved (invite-only coupons). */
+  inviteEmails: string;
 };
 
 const EMPTY_FORM: FormState = {
@@ -53,6 +56,30 @@ const EMPTY_FORM: FormState = {
   expiresAt: "",
   maxUses: "",
   perUserLimit: "1",
+  inviteOnly: false,
+  inviteEmails: "",
+};
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function splitEmails(raw: string): string[] {
+  return raw.split(/[\s,;]+/).filter(Boolean);
+}
+
+type InviteResult = {
+  email: string;
+  status: "activated" | "pending" | "failed";
+  emailSent: boolean;
+  message?: string;
+};
+
+const INVITE_STATUS: Record<
+  AdminCouponRecord["invites"][number]["status"],
+  { label: string; tone: string }
+> = {
+  pending: { label: "Waiting for signup", tone: "bg-sky-100 text-sky-700" },
+  activated: { label: "Access active", tone: "bg-emerald-100 text-emerald-700" },
+  failed: { label: "Not granted", tone: "bg-red-100 text-red-700" },
 };
 
 function toDateInput(iso: string | null): string {
@@ -98,6 +125,16 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [openUsageId, setOpenUsageId] = useState<string | null>(null);
+  const [openInviteId, setOpenInviteId] = useState<string | null>(null);
+  const [inviteEmails, setInviteEmails] = useState("");
+  const [inviting, setInviting] = useState(false);
+  const [inviteMessage, setInviteMessage] = useState<{ tone: "ok" | "error"; text: string } | null>(
+    null
+  );
+
+  // Invites grant free access / free uses, so only those types can be invite-only.
+  const canInviteOnly = form.discountType === "free" || form.discountType === "credits";
+  const inviteOnlySelected = canInviteOnly && form.inviteOnly;
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -129,6 +166,8 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
       expiresAt: toDateInput(coupon.expiresAt),
       maxUses: coupon.maxUses ? String(coupon.maxUses) : "",
       perUserLimit: String(coupon.perUserLimit),
+      inviteOnly: coupon.inviteOnly,
+      inviteEmails: "",
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -141,12 +180,29 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    setSaving(true);
     setError(null);
 
+    const isFreeType = form.discountType === "free" || form.discountType === "credits";
+    const inviteOnly = form.inviteOnly && isFreeType;
+    const emails = inviteOnly ? splitEmails(form.inviteEmails) : [];
+    const badEmail = emails.find((email) => !EMAIL_RE.test(email));
+    if (badEmail) {
+      setError(`Not a valid email: ${badEmail}`);
+      return;
+    }
+    if (inviteOnly && !editingId && emails.length === 0) {
+      setError("Add at least one email to invite.");
+      return;
+    }
+
+    setSaving(true);
+
     // Date inputs are calendar days: start at 00:00, expire at the end of the chosen day (local time).
+    const { inviteEmails: _emails, ...fields } = form;
+    void _emails;
     const payload = {
-      ...form,
+      ...fields,
+      inviteOnly,
       validFrom: form.validFrom ? new Date(`${form.validFrom}T00:00:00`).toISOString() : null,
       expiresAt: form.expiresAt ? new Date(`${form.expiresAt}T23:59:59`).toISOString() : null,
     };
@@ -160,13 +216,20 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
           body: JSON.stringify(payload),
         }
       );
-      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      const data = (await res.json().catch(() => ({}))) as { error?: string; id?: string };
       if (!res.ok) {
         setError(data.error ?? "Could not save coupon.");
         return;
       }
+      const couponId = editingId ?? data.id;
       cancelEdit();
-      router.refresh();
+      if (couponId && emails.length > 0) {
+        // Show the send results (and invite list) under the coupon's row.
+        setOpenInviteId(couponId);
+        await sendInvites(couponId, emails.join("\n"));
+      } else {
+        router.refresh();
+      }
     } catch {
       setError("Could not save coupon.");
     } finally {
@@ -212,12 +275,57 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
     router.refresh();
   }
 
+  function toggleInvitePanel(coupon: AdminCouponRecord) {
+    setOpenInviteId(openInviteId === coupon.id ? null : coupon.id);
+    setInviteEmails("");
+    setInviteMessage(null);
+  }
+
+  async function sendInvites(couponId: string, emails = inviteEmails) {
+    setInviting(true);
+    setInviteMessage(null);
+    try {
+      const res = await fetch(`/api/admin-panel/coupons/${couponId}/invites`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ emails }),
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        results?: InviteResult[];
+      };
+      if (!res.ok || !data.results) {
+        setInviteMessage({ tone: "error", text: data.error ?? "Could not send invites." });
+        return;
+      }
+      const problems = data.results.filter((r) => r.status === "failed" || !r.emailSent);
+      const sent = data.results.length - problems.length;
+      setInviteMessage({
+        tone: problems.length > 0 ? "error" : "ok",
+        text: [
+          sent > 0 ? `Invite sent to ${sent} email${sent === 1 ? "" : "s"}.` : "",
+          ...problems.map((r) => `${r.email}: ${r.message ?? "Could not invite."}`),
+        ]
+          .filter(Boolean)
+          .join(" "),
+      });
+      setInviteEmails("");
+      router.refresh();
+    } catch {
+      setInviteMessage({ tone: "error", text: "Could not send invites." });
+    } finally {
+      setInviting(false);
+    }
+  }
+
   return (
     <div className="min-w-0 space-y-6">
       <div>
         <h2 className="text-2xl font-semibold text-secondary">Coupons</h2>
         <p className="mt-1 text-sm text-secondary/70">
-          Create discount or free-access codes. Users enter them at checkout on the pricing page.
+          Create discount or free-access codes. Users enter them at checkout on the pricing page,
+          or use Invite on a free coupon to email it — invited users get access as soon as they
+          sign up.
         </p>
       </div>
 
@@ -355,15 +463,42 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className={LABEL_CLASS}>Max total uses</label>
-              <input
-                type="number"
-                min={1}
-                value={form.maxUses}
-                onChange={(event) => update("maxUses", event.target.value)}
-                placeholder="Unlimited"
-                className={INPUT_CLASS}
-              />
+              <label className={LABEL_CLASS}>Who can use</label>
+              {canInviteOnly ? (
+                <div className="mt-1 flex gap-1.5">
+                  {[
+                    { label: "Total users", inviteOnly: false },
+                    { label: "Email invites", inviteOnly: true },
+                  ].map((option) => (
+                    <button
+                      key={option.label}
+                      type="button"
+                      onClick={() => update("inviteOnly", option.inviteOnly)}
+                      className={`rounded-full border px-2.5 py-1 text-xs font-medium ${
+                        inviteOnlySelected === option.inviteOnly
+                          ? "border-primary bg-primary text-white"
+                          : "border-primary/20 text-secondary/70 hover:border-primary"
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+              {inviteOnlySelected ? (
+                <p className="mt-2 text-xs text-secondary/60">
+                  Only the emails below can use it.
+                </p>
+              ) : (
+                <input
+                  type="number"
+                  min={1}
+                  value={form.maxUses}
+                  onChange={(event) => update("maxUses", event.target.value)}
+                  placeholder="Max total uses (empty = unlimited)"
+                  className={INPUT_CLASS}
+                />
+              )}
             </div>
             <div>
               <label className={LABEL_CLASS}>Uses per user</label>
@@ -377,6 +512,25 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
             </div>
           </div>
         </div>
+
+        {inviteOnlySelected ? (
+          <div>
+            <label className={LABEL_CLASS}>
+              {editingId ? "Invite more emails (optional)" : "Emails to invite"}
+            </label>
+            <p className="mt-0.5 text-xs text-secondary/60">
+              One per line or comma separated. Each person gets an invite link by email when you
+              save. Existing users get access right away; new users get it when they sign up.
+            </p>
+            <textarea
+              value={form.inviteEmails}
+              onChange={(event) => update("inviteEmails", event.target.value)}
+              rows={3}
+              placeholder={"student1@college.edu\nstudent2@college.edu"}
+              className={INPUT_CLASS}
+            />
+          </div>
+        ) : null}
 
         <div>
           <label className={LABEL_CLASS}>Works on (none selected = everything)</label>
@@ -419,7 +573,13 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
             disabled={saving}
             className="rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-white disabled:opacity-60"
           >
-            {saving ? "Saving…" : editingId ? "Save changes" : "Create coupon"}
+            {saving
+              ? "Saving…"
+              : editingId
+                ? "Save changes"
+                : inviteOnlySelected
+                  ? "Create & send invites"
+                  : "Create coupon"}
           </button>
           {editingId ? (
             <button
@@ -457,6 +617,9 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
               coupons.map((coupon) => {
                 const state = couponState(coupon);
                 const usageOpen = openUsageId === coupon.id;
+                const inviteOpen = openInviteId === coupon.id;
+                const canInvite =
+                  coupon.discountType === "free" || coupon.discountType === "credits";
                 return (
                   <Fragment key={coupon.id}>
                   <tr className="border-b border-primary/5 text-sm text-secondary">
@@ -475,8 +638,14 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
                     </td>
                     <td className="px-3 py-3 text-xs">
                       {coupon.usedCount}
-                      {coupon.maxUses != null ? ` / ${coupon.maxUses}` : ""}
-                      <span className="block text-secondary/50">{coupon.perUserLimit}× per user</span>
+                      {coupon.inviteOnly
+                        ? ` / ${coupon.invites.length} invited`
+                        : coupon.maxUses != null
+                          ? ` / ${coupon.maxUses}`
+                          : ""}
+                      <span className="block text-secondary/50">
+                        {coupon.inviteOnly ? "Invite only" : `${coupon.perUserLimit}× per user`}
+                      </span>
                       {coupon.redemptions.length > 0 ? (
                         <button
                           type="button"
@@ -495,6 +664,18 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
                       </span>
                     </td>
                     <td className="whitespace-nowrap px-3 py-3 text-right text-xs">
+                      {canInvite ? (
+                        <button
+                          type="button"
+                          onClick={() => toggleInvitePanel(coupon)}
+                          disabled={busyId === coupon.id}
+                          className="mr-3 font-semibold text-primary hover:underline"
+                        >
+                          {inviteOpen
+                            ? "Close invites"
+                            : `Invite${coupon.invites.length > 0 ? ` (${coupon.invites.length})` : ""}`}
+                        </button>
+                      ) : null}
                       <button
                         type="button"
                         onClick={() => startEdit(coupon)}
@@ -521,6 +702,95 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
                       </button>
                     </td>
                   </tr>
+                  {inviteOpen ? (
+                    <tr className="border-b border-primary/5 bg-primary/[0.02]">
+                      <td colSpan={7} className="space-y-3 px-3 py-3">
+                        <div>
+                          <label className={LABEL_CLASS}>Invite by email — {coupon.label}</label>
+                          <p className="mt-0.5 text-xs text-secondary/60">
+                            Paste one or more emails (comma or new line). Existing users get access
+                            right away; new users get it automatically when they sign up with that email.
+                          </p>
+                          <textarea
+                            value={inviteEmails}
+                            onChange={(event) => {
+                              setInviteEmails(event.target.value);
+                              setInviteMessage(null);
+                            }}
+                            rows={3}
+                            placeholder={"student1@college.edu\nstudent2@college.edu"}
+                            className={INPUT_CLASS}
+                          />
+                        </div>
+                        {inviteMessage ? (
+                          <p
+                            className={`text-xs ${inviteMessage.tone === "ok" ? "text-emerald-700" : "text-red-600"}`}
+                            role="status"
+                          >
+                            {inviteMessage.text}
+                          </p>
+                        ) : null}
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => sendInvites(coupon.id)}
+                            disabled={inviting || !inviteEmails.trim() || !coupon.isActive}
+                            className="rounded-lg bg-primary px-4 py-1.5 text-xs font-semibold text-white disabled:opacity-60"
+                          >
+                            {inviting ? "Sending…" : "Send invite"}
+                          </button>
+                          {!coupon.isActive ? (
+                            <span className="text-xs text-secondary/60">
+                              Turn the coupon on to send invites.
+                            </span>
+                          ) : null}
+                        </div>
+
+                        {coupon.invites.length > 0 ? (
+                          <table className="w-full text-left text-xs text-secondary">
+                            <thead>
+                              <tr className="text-[10px] font-semibold uppercase tracking-wider text-secondary/50">
+                                <th className="px-2 py-1.5">Email</th>
+                                <th className="px-2 py-1.5">Status</th>
+                                <th className="px-2 py-1.5">Invited</th>
+                                <th className="px-2 py-1.5">Last emailed</th>
+                                <th className="px-2 py-1.5" />
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {coupon.invites.map((invite) => (
+                                <tr key={invite.id} className="border-t border-primary/5">
+                                  <td className="px-2 py-1.5 font-medium">{invite.email}</td>
+                                  <td className="px-2 py-1.5">
+                                    <span
+                                      className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${INVITE_STATUS[invite.status].tone}`}
+                                    >
+                                      {INVITE_STATUS[invite.status].label}
+                                    </span>
+                                    {invite.status === "failed" && invite.failureReason ? (
+                                      <span className="ml-2 text-secondary/60">{invite.failureReason}</span>
+                                    ) : null}
+                                  </td>
+                                  <td className="px-2 py-1.5">{formatDate(invite.invitedAt || null)}</td>
+                                  <td className="px-2 py-1.5">{formatDate(invite.lastEmailedAt)}</td>
+                                  <td className="px-2 py-1.5 text-right">
+                                    <button
+                                      type="button"
+                                      onClick={() => sendInvites(coupon.id, invite.email)}
+                                      disabled={inviting || !coupon.isActive}
+                                      className="font-semibold text-primary hover:underline disabled:opacity-50"
+                                    >
+                                      Resend
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        ) : null}
+                      </td>
+                    </tr>
+                  ) : null}
                   {usageOpen ? (() => {
                     const isCredits =
                       coupon.discountType === "credits" ||

@@ -28,6 +28,8 @@ const couponSchema = new Schema(
     /** Total redemptions allowed. null = unlimited. */
     maxUses: { type: Number, default: null },
     perUserLimit: { type: Number, default: 1 },
+    /** Only emails invited from the admin panel can use it (no total-uses cap). */
+    inviteOnly: { type: Boolean, default: false },
     usedCount: { type: Number, default: 0 },
     isActive: { type: Boolean, default: true },
     createdBy: { type: Schema.Types.ObjectId, ref: "User" },

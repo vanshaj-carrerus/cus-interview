@@ -1,19 +1,30 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
 import { useAuth } from "@/components/providers/auth-provider";
 import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 
 type Step = "email" | "verify";
 
 export default function SignupPage() {
+  return (
+    <Suspense fallback={null}>
+      <SignupPageContent />
+    </Suspense>
+  );
+}
+
+function SignupPageContent() {
   const router = useRouter();
   const { sendSignupCode, completeSignup } = useAuth();
   const [step, setStep] = useState<Step>("email");
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  // Invite emails link here with ?email= so the invited address is prefilled.
+  const searchParams = useSearchParams();
+  const [typedEmail, setEmail] = useState<string | null>(null);
+  const email = typedEmail ?? searchParams.get("email") ?? "";
   const [code, setCode] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);

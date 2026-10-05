@@ -1,6 +1,8 @@
 import { connectDB } from "@/lib/mongodb";
 import { Coupon, COUPON_DISCOUNT_TYPES, type CouponDiscountType } from "@/models/Coupon";
 import { CouponRedemption } from "@/models/CouponRedemption";
+import { CouponInvite } from "@/models/CouponInvite";
+import { toAdminCouponInvite, type AdminCouponInvite } from "@/lib/billing/coupon-invites";
 import { User } from "@/models/User";
 import {
   COUPON_PRODUCT_IDS,
@@ -73,11 +75,13 @@ export type AdminCouponRecord = {
   expiresAt: string | null;
   maxUses: number | null;
   perUserLimit: number;
+  inviteOnly: boolean;
   usedCount: number;
   isActive: boolean;
   label: string;
   createdAt: string;
   redemptions: AdminCouponRedemption[];
+  invites: AdminCouponInvite[];
 };
 
 export type CouponInput = {
@@ -93,6 +97,7 @@ export type CouponInput = {
   expiresAt: Date | null;
   maxUses: number | null;
   perUserLimit: number;
+  inviteOnly: boolean;
   isActive: boolean;
 };
 
@@ -102,10 +107,18 @@ function toIso(value?: Date | null): string | null {
 
 export async function getAdminCoupons(): Promise<AdminCouponRecord[]> {
   await connectDB();
-  const [coupons, redemptions] = await Promise.all([
+  const [coupons, redemptions, invites] = await Promise.all([
     Coupon.find().sort({ createdAt: -1 }).lean(),
     CouponRedemption.find().sort({ createdAt: -1 }).lean(),
+    CouponInvite.find().sort({ createdAt: -1 }).lean(),
   ]);
+
+  const invitesByCoupon = new Map<string, AdminCouponInvite[]>();
+  for (const invite of invites) {
+    const list = invitesByCoupon.get(invite.couponId.toString()) ?? [];
+    list.push(toAdminCouponInvite(invite));
+    invitesByCoupon.set(invite.couponId.toString(), list);
+  }
 
   const userIds = [...new Set(redemptions.map((r) => r.userId.toString()))];
   const users = await User.find({ _id: { $in: userIds } })
@@ -160,11 +173,13 @@ export async function getAdminCoupons(): Promise<AdminCouponRecord[]> {
     expiresAt: toIso(coupon.expiresAt),
     maxUses: coupon.maxUses ?? null,
     perUserLimit: coupon.perUserLimit ?? 1,
+    inviteOnly: coupon.inviteOnly ?? false,
     usedCount: coupon.usedCount ?? 0,
     isActive: coupon.isActive ?? true,
     label: describeCoupon(coupon),
     createdAt: toIso(coupon.createdAt as Date) ?? new Date().toISOString(),
     redemptions: redemptionsByCoupon.get(coupon._id.toString()) ?? [],
+    invites: invitesByCoupon.get(coupon._id.toString()) ?? [],
   }));
 }
 
@@ -252,7 +267,12 @@ export function parseCouponInput(
     return { ok: false, error: "Expiry must be after the start date." };
   }
 
-  const maxUses = parseOptionalPositiveInt(body.maxUses);
+  // Invites only grant free access / free uses, so only those types can be invite-only.
+  const inviteOnly =
+    body.inviteOnly === true && (discountType === "free" || discountType === "credits");
+
+  // Invite-only: the invite list is the limit, not a total count.
+  const maxUses = inviteOnly ? null : parseOptionalPositiveInt(body.maxUses);
   if (maxUses === "invalid") {
     return { ok: false, error: "Max uses must be a whole number, or empty for unlimited." };
   }
@@ -277,6 +297,7 @@ export function parseCouponInput(
       expiresAt,
       maxUses,
       perUserLimit,
+      inviteOnly,
       isActive: body.isActive !== false,
     },
   };
