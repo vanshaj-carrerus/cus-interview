@@ -636,7 +636,7 @@ function isHashSetDesignProblem(questionText: string): boolean {
   );
 }
 
-function isDesignDataStructureProblem(questionText: string): boolean {
+export function isDesignDataStructureProblem(questionText: string): boolean {
   const lower = questionText.toLowerCase();
   return (
     isParkingSystemProblem(questionText) ||

@@ -7,6 +7,7 @@ import CompilerEditor from "./components/CompilerEditor";
 import CustomInput from "./components/CustomInput";
 import OutputConsole from "./components/OutputConsole";
 import { CODE_SNIPPETS, LANGUAGE_IDS } from "./lib/constants";
+import { buildFunctionHarness } from "./lib/function-harness";
 import {
   getProblemCodeStorageKey,
   getProblemStarterCode,
@@ -14,6 +15,7 @@ import {
   parseProblemFromSearchParams,
   resolveExpectedOutput,
   resolveProblemValidation,
+  isDesignDataStructureProblem,
   getClassSimulationOutput,
   syncProblemSolveToServer,
   type ProblemContext,
@@ -37,6 +39,7 @@ export default function CompilerPage({ embedded = false }: { embedded?: boolean 
   const [progressSaved, setProgressSaved] = useState(false);
   const [progressMessage, setProgressMessage] = useState<string | null>(null);
   const [isSavingProgress, setIsSavingProgress] = useState(false);
+  const [isAiChecking, setIsAiChecking] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -147,18 +150,76 @@ export default function CompilerPage({ embedded = false }: { embedded?: boolean 
     setProgressMessage(result.error ?? "Could not save progress. Try again.");
   };
 
+  const runAiCheck = async (
+    problem: ProblemContext,
+    run: { stdout: string; stderr: string }
+  ) => {
+    setIsAiChecking(true);
+    try {
+      const response = await fetch("/api/compiler/ai-check", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          questionText: problem.questionText,
+          language,
+          code,
+          stdin: customInput,
+          stdout: run.stdout,
+          stderr: run.stderr,
+          executionSucceeded: true,
+        }),
+      });
+      const data = (await response.json().catch(() => ({}))) as {
+        verdict?: "correct" | "wrong";
+        feedback?: string;
+        error?: string;
+      };
+
+      if (!response.ok || !data.verdict) {
+        // Stays "unchecked" — the learner can still mark it solved by hand.
+        setOutputDetails((prev: any) =>
+          prev ? { ...prev, aiError: data.error ?? "AI check is unavailable right now." } : prev
+        );
+        return;
+      }
+
+      setOutputDetails((prev: any) =>
+        prev
+          ? { ...prev, validationResult: data.verdict, aiFeedback: data.feedback ?? null }
+          : prev
+      );
+      setIsError(data.verdict === "wrong");
+      if (data.verdict === "correct" && problem.questionId) {
+        void saveProblemProgress(problem.questionId);
+      }
+    } catch {
+      setOutputDetails((prev: any) =>
+        prev ? { ...prev, aiError: "AI check is unavailable right now." } : prev
+      );
+    } finally {
+      setIsAiChecking(false);
+    }
+  };
+
   const runCompile = async () => {
     if (!code) return;
     setIsLoading(true);
     setIsError(false);
     setOutputDetails(null);
 
+    // LeetCode-style function-only solution: call it with the custom input and print the result.
+    // Design problems (classes driven by stdin) keep running as-is.
+    const harness =
+      problemContext && isDesignDataStructureProblem(problemContext.questionText)
+        ? null
+        : buildFunctionHarness(language, code, customInput);
+
     try {
       const response = await fetch("/api/execute", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          source_code: code,
+          source_code: harness?.code ?? code,
           language_id: LANGUAGE_IDS[language as keyof typeof LANGUAGE_IDS],
           stdin: customInput,
         }),
@@ -189,15 +250,21 @@ export default function CompilerPage({ embedded = false }: { embedded?: boolean 
         });
       } else {
         const executionSucceeded = data.status?.id === 3;
-        const validationResult = problemContext
-          ? resolveProblemValidation(
-              data.stdout,
-              problemContext,
-              executionSucceeded,
-              customInput,
-              code
-            )
-          : null;
+        // Function-style answers return values, which the keyword-based stdout checks can't
+        // judge — the AI check reviews them instead.
+        const validationResult = !problemContext
+          ? null
+          : harness
+            ? executionSucceeded
+              ? "unchecked"
+              : null
+            : resolveProblemValidation(
+                data.stdout,
+                problemContext,
+                executionSucceeded,
+                customInput,
+                code
+              );
 
         const simulatedStdout =
           problemContext && validationResult === "correct" && !(data.stdout ?? "").trim()
@@ -222,6 +289,14 @@ export default function CompilerPage({ embedded = false }: { embedded?: boolean 
 
         if (validationResult === "correct" && problemContext?.questionId) {
           void saveProblemProgress(problemContext.questionId);
+        }
+
+        // No exact test case for this problem — let AI review the solution instead.
+        if (validationResult === "unchecked" && problemContext) {
+          void runAiCheck(problemContext, {
+            stdout: data.stdout ?? "",
+            stderr: data.stderr ?? "",
+          });
         }
 
         if (!executionSucceeded) {
@@ -284,13 +359,15 @@ export default function CompilerPage({ embedded = false }: { embedded?: boolean 
             <LanguageSelector language={language} onSelect={onSelectLanguage} />
             <button
               onClick={handleCompile}
-              disabled={isLoading}
+              disabled={isLoading || isAiChecking}
               className="flex items-center gap-2 bg-slate-900 hover:bg-primary disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold px-6 py-2.5 rounded-xl transition-all shadow-md active:scale-95 text-sm"
             >
               <Play className="w-4 h-4 fill-current" />
               {isLoading
                 ? "Running..."
-                : problemContext
+                : isAiChecking
+                  ? "Checking..."
+                  : problemContext
                   ? "Run & Check"
                   : "Run Code"}
             </button>
@@ -314,9 +391,9 @@ export default function CompilerPage({ embedded = false }: { embedded?: boolean 
                     your code. If your logic is correct, the answer will be accepted.
                   </p>
                 ) : (
-                  <p className="mt-3 text-xs text-amber-600">
-                    Auto-check is not available for this problem yet. Write a solution
-                    that matches the problem statement.
+                  <p className="mt-3 text-xs text-slate-500">
+                    Write your solution and click Run &amp; Check — AI reviews your code
+                    against the problem statement and marks it solved when it&apos;s correct.
                   </p>
                 )}
               </div>
@@ -347,8 +424,12 @@ export default function CompilerPage({ embedded = false }: { embedded?: boolean 
                   Boolean(problemContext?.questionId) &&
                   outputDetails?.status?.id === 3 &&
                   outputDetails?.validationResult === "unchecked" &&
+                  // Manual fallback only when the AI check could not run.
+                  Boolean(outputDetails?.aiError) &&
+                  !isAiChecking &&
                   !progressSaved
                 }
+                isAiChecking={isAiChecking}
                 isSavingProgress={isSavingProgress}
                 progressMessage={progressMessage}
                 onMarkSolved={

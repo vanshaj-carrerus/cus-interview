@@ -11,6 +11,9 @@ type OutputDetails = {
   memory?: number;
   validationResult?: ValidationResult | null;
   computedExpected?: string | null;
+  /** AI review result for problems without an exact test case. */
+  aiFeedback?: string | null;
+  aiError?: string | null;
 };
 
 type Props = {
@@ -23,6 +26,7 @@ type Props = {
   isSavingProgress?: boolean;
   progressMessage?: string | null;
   onMarkSolved?: () => void;
+  isAiChecking?: boolean;
 };
 
 function getProblemStatusBadge(validationResult: ValidationResult | null | undefined) {
@@ -59,6 +63,7 @@ export default function OutputConsole({
   isSavingProgress = false,
   progressMessage = null,
   onMarkSolved,
+  isAiChecking = false,
 }: Props) {
   const getOutput = () => {
     let statusId = outputDetails?.status?.id;
@@ -75,6 +80,17 @@ export default function OutputConsole({
         isProblemMode && outputDetails?.validationResult === "wrong"
           ? "text-rose-600"
           : "text-emerald-600";
+
+      if (!outputDetails?.stdout?.trim()) {
+        return (
+          <span className="font-sans text-xs text-slate-400">
+            No output printed.
+            {isProblemMode
+              ? " To run your function, type its input in Custom Input — one argument per line, e.g. [0,0,null,0,0] — and its return value shows here."
+              : " Add a print / console.log statement to see output."}
+          </span>
+        );
+      }
 
       return (
         <span className={outputClassName}>
@@ -146,6 +162,9 @@ export default function OutputConsole({
       {isProblemMode && !isLoading && outputDetails?.validationResult === "correct" && (
         <div className="rounded-xl border px-4 py-3 text-sm font-semibold border-emerald-200 bg-emerald-50 text-emerald-700">
           Correct! Your answer is correct for this problem.
+          {outputDetails.aiFeedback ? (
+            <p className="mt-1 text-xs font-medium text-emerald-600">{outputDetails.aiFeedback}</p>
+          ) : null}
           {progressMessage ? (
             <p className="mt-1 text-xs font-medium text-emerald-600">{progressMessage}</p>
           ) : null}
@@ -154,18 +173,35 @@ export default function OutputConsole({
 
       {isProblemMode && !isLoading && outputDetails?.validationResult === "wrong" && (
         <div className="rounded-xl border px-4 py-3 text-sm font-semibold border-rose-200 bg-rose-50 text-rose-700">
-          Wrong answer. Your code ran, but the output does not look like a correct
-          solution for this problem.
-          {(outputDetails?.computedExpected ?? expectedOutput)
-            ? ` Expected something like: ${outputDetails?.computedExpected ?? expectedOutput}`
-            : ""}
+          {outputDetails.aiFeedback ? (
+            <>
+              Not correct yet.
+              <p className="mt-1 text-xs font-medium text-rose-600">{outputDetails.aiFeedback}</p>
+            </>
+          ) : (
+            <>
+              Wrong answer. Your code ran, but the output does not look like a correct
+              solution for this problem.
+              {(outputDetails?.computedExpected ?? expectedOutput)
+                ? ` Expected something like: ${outputDetails?.computedExpected ?? expectedOutput}`
+                : ""}
+            </>
+          )}
         </div>
       )}
 
-      {isProblemMode && !isLoading && outputDetails?.validationResult === "unchecked" && (
+      {isProblemMode && !isLoading && outputDetails?.validationResult === "unchecked" && isAiChecking && (
+        <div className="flex items-center gap-2 rounded-xl border px-4 py-3 text-sm font-semibold border-sky-200 bg-sky-50 text-sky-700">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Code ran — AI is checking your solution…
+        </div>
+      )}
+
+      {isProblemMode && !isLoading && outputDetails?.validationResult === "unchecked" && !isAiChecking && (
         <div className="rounded-xl border px-4 py-3 text-sm font-semibold border-amber-200 bg-amber-50 text-amber-700">
-          Code executed, but this problem cannot be auto-checked yet. Make sure your
-          solution matches the problem statement.
+          {outputDetails.aiError
+            ? `Code executed, but the AI check is unavailable right now. If your solution matches the problem statement, you can mark it solved.`
+            : "Code executed. Make sure your solution matches the problem statement."}
           {canMarkSolved && onMarkSolved ? (
             <button
               type="button"
