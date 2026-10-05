@@ -41,6 +41,9 @@ type FormState = {
   inviteOnly: boolean;
   /** Emails to invite once the coupon is saved (invite-only coupons). */
   inviteEmails: string;
+  /** Access dates for those emails (YYYY-MM-DD, empty = default). */
+  inviteStart: string;
+  inviteEnd: string;
 };
 
 const EMPTY_FORM: FormState = {
@@ -58,6 +61,8 @@ const EMPTY_FORM: FormState = {
   perUserLimit: "1",
   inviteOnly: false,
   inviteEmails: "",
+  inviteStart: "",
+  inviteEnd: "",
 };
 
 /** Matches MAX_INVITES_PER_REQUEST on the server. */
@@ -87,6 +92,17 @@ const INVITE_STATUS: Record<
 };
 
 type AdminInvite = AdminCouponRecord["invites"][number];
+
+type InviteDates = { start: string; end: string };
+const EMPTY_INVITE_DATES: InviteDates = { start: "", end: "" };
+
+/** Calendar days → ISO: access starts at 00:00 and ends at the end of the chosen day (local time). */
+function datesToPayload(dates: InviteDates) {
+  return {
+    accessStartsAt: dates.start ? new Date(`${dates.start}T00:00:00`).toISOString() : null,
+    accessEndsAt: dates.end ? new Date(`${dates.end}T23:59:59`).toISOString() : null,
+  };
+}
 
 /** YYYY-MM-DD in the admin's local time (for date inputs). */
 function toLocalDateInput(iso: string | null): string {
@@ -152,6 +168,46 @@ function productLabel(ids: string[]): string {
     .join(", ");
 }
 
+/** Start / end date pickers for someone's access from a coupon. */
+function AccessDateFields({
+  dates,
+  onChange,
+  freeAccessDays,
+  startHint = "empty = on signup",
+}: {
+  dates: InviteDates;
+  onChange: (dates: InviteDates) => void;
+  freeAccessDays: number | null;
+  startHint?: string;
+}) {
+  return (
+    <>
+      <div>
+        <label className={LABEL_CLASS}>Access starts ({startHint})</label>
+        <input
+          type="date"
+          value={dates.start}
+          onChange={(event) => onChange({ ...dates, start: event.target.value })}
+          className={INPUT_CLASS}
+        />
+      </div>
+      <div>
+        <label className={LABEL_CLASS}>
+          Access ends (
+          {freeAccessDays ? `empty = ${freeAccessDays} days from start` : "empty = no end"})
+        </label>
+        <input
+          type="date"
+          value={dates.end}
+          min={dates.start || undefined}
+          onChange={(event) => onChange({ ...dates, end: event.target.value })}
+          className={INPUT_CLASS}
+        />
+      </div>
+    </>
+  );
+}
+
 export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] }) {
   const router = useRouter();
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
@@ -162,10 +218,13 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
   const [openUsageId, setOpenUsageId] = useState<string | null>(null);
   const [openInviteId, setOpenInviteId] = useState<string | null>(null);
   const [inviteEmails, setInviteEmails] = useState("");
+  /** Access dates for the emails being invited from a coupon's Invite panel (YYYY-MM-DD). */
+  const [inviteDates, setInviteDates] = useState<InviteDates>(EMPTY_INVITE_DATES);
   const [inviting, setInviting] = useState(false);
   const [busyInviteId, setBusyInviteId] = useState<string | null>(null);
   const [editingDates, setEditingDates] = useState<{
-    inviteId: string;
+    kind: "invite" | "redemption";
+    id: string;
     start: string;
     end: string;
   } | null>(null);
@@ -211,6 +270,8 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
       perUserLimit: String(coupon.perUserLimit),
       inviteOnly: coupon.inviteOnly,
       inviteEmails: "",
+      inviteStart: "",
+      inviteEnd: "",
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -237,12 +298,19 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
       setError("Add at least one email to invite.");
       return;
     }
+    const accessDates: InviteDates = { start: form.inviteStart, end: form.inviteEnd };
+    if (accessDates.start && accessDates.end && accessDates.end < accessDates.start) {
+      setError("Access end date must be after the start date.");
+      return;
+    }
 
     setSaving(true);
 
     // Date inputs are calendar days: start at 00:00, expire at the end of the chosen day (local time).
-    const { inviteEmails: _emails, ...fields } = form;
+    const { inviteEmails: _emails, inviteStart: _start, inviteEnd: _end, ...fields } = form;
     void _emails;
+    void _start;
+    void _end;
     const payload = {
       ...fields,
       inviteOnly,
@@ -269,7 +337,7 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
       if (couponId && emails.length > 0) {
         // Show the send results (and invite list) under the coupon's row.
         setOpenInviteId(couponId);
-        await sendInvites(couponId, emails.join("\n"));
+        await sendInvites(couponId, emails.join("\n"), accessDates);
       } else {
         router.refresh();
       }
@@ -321,6 +389,7 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
   function toggleInvitePanel(coupon: AdminCouponRecord) {
     setOpenInviteId(openInviteId === coupon.id ? null : coupon.id);
     setInviteEmails("");
+    setInviteDates(EMPTY_INVITE_DATES);
     setInviteMessage(null);
   }
 
@@ -372,7 +441,8 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
         : null);
     setInviteMessage(null);
     setEditingDates({
-      inviteId: invite.id,
+      kind: "invite",
+      id: invite.id,
       start: toLocalDateInput(start),
       end: toLocalDateInput(end),
     });
@@ -380,22 +450,19 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
 
   async function saveInviteDates(coupon: AdminCouponRecord) {
     if (!editingDates) return;
-    const { inviteId, start, end } = editingDates;
+    const { kind, id, start, end } = editingDates;
     if (start && end && end < start) {
       setInviteMessage({ tone: "error", text: "End date must be after the start date." });
       return;
     }
-    setBusyInviteId(inviteId);
+    setBusyInviteId(id);
     setInviteMessage(null);
     try {
-      // Calendar days: access starts at 00:00 and ends at the end of the chosen day (local time).
-      const res = await fetch(`/api/admin-panel/coupons/${coupon.id}/invites/${inviteId}`, {
+      const path = kind === "invite" ? "invites" : "redemptions";
+      const res = await fetch(`/api/admin-panel/coupons/${coupon.id}/${path}/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          accessStartsAt: start ? new Date(`${start}T00:00:00`).toISOString() : null,
-          accessEndsAt: end ? new Date(`${end}T23:59:59`).toISOString() : null,
-        }),
+        body: JSON.stringify(datesToPayload({ start, end })),
       });
       const data = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
@@ -412,7 +479,12 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
     }
   }
 
-  async function sendInvites(couponId: string, emails = inviteEmails) {
+  /** `dates` = access dates for these emails; omitted (Resend) keeps each invite's existing dates. */
+  async function sendInvites(couponId: string, emails = inviteEmails, dates?: InviteDates) {
+    if (dates?.start && dates.end && dates.end < dates.start) {
+      setInviteMessage({ tone: "error", text: "End date must be after the start date." });
+      return;
+    }
     setInviting(true);
     setInviteMessage(null);
     try {
@@ -424,7 +496,10 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
         const res = await fetch(`/api/admin-panel/coupons/${couponId}/invites`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ emails: list.slice(i, i + INVITE_BATCH_SIZE).join("\n") }),
+          body: JSON.stringify({
+            emails: list.slice(i, i + INVITE_BATCH_SIZE).join("\n"),
+            ...(dates ? datesToPayload(dates) : {}),
+          }),
         });
         const data = (await res.json().catch(() => ({}))) as {
           error?: string;
@@ -453,6 +528,7 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
           .join(" "),
       });
       setInviteEmails("");
+      setInviteDates(EMPTY_INVITE_DATES);
       router.refresh();
     } catch {
       setInviteMessage({ tone: "error", text: "Could not send invites." });
@@ -680,6 +756,16 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
                 access{inviteEmailCount === 1 ? "" : "es"}
               </p>
             ) : null}
+            <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:max-w-2xl">
+              <AccessDateFields
+                dates={{ start: form.inviteStart, end: form.inviteEnd }}
+                onChange={(dates) => {
+                  setForm((prev) => ({ ...prev, inviteStart: dates.start, inviteEnd: dates.end }));
+                  setError(null);
+                }}
+                freeAccessDays={Number(form.freeAccessDays) || null}
+              />
+            </div>
           </div>
         ) : null}
 
@@ -872,6 +958,16 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
                             placeholder={"student1@college.edu\nstudent2@college.edu"}
                             className={INPUT_CLASS}
                           />
+                          <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:max-w-2xl">
+                            <AccessDateFields
+                              dates={inviteDates}
+                              onChange={(dates) => {
+                                setInviteDates(dates);
+                                setInviteMessage(null);
+                              }}
+                              freeAccessDays={coupon.freeAccessDays}
+                            />
+                          </div>
                         </div>
                         {inviteMessage ? (
                           <p
@@ -884,7 +980,7 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
                         <div className="flex items-center gap-2">
                           <button
                             type="button"
-                            onClick={() => sendInvites(coupon.id)}
+                            onClick={() => sendInvites(coupon.id, inviteEmails, inviteDates)}
                             disabled={inviting || !inviteEmails.trim() || !coupon.isActive}
                             className="rounded-lg bg-primary px-4 py-1.5 text-xs font-semibold text-white disabled:opacity-60"
                           >
@@ -933,7 +1029,7 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
                                     <button
                                       type="button"
                                       onClick={() =>
-                                        editingDates?.inviteId === invite.id
+                                        editingDates?.id === invite.id
                                           ? setEditingDates(null)
                                           : startEditDates(coupon, invite)
                                       }
@@ -978,7 +1074,7 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
                                     </button>
                                   </td>
                                 </tr>
-                                {editingDates?.inviteId === invite.id ? (
+                                {editingDates?.id === invite.id ? (
                                   <tr className="bg-white">
                                     <td colSpan={6} className="px-2 py-2">
                                       <div className="flex flex-wrap items-end gap-3">
@@ -1054,6 +1150,8 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
                       coupon.discountType === "credits" ||
                       (coupon.discountType === "free" &&
                         (coupon.mockInterviewCredits > 0 || coupon.resumeAnalyzerCredits > 0));
+                    // Access dates only exist for free-access / free-uses coupons.
+                    const canEditDates = canInvite;
                     return (
                     <tr className="border-b border-primary/5 bg-primary/[0.02]">
                       <td colSpan={7} className="px-3 py-3">
@@ -1066,7 +1164,6 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
                                 <>
                                   <th className="px-2 py-1.5">AI mock interviews used</th>
                                   <th className="px-2 py-1.5">Resume analyses used</th>
-                                  <th className="px-2 py-1.5">Free uses expire</th>
                                 </>
                               ) : (
                                 <>
@@ -1075,12 +1172,15 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
                                   <th className="px-2 py-1.5">Paid</th>
                                 </>
                               )}
+                              {canEditDates ? <th className="px-2 py-1.5">Access</th> : null}
                               <th className="px-2 py-1.5">Date</th>
+                              {canEditDates ? <th className="px-2 py-1.5" /> : null}
                             </tr>
                           </thead>
                           <tbody>
                             {coupon.redemptions.map((r) => (
-                              <tr key={r.id} className="border-t border-primary/5">
+                              <Fragment key={r.id}>
+                              <tr className="border-t border-primary/5">
                                 <td className="px-2 py-1.5 font-medium">{r.userName}</td>
                                 <td className="px-2 py-1.5">{r.userEmail || "—"}</td>
                                 {isCredits ? (
@@ -1095,13 +1195,6 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
                                         ? `${r.creditUsage.resumeAnalyzerUsed} / ${r.creditUsage.resumeAnalyzerTotal}`
                                         : "—"}
                                     </td>
-                                    <td className="px-2 py-1.5">
-                                      {r.creditUsage
-                                        ? r.creditUsage.expiresAt
-                                          ? formatDate(r.creditUsage.expiresAt)
-                                          : "No expiry"
-                                        : "—"}
-                                    </td>
                                   </>
                                 ) : (
                                   <>
@@ -1112,11 +1205,85 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
                                     </td>
                                   </>
                                 )}
+                                {canEditDates ? (
+                                  <td className="whitespace-nowrap px-2 py-1.5">
+                                    {formatDate(r.accessStartsAt)} →{" "}
+                                    {r.accessEndsAt
+                                      ? formatDate(r.accessEndsAt)
+                                      : coupon.discountType === "credits"
+                                        ? "No expiry"
+                                        : "Lifetime"}
+                                  </td>
+                                ) : null}
                                 <td className="px-2 py-1.5">{formatDate(r.usedAt || null)}</td>
+                                {canEditDates ? (
+                                  <td className="whitespace-nowrap px-2 py-1.5 text-right">
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        editingDates?.id === r.id
+                                          ? setEditingDates(null)
+                                          : (setInviteMessage(null),
+                                            setEditingDates({
+                                              kind: "redemption",
+                                              id: r.id,
+                                              start: toLocalDateInput(r.accessStartsAt),
+                                              end: toLocalDateInput(r.accessEndsAt),
+                                            }))
+                                      }
+                                      disabled={busyInviteId === r.id}
+                                      className="font-semibold text-primary hover:underline disabled:opacity-50"
+                                    >
+                                      Edit dates
+                                    </button>
+                                  </td>
+                                ) : null}
                               </tr>
+                              {editingDates?.id === r.id ? (
+                                <tr className="bg-white">
+                                  <td colSpan={8} className="px-2 py-2">
+                                    <div className="flex flex-wrap items-end gap-3">
+                                      <AccessDateFields
+                                        dates={editingDates}
+                                        onChange={(dates) => setEditingDates({ ...editingDates, ...dates })}
+                                        freeAccessDays={coupon.freeAccessDays}
+                                        startHint="empty = when they used it"
+                                      />
+                                      <button
+                                        type="button"
+                                        onClick={() => saveInviteDates(coupon)}
+                                        disabled={busyInviteId === r.id}
+                                        className="rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-white disabled:opacity-60"
+                                      >
+                                        {busyInviteId === r.id ? "Saving…" : "Save dates"}
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => setEditingDates(null)}
+                                        className="rounded-lg border border-primary/20 px-4 py-2 text-xs font-semibold text-secondary"
+                                      >
+                                        Cancel
+                                      </button>
+                                    </div>
+                                    <p className="mt-1.5 text-xs text-secondary/60">
+                                      Applies to {r.userName}&apos;s account right away. Before the start
+                                      date they won&apos;t have access; after the end date it stops.
+                                    </p>
+                                  </td>
+                                </tr>
+                              ) : null}
+                              </Fragment>
                             ))}
                           </tbody>
                         </table>
+                        {inviteMessage && !inviteOpen ? (
+                          <p
+                            className={`mt-2 text-xs ${inviteMessage.tone === "ok" ? "text-emerald-700" : "text-red-600"}`}
+                            role="status"
+                          >
+                            {inviteMessage.text}
+                          </p>
+                        ) : null}
                       </td>
                     </tr>
                     );

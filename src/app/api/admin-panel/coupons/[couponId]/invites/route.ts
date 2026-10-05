@@ -4,6 +4,7 @@ import { getSessionPublicUser } from "@/lib/get-session-user";
 import {
   inviteEmailsToCoupon,
   MAX_INVITES_PER_REQUEST,
+  parseAccessDate,
   parseInviteEmails,
 } from "@/lib/billing/coupon-invites";
 
@@ -44,7 +45,18 @@ export async function POST(request: Request, { params }: Props) {
       );
     }
 
-    const result = await inviteEmailsToCoupon(couponId, valid, admin.id);
+    // Optional access dates for this batch. Resend from the list sends none (keeps existing dates).
+    let dates: { startsAt: Date | null; endsAt: Date | null } | undefined;
+    if ("accessStartsAt" in body || "accessEndsAt" in body) {
+      const startsAt = parseAccessDate(body.accessStartsAt);
+      const endsAt = parseAccessDate(body.accessEndsAt);
+      if (startsAt === "invalid" || endsAt === "invalid") {
+        return NextResponse.json({ error: "Invalid date." }, { status: 400 });
+      }
+      dates = { startsAt, endsAt };
+    }
+
+    const result = await inviteEmailsToCoupon(couponId, valid, admin.id, dates);
     if (!result.ok) {
       return NextResponse.json({ error: result.error }, { status: 400 });
     }

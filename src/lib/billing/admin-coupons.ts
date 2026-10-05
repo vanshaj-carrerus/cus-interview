@@ -32,6 +32,9 @@ export type AdminCouponRedemption = {
     resumeAnalyzerTotal: number;
     expiresAt: string | null;
   } | null;
+  /** The user's current access window from this coupon (free / credits coupons). */
+  accessStartsAt: string | null;
+  accessEndsAt: string | null;
 };
 
 /**
@@ -118,6 +121,36 @@ function toIso(value?: Date | null): string | null {
   return value ? value.toISOString() : null;
 }
 
+type WindowUser = {
+  appliedCouponCode?: string | null;
+  planAmount?: number | null;
+  currentPeriodEnd?: Date | null;
+  couponAccessStartsAt?: Date | null;
+  featureCredits?: { couponCode?: string | null; startsAt?: Date | null; expiresAt?: Date | null } | null;
+};
+
+/** Where this user's access from `code` currently starts and ends (start defaults to when they used it). */
+function accessWindowFor(
+  user: WindowUser | undefined,
+  code: string,
+  usedAt: Date | undefined
+): { accessStartsAt: string | null; accessEndsAt: string | null } {
+  const fallbackStart = toIso(usedAt);
+  if (user?.appliedCouponCode === code && (user.planAmount ?? 0) === 0) {
+    return {
+      accessStartsAt: toIso(user.couponAccessStartsAt) ?? fallbackStart,
+      accessEndsAt: toIso(user.currentPeriodEnd),
+    };
+  }
+  if (user?.featureCredits?.couponCode === code) {
+    return {
+      accessStartsAt: toIso(user.featureCredits.startsAt) ?? fallbackStart,
+      accessEndsAt: toIso(user.featureCredits.expiresAt),
+    };
+  }
+  return { accessStartsAt: fallbackStart, accessEndsAt: null };
+}
+
 export async function getAdminCoupons(): Promise<AdminCouponRecord[]> {
   await connectDB();
   const [coupons, redemptions, invites] = await Promise.all([
@@ -135,7 +168,17 @@ export async function getAdminCoupons(): Promise<AdminCouponRecord[]> {
 
   const userIds = [...new Set(redemptions.map((r) => r.userId.toString()))];
   const users = await User.find({ _id: { $in: userIds } })
-    .select({ name: 1, firstName: 1, lastName: 1, email: 1, featureCredits: 1 })
+    .select({
+      name: 1,
+      firstName: 1,
+      lastName: 1,
+      email: 1,
+      featureCredits: 1,
+      appliedCouponCode: 1,
+      planAmount: 1,
+      currentPeriodEnd: 1,
+      couponAccessStartsAt: 1,
+    })
     .lean();
   const userById = new Map(users.map((u) => [u._id.toString(), u]));
 
@@ -156,6 +199,7 @@ export async function getAdminCoupons(): Promise<AdminCouponRecord[]> {
       amountPaid: r.amountPaid,
       discountAmount: r.discountAmount,
       usedAt: toIso(r.createdAt as Date) ?? "",
+      ...accessWindowFor(user, r.code, r.createdAt as Date | undefined),
       creditUsage:
         credits && hasCredits
           ? {
