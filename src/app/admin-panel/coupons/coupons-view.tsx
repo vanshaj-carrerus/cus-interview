@@ -60,7 +60,10 @@ const EMPTY_FORM: FormState = {
   inviteEmails: "",
 };
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+/** Matches MAX_INVITES_PER_REQUEST on the server. */
+const INVITE_BATCH_SIZE = 50;
+
+const EMAIL_RE =/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function splitEmails(raw: string): string[] {
   return raw.split(/[\s,;]+/).filter(Boolean);
@@ -137,6 +140,8 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
   // Invites grant free access / free uses, so only those types can be invite-only.
   const canInviteOnly = form.discountType === "free" || form.discountType === "credits";
   const inviteOnlySelected = canInviteOnly && form.inviteOnly;
+  // Each invited email = one access, so the count is the limit.
+  const inviteEmailCount = new Set(splitEmails(form.inviteEmails.toLowerCase())).size;
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -325,26 +330,38 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
     setInviting(true);
     setInviteMessage(null);
     try {
-      const res = await fetch(`/api/admin-panel/coupons/${couponId}/invites`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ emails }),
-      });
-      const data = (await res.json().catch(() => ({}))) as {
-        error?: string;
-        results?: InviteResult[];
-      };
-      if (!res.ok || !data.results) {
-        setInviteMessage({ tone: "error", text: data.error ?? "Could not send invites." });
+      // The API takes up to 50 emails per request, so big lists go in batches.
+      const list = [...new Set(splitEmails(emails.toLowerCase()))];
+      const results: InviteResult[] = [];
+      let batchError: string | null = null;
+      for (let i = 0; i < list.length && !batchError; i += INVITE_BATCH_SIZE) {
+        const res = await fetch(`/api/admin-panel/coupons/${couponId}/invites`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ emails: list.slice(i, i + INVITE_BATCH_SIZE).join("\n") }),
+        });
+        const data = (await res.json().catch(() => ({}))) as {
+          error?: string;
+          results?: InviteResult[];
+        };
+        if (!res.ok || !data.results) {
+          batchError = data.error ?? "Could not send invites.";
+        } else {
+          results.push(...data.results);
+        }
+      }
+      if (results.length === 0) {
+        setInviteMessage({ tone: "error", text: batchError ?? "Could not send invites." });
         return;
       }
-      const problems = data.results.filter((r) => r.status === "failed" || !r.emailSent);
-      const sent = data.results.length - problems.length;
+      const problems = results.filter((r) => r.status === "failed" || !r.emailSent);
+      const sent = results.length - problems.length;
       setInviteMessage({
-        tone: problems.length > 0 ? "error" : "ok",
+        tone: problems.length > 0 || batchError ? "error" : "ok",
         text: [
           sent > 0 ? `Invite sent to ${sent} email${sent === 1 ? "" : "s"}.` : "",
           ...problems.map((r) => `${r.email}: ${r.message ?? "Could not invite."}`),
+          batchError ? `Stopped early: ${batchError}` : "",
         ]
           .filter(Boolean)
           .join(" "),
@@ -501,7 +518,7 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className={inviteOnlySelected ? "" : "grid grid-cols-2 gap-3"}>
             <div>
               <label className={LABEL_CLASS}>Who can use</label>
               {canInviteOnly ? (
@@ -527,7 +544,7 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
               ) : null}
               {inviteOnlySelected ? (
                 <p className="mt-2 text-xs text-secondary/60">
-                  Only the emails below can use it.
+                  No user limit — every email you invite gets access once.
                 </p>
               ) : (
                 <input
@@ -540,16 +557,18 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
                 />
               )}
             </div>
-            <div>
-              <label className={LABEL_CLASS}>Uses per user</label>
-              <input
-                type="number"
-                min={1}
-                value={form.perUserLimit}
-                onChange={(event) => update("perUserLimit", event.target.value)}
-                className={INPUT_CLASS}
-              />
-            </div>
+            {inviteOnlySelected ? null : (
+              <div>
+                <label className={LABEL_CLASS}>Uses per user</label>
+                <input
+                  type="number"
+                  min={1}
+                  value={form.perUserLimit}
+                  onChange={(event) => update("perUserLimit", event.target.value)}
+                  className={INPUT_CLASS}
+                />
+              </div>
+            )}
           </div>
         </div>
 
@@ -569,6 +588,12 @@ export default function CouponsView({ coupons }: { coupons: AdminCouponRecord[] 
               placeholder={"student1@college.edu\nstudent2@college.edu"}
               className={INPUT_CLASS}
             />
+            {inviteEmailCount > 0 ? (
+              <p className="mt-1 text-xs font-medium text-secondary/70">
+                {inviteEmailCount} email{inviteEmailCount === 1 ? "" : "s"} = {inviteEmailCount}{" "}
+                access{inviteEmailCount === 1 ? "" : "es"}
+              </p>
+            ) : null}
           </div>
         ) : null}
 

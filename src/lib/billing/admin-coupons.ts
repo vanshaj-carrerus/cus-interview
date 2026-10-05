@@ -290,7 +290,8 @@ export function parseCouponInput(
     return { ok: false, error: "Max uses must be a whole number, or empty for unlimited." };
   }
 
-  const perUserLimit = parseOptionalPositiveInt(body.perUserLimit) ?? 1;
+  // Invite-only: one access per invited email.
+  const perUserLimit = inviteOnly ? 1 : parseOptionalPositiveInt(body.perUserLimit) ?? 1;
   if (perUserLimit === "invalid") {
     return { ok: false, error: "Uses per user must be a whole number." };
   }
