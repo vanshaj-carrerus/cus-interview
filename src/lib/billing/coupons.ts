@@ -256,7 +256,9 @@ export async function grantCouponCredits(
   coupon: Pick<
     CouponDocument,
     "code" | "freeAccessDays" | "mockInterviewCredits" | "resumeAnalyzerCredits"
-  >
+  >,
+  /** Admin-set dates for this person: used as-is instead of the coupon's days. */
+  window?: AccessWindow
 ): Promise<void> {
   await connectDB();
   const user = await User.findById(userId);
@@ -274,7 +276,9 @@ export async function grantCouponCredits(
 
   // Keep whichever expiry is later (null = never expires).
   let expiresAt: Date | null = newExpiry;
-  if (stillValid) {
+  if (window) {
+    expiresAt = window.endsAt;
+  } else if (stillValid) {
     if (!currentExpiry || !newExpiry) {
       expiresAt = null;
     } else {
@@ -290,6 +294,7 @@ export async function grantCouponCredits(
     resumeAnalyzerRemaining: (stillValid ? current?.resumeAnalyzerRemaining ?? 0 : 0) + resume,
     resumeAnalyzerTotal: (stillValid ? current?.resumeAnalyzerTotal ?? 0 : 0) + resume,
     expiresAt,
+    startsAt: window && window.startsAt.getTime() > now.getTime() ? window.startsAt : null,
     couponCode: coupon.code,
   });
   await user.save();
@@ -305,9 +310,13 @@ export function applyFreeCouponPlan(
     CouponDocument,
     "code" | "discountType" | "freeAccessDays" | "mockInterviewCredits" | "resumeAnalyzerCredits"
   >,
-  planId: PublicBillingPlanId
+  planId: PublicBillingPlanId,
+  /** Custom access window (admin-set per invite). Without it: from now for the coupon's length. */
+  window?: AccessWindow
 ): void {
-  const periodEnd = getCouponPlanPeriodEnd(coupon, planId);
+  const periodEnd = window ? window.endsAt : getCouponPlanPeriodEnd(coupon, planId);
+  const startsAt = window && window.startsAt.getTime() > Date.now() ? window.startsAt : null;
+  user.couponAccessStartsAt = startsAt;
   user.billingPlanId = planId;
   user.subscribedAt = new Date();
   user.subscriptionStatus = "active";
@@ -327,11 +336,30 @@ export function applyFreeCouponPlan(
       resumeAnalyzerRemaining: resume,
       resumeAnalyzerTotal: resume,
       expiresAt: periodEnd,
+      startsAt,
       couponCode: coupon.code,
       suspended: false,
       planLimited: true,
     });
   }
+}
+
+/** A start and end for coupon access. `endsAt` null = no end. */
+export type AccessWindow = { startsAt: Date; endsAt: Date | null };
+
+/** Start defaults to now, end to start + the coupon's days (null = lifetime / no expiry). */
+export function resolveAccessWindow(
+  coupon: Pick<CouponDocument, "freeAccessDays">,
+  startsAt?: Date | null,
+  endsAt?: Date | null
+): AccessWindow {
+  const start = startsAt ?? new Date();
+  const end =
+    endsAt ??
+    (coupon.freeAccessDays
+      ? new Date(start.getTime() + coupon.freeAccessDays * 24 * 60 * 60 * 1000)
+      : null);
+  return { startsAt: start, endsAt: end };
 }
 
 type RecordRedemptionInput = {

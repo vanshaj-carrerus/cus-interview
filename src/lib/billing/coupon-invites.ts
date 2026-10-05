@@ -14,6 +14,8 @@ import {
   describeCoupon,
   grantCouponCredits,
   recordCouponRedemption,
+  resolveAccessWindow,
+  type AccessWindow,
 } from "@/lib/billing/coupons";
 
 /** Max emails per invite request — keeps one request well inside the SMTP / route time limits. */
@@ -42,7 +44,8 @@ function invitePlanId(coupon: Pick<CouponDocument, "appliesTo">): PublicBillingP
   return appliesTo.includes("quarterly") && !appliesTo.includes("monthly") ? "quarterly" : "monthly";
 }
 
-type GrantResult = { ok: true } | { ok: false; reason: string };
+/** `window` = the access dates actually given (absent when nothing new was granted). */
+type GrantResult = { ok: true; window?: AccessWindow } | { ok: false; reason: string };
 
 /** Gives `userId` what the coupon offers, as if they had redeemed it at a ₹0 checkout. */
 async function grantInvite(
@@ -79,10 +82,11 @@ async function grantInvite(
   }
 
   const planId = invitePlanId(coupon);
+  const window = resolveAccessWindow(coupon, invite.accessStartsAt, invite.accessEndsAt);
   if (coupon.discountType === "credits") {
-    await grantCouponCredits(userId, coupon);
+    await grantCouponCredits(userId, coupon, window);
   } else {
-    applyFreeCouponPlan(user, coupon, planId);
+    applyFreeCouponPlan(user, coupon, planId, window);
     await user.save();
   }
 
@@ -97,7 +101,7 @@ async function grantInvite(
     incrementUsage: false,
   });
 
-  return { ok: true };
+  return { ok: true, window };
 }
 
 async function markInvite(
@@ -108,7 +112,18 @@ async function markInvite(
   await CouponInvite.updateOne(
     { _id: invite._id },
     result.ok
-      ? { $set: { status: "activated", userId, activatedAt: new Date(), failureReason: "" } }
+      ? {
+          $set: {
+            status: "activated",
+            userId,
+            activatedAt: new Date(),
+            failureReason: "",
+            // Store the real dates so the admin list shows (and edits) what was given.
+            ...(result.window
+              ? { accessStartsAt: result.window.startsAt, accessEndsAt: result.window.endsAt }
+              : {}),
+          },
+        }
       : { $set: { status: "failed", userId, failureReason: result.reason } }
   );
 }
@@ -346,6 +361,66 @@ export async function deleteInvite(couponId: string, inviteId: string): Promise<
   return { ok: true };
 }
 
+/**
+ * Sets this person's own access start / end date.
+ * - Already has access: their plan / free uses are moved to the new dates right away.
+ * - Not signed up yet: the dates are used when they sign up.
+ * Empty start = from signup (or the original activation); empty end = start + the coupon's days.
+ */
+export async function setInviteDates(
+  couponId: string,
+  inviteId: string,
+  startsAt: Date | null,
+  endsAt: Date | null
+): Promise<InviteActionResult> {
+  if (startsAt && endsAt && endsAt <= startsAt) {
+    return { ok: false, error: "End date must be after the start date.", status: 400 };
+  }
+
+  const invite = await findInvite(couponId, inviteId);
+  if (!invite) return { ok: false, error: "Invite not found.", status: 404 };
+  const coupon = await Coupon.findById(couponId).select({ freeAccessDays: 1 }).lean();
+  if (!coupon) return { ok: false, error: "Coupon not found.", status: 404 };
+
+  const hasAccess =
+    invite.userId &&
+    (invite.status === "activated" ||
+      (invite.status === "paused" && invite.statusBeforePause === "activated"));
+
+  if (!hasAccess || !invite.userId) {
+    await CouponInvite.updateOne(
+      { _id: invite._id },
+      { $set: { accessStartsAt: startsAt, accessEndsAt: endsAt } }
+    );
+    return { ok: true };
+  }
+
+  const window = resolveAccessWindow(
+    coupon,
+    startsAt ?? invite.activatedAt ?? new Date(),
+    endsAt
+  );
+  const futureStart = window.startsAt.getTime() > Date.now() ? window.startsAt : null;
+  const userId = invite.userId.toString();
+
+  // ₹0 plan from this coupon (no-op for credits coupons or if they've since bought a plan).
+  await User.updateOne(
+    { _id: userId, appliedCouponCode: invite.code, planAmount: 0 },
+    { $set: { currentPeriodEnd: window.endsAt, couponAccessStartsAt: futureStart } }
+  );
+  // Free uses (credits coupon) or the plan's usage caps.
+  await User.updateOne(
+    { _id: userId, "featureCredits.couponCode": invite.code },
+    { $set: { "featureCredits.expiresAt": window.endsAt, "featureCredits.startsAt": futureStart } }
+  );
+
+  await CouponInvite.updateOne(
+    { _id: invite._id },
+    { $set: { accessStartsAt: window.startsAt, accessEndsAt: window.endsAt } }
+  );
+  return { ok: true };
+}
+
 /** Users whose invite to this coupon is paused — turning the coupon on must not restore them. */
 export async function getPausedInviteUserIds(code: string): Promise<string[]> {
   await connectDB();
@@ -363,6 +438,8 @@ export type AdminCouponInvite = {
   invitedAt: string;
   activatedAt: string | null;
   lastEmailedAt: string | null;
+  accessStartsAt: string | null;
+  accessEndsAt: string | null;
 };
 
 export function toAdminCouponInvite(invite: CouponInviteDocument): AdminCouponInvite {
@@ -374,5 +451,7 @@ export function toAdminCouponInvite(invite: CouponInviteDocument): AdminCouponIn
     invitedAt: (invite.createdAt as Date | undefined)?.toISOString() ?? "",
     activatedAt: invite.activatedAt ? invite.activatedAt.toISOString() : null,
     lastEmailedAt: invite.lastEmailedAt ? invite.lastEmailedAt.toISOString() : null,
+    accessStartsAt: invite.accessStartsAt ? invite.accessStartsAt.toISOString() : null,
+    accessEndsAt: invite.accessEndsAt ? invite.accessEndsAt.toISOString() : null,
   };
 }

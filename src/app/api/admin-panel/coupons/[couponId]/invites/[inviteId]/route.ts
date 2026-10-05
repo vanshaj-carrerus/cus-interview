@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { getSessionPublicUser } from "@/lib/get-session-user";
-import { deleteInvite, setInvitePaused } from "@/lib/billing/coupon-invites";
+import { deleteInvite, setInviteDates, setInvitePaused } from "@/lib/billing/coupon-invites";
 
 export const dynamic = "force-dynamic";
 
@@ -21,13 +21,37 @@ async function resolveIds(params: Props["params"]) {
   return { couponId, inviteId };
 }
 
-/** Body `{ paused }` — pause or resume this person's access. */
+function parseOptionalDate(value: unknown): Date | null | "invalid" {
+  if (value === null || value === undefined || value === "") return null;
+  if (typeof value !== "string") return "invalid";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "invalid" : date;
+}
+
+/**
+ * Body `{ paused }` — pause or resume this person's access.
+ * Body `{ accessStartsAt, accessEndsAt }` — set their own access dates (ISO, or null for default).
+ */
 export async function PATCH(request: Request, { params }: Props) {
   try {
     const ids = await resolveIds(params);
     if ("response" in ids) return ids.response;
 
     const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
+
+    if ("accessStartsAt" in body || "accessEndsAt" in body) {
+      const startsAt = parseOptionalDate(body.accessStartsAt);
+      const endsAt = parseOptionalDate(body.accessEndsAt);
+      if (startsAt === "invalid" || endsAt === "invalid") {
+        return NextResponse.json({ error: "Invalid date." }, { status: 400 });
+      }
+      const result = await setInviteDates(ids.couponId, ids.inviteId, startsAt, endsAt);
+      if (!result.ok) {
+        return NextResponse.json({ error: result.error }, { status: result.status });
+      }
+      return NextResponse.json({ ok: true });
+    }
+
     if (typeof body.paused !== "boolean") {
       return NextResponse.json({ error: "Send { paused: true | false }." }, { status: 400 });
     }

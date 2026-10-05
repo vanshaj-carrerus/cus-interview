@@ -10,6 +10,7 @@ export type FeatureCreditsLike = {
   resumeAnalyzerRemaining?: number | null;
   resumeAnalyzerTotal?: number | null;
   expiresAt?: Date | string | null;
+  startsAt?: Date | string | null;
   couponCode?: string | null;
   suspended?: boolean | null;
   planLimited?: boolean | null;
@@ -36,6 +37,7 @@ export function toPublicFeatureCredits(
 
   const expiresAt = credits.expiresAt ? new Date(credits.expiresAt) : null;
   if (expiresAt && expiresAt.getTime() <= Date.now()) return null;
+  if (credits.startsAt && new Date(credits.startsAt).getTime() > Date.now()) return null;
 
   return {
     mockInterview: {
@@ -119,9 +121,19 @@ export async function consumeFeatureCredit(
       _id: userId,
       [field]: { $gt: 0 },
       "featureCredits.suspended": { $ne: true },
-      $or: [
-        { "featureCredits.expiresAt": null },
-        { "featureCredits.expiresAt": { $gt: new Date() } },
+      $and: [
+        {
+          $or: [
+            { "featureCredits.expiresAt": null },
+            { "featureCredits.expiresAt": { $gt: new Date() } },
+          ],
+        },
+        {
+          $or: [
+            { "featureCredits.startsAt": null },
+            { "featureCredits.startsAt": { $lte: new Date() } },
+          ],
+        },
       ],
     },
     { $inc: { [field]: -1 } }

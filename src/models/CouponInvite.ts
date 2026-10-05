@@ -20,6 +20,9 @@ const couponInviteSchema = new Schema(
     failureReason: { type: String, default: "" },
     userId: { type: Schema.Types.ObjectId, ref: "User", default: null },
     activatedAt: { type: Date, default: null },
+    /** Custom access window set by the admin. null start = from signup / invite; null end = coupon's length. */
+    accessStartsAt: { type: Date, default: null },
+    accessEndsAt: { type: Date, default: null },
     /** While paused: the status to go back to on resume. */
     statusBeforePause: { type: String, enum: ["pending", "activated"], default: null },
     lastEmailedAt: { type: Date, default: null },

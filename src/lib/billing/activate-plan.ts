@@ -22,5 +22,6 @@ export async function activatePlanForUser(
     currentPeriodEnd: periodEnd,
     trialEndsAt: null,
     cancelAtPeriodEnd: false,
+    couponAccessStartsAt: null,
   });
 }

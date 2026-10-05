@@ -49,6 +49,8 @@ const userSchema = new Schema(
     appliedCouponCode: { type: String, default: "" },
     /** True while a free-access coupon's plan is paused because the admin turned the coupon off. */
     couponAccessSuspended: { type: Boolean, default: false },
+    /** Free-access coupon plan with a custom start date: no access before this (₹0 plans only). */
+    couponAccessStartsAt: { type: Date, default: null },
     /** Free uses granted by a `credits` coupon (no plan needed for these features). */
     featureCredits: {
       mockInterviewRemaining: { type: Number, default: 0 },
@@ -57,6 +59,8 @@ const userSchema = new Schema(
       resumeAnalyzerTotal: { type: Number, default: 0 },
       /** null = no expiry. */
       expiresAt: { type: Date, default: null },
+      /** null = usable now. Set by an invite with a custom start date. */
+      startsAt: { type: Date, default: null },
       couponCode: { type: String, default: "" },
       /** True while the coupon that granted these is turned off. */
       suspended: { type: Boolean, default: false },

@@ -16,6 +16,8 @@ type UserLike = {
   trialEndsAt?: Date | string | null;
   currentPeriodEnd?: Date | string | null;
   cancelAtPeriodEnd?: boolean;
+  planAmount?: number | null;
+  couponAccessStartsAt?: Date | string | null;
   featureCredits?: FeatureCreditsLike | null;
 };
 
@@ -30,13 +32,20 @@ function toPublicSubscription(user: UserLike): PublicSubscription {
   const trialEndsAt = toIsoDate(user.trialEndsAt);
   const currentPeriodEnd = toIsoDate(user.currentPeriodEnd);
   const planId = isBillingPlanId(user.billingPlanId) ? user.billingPlanId : null;
-  const hasAccess = hasSubscriptionAccess(status, trialEndsAt, currentPeriodEnd);
-  const hasPlatformAccess = hasPlatformPlanAccess({
-    status,
-    billingPlanId: planId,
-    trialEndsAt,
-    currentPeriodEnd,
-  });
+  // A ₹0 coupon plan with a custom start date gives no access until that date.
+  const couponStartsAt = user.couponAccessStartsAt ? new Date(user.couponAccessStartsAt) : null;
+  const notStartedYet =
+    (user.planAmount ?? 0) === 0 && couponStartsAt !== null && couponStartsAt.getTime() > Date.now();
+  const hasAccess =
+    !notStartedYet && hasSubscriptionAccess(status, trialEndsAt, currentPeriodEnd);
+  const hasPlatformAccess =
+    !notStartedYet &&
+    hasPlatformPlanAccess({
+      status,
+      billingPlanId: planId,
+      trialEndsAt,
+      currentPeriodEnd,
+    });
   const limitInput = { status, hasPlatformAccess };
 
   return {
