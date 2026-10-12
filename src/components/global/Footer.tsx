@@ -122,7 +122,18 @@ export default async function Footer() {
       <div className="border-t border-white/10">
         <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-6 px-6 py-8 sm:flex-row sm:items-center">
           <div className="flex flex-col gap-2">
-            <Logo href="/" width={110} height={44} />
+            {/* Icon + white wordmark — the full logo image has dark text that disappears on this background. */}
+            <Link href="/" className="inline-flex items-center gap-3" aria-label="CUS Interview home">
+              <Logo href={null} variant="icon" width={42} height={42} />
+              <span className="flex flex-col gap-1.5">
+                <span className="block text-xl font-bold leading-none tracking-wide text-white">
+                  CUS
+                </span>
+                <span className="block text-[11px] font-semibold uppercase leading-none tracking-[0.24em] text-primary">
+                  Interview
+                </span>
+              </span>
+            </Link>
             <p className="text-[13px] text-slate-500">
               © {new Date().getFullYear()} CUS Interview. Built for the modern
               engineer.
