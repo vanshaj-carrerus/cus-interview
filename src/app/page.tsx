@@ -13,8 +13,8 @@ const Home = () => {
       <HeroLanding />
       <AiVisionSection />
       <DeveloperSkillsSection />
-      <HomeTestimonials />
       <FeatureShowcase />
+      <HomeTestimonials />
       <BottomCtaCards />
     </>
   );
