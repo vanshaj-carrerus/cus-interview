@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
+import { Geist_Mono, Newsreader, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import NextTopLoader from "nextjs-toploader";
 import Footer from "@/components/global/Footer";
@@ -12,6 +12,13 @@ const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
+});
+
+const newsreader = Newsreader({
+  variable: "--font-newsreader",
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  style: ["normal", "italic"],
 });
 
 const geistMono = Geist_Mono({
@@ -39,11 +46,12 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${plusJakarta.variable} ${geistMono.variable} h-full antialiased light`}
+      data-scroll-behavior="smooth"
+      className={`${plusJakarta.variable} ${newsreader.variable} ${geistMono.variable} h-full antialiased light`}
     >
       <body className="min-h-screen bg-background font-sans text-foreground">
         <NextTopLoader
-          color="#5bb9e5"
+          color="#0ea5e9"
           initialPosition={0.08}
           crawlSpeed={200}
           height={3}

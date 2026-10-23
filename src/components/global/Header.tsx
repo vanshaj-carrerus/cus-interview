@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
-import { UserRound, ChevronDown, LayoutDashboard } from "lucide-react";
+import { ArrowRight, UserRound, ChevronDown, LayoutDashboard } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
 import Logo from "@/components/global/Logo";
 
@@ -55,7 +55,7 @@ function MegaMenu({
         type="button"
         aria-haspopup="true"
         aria-expanded={open}
-        className="flex items-center gap-1 py-2 text-[15px] font-medium text-secondary transition-colors hover:text-primary"
+        className="flex items-center gap-1 py-2 text-[15px] font-medium text-slate-700 transition-colors hover:text-slate-950"
       >
         {label}
         <ChevronDown
@@ -75,15 +75,15 @@ function MegaMenu({
       >
         {/* Caret */}
         <div className="flex justify-center">
-          <div className="h-0 w-0 border-l-[8px] border-r-[8px] border-b-[8px] border-l-transparent border-r-transparent border-b-slate-100" />
+          <div className="h-0 w-0 border-l-[8px] border-r-[8px] border-b-[8px] border-l-transparent border-r-transparent border-b-slate-200/70" />
         </div>
 
         {/* Panel */}
-        <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-2xl">
+        <div className="overflow-hidden rounded-2xl border border-slate-200/70 bg-white/95 shadow-[0_24px_60px_-24px_rgba(15,23,42,0.3)] backdrop-blur-xl">
           <div>
             {/* Left column */}
             <div className="p-6">
-              <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.12em] text-primary">
+              <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
                 {mega.left.heading}
               </p>
               <div className="flex flex-col gap-1">
@@ -91,13 +91,13 @@ function MegaMenu({
                   <Link
                     key={item.label}
                     href={item.href}
-                    className="group flex items-start gap-3 rounded-xl px-3 py-2.5 transition-colors duration-150 hover:bg-primary/5"
+                    className="group flex items-start gap-3 rounded-xl px-3 py-2.5 transition-colors duration-150 hover:bg-slate-50"
                   >
-                    <span className="mt-0.5 shrink-0 text-primary opacity-70 transition-opacity group-hover:opacity-100">
+                    <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-950 text-white">
                       {item.icon}
                     </span>
                     <div>
-                      <p className="text-[14px] font-semibold text-secondary group-hover:text-primary">
+                      <p className="text-[14px] font-semibold text-slate-900">
                         {item.label}
                       </p>
                       <p className="mt-0.5 text-[12px] leading-snug text-slate-400 group-hover:text-slate-500">
@@ -123,6 +123,14 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [productMobileOpen, setProductMobileOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -149,7 +157,13 @@ export default function Header() {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 border-b border-slate-100 bg-white">
+      <header
+        className={`fixed top-0 left-0 right-0 z-50 border-b backdrop-blur-xl backdrop-saturate-150 transition-[background-color,border-color,box-shadow] duration-300 ${
+          scrolled
+            ? "border-slate-200/70 bg-white/80 shadow-[0_8px_30px_-18px_rgba(15,23,42,0.25)]"
+            : "border-transparent bg-white/70"
+        }`}
+      >
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-6 lg:px-8">
           {/* Logo */}
           <div className="flex shrink-0 items-center">
@@ -165,9 +179,13 @@ export default function Header() {
                 <Link
                   key={item.label}
                   href={item.href}
-                  className="py-2 text-[15px] font-medium text-secondary transition-colors hover:text-primary"
+                  className="group relative py-2 text-[15px] font-medium text-slate-700 transition-colors hover:text-slate-950"
                 >
                   {item.label}
+                  <span
+                    className="absolute inset-x-0 -bottom-0.5 h-px origin-left scale-x-0 bg-slate-950 transition-transform duration-300 group-hover:scale-x-100"
+                    aria-hidden
+                  />
                 </Link>
               )
             )}
@@ -182,7 +200,7 @@ export default function Header() {
                 <button
                   type="button"
                   onClick={() => setUserMenuOpen((v) => !v)}
-                  className="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-600 transition-colors hover:border-primary/30 hover:text-primary"
+                  className="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-950"
                   aria-expanded={userMenuOpen}
                   aria-haspopup="menu"
                 >
@@ -199,11 +217,11 @@ export default function Header() {
                       <p className="mt-1 truncate text-sm font-semibold text-secondary">{user.name ?? user.email}</p>
                     </div>
                     <Link href="/profile" role="menuitem" onClick={() => setUserMenuOpen(false)}
-                      className="block px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-primary/5 hover:text-primary">
+                      className="block px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-950">
                       Profile
                     </Link>
                     <Link href="/dashboard" role="menuitem" onClick={() => setUserMenuOpen(false)}
-                      className="block px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-primary/5 hover:text-primary">
+                      className="block px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-950">
                       Dashboard
                     </Link>
                     <button type="button" role="menuitem"
@@ -217,12 +235,13 @@ export default function Header() {
             ) : (
               <>
                 <Link href="/login"
-                  className="hidden text-[15px] font-medium text-secondary transition-colors hover:text-primary sm:inline-flex">
+                  className="hidden text-[15px] font-medium text-slate-700 transition-colors hover:text-slate-950 sm:inline-flex">
                   Login
                 </Link>
                 <Link href="/signup"
-                  className="hidden items-center justify-center rounded-md bg-primary px-5 py-2 text-[14px] font-semibold text-white transition-colors hover:bg-primary/90 sm:inline-flex">
+                  className="group/cta hidden items-center justify-center gap-1.5 rounded-full bg-slate-950 px-5 py-2.5 text-[14px] font-semibold text-white transition-all hover:-translate-y-0.5 hover:bg-slate-800 sm:inline-flex">
                   Create a free account
+                  <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover/cta:translate-x-0.5" />
                 </Link>
               </>
             )}
@@ -291,7 +310,7 @@ export default function Header() {
                       </p>
                       {item.mega.left.items.map((sub) => (
                         <Link key={sub.label} href={sub.href} onClick={() => setMobileMenuOpen(false)}
-                          className="flex items-center gap-3 rounded-lg px-2 py-2 text-sm font-medium text-slate-700 hover:bg-primary/5 hover:text-primary">
+                          className="flex items-center gap-3 rounded-lg px-2 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-950">
                           <span className="text-primary">{sub.icon}</span>
                           {sub.label}
                         </Link>
@@ -311,11 +330,11 @@ export default function Header() {
           {!user && !loading && (
             <div className="mt-8 flex flex-col gap-3 border-t border-slate-100 pt-6">
               <Link href="/login" onClick={() => setMobileMenuOpen(false)}
-                className="rounded-lg border border-slate-200 px-4 py-2.5 text-center text-sm font-semibold text-secondary">
+                className="rounded-full border border-slate-900 px-4 py-2.5 text-center text-sm font-semibold text-slate-900">
                 Login
               </Link>
               <Link href="/signup" onClick={() => setMobileMenuOpen(false)}
-                className="rounded-lg bg-primary px-4 py-2.5 text-center text-sm font-semibold text-white">
+                className="rounded-full bg-slate-950 px-4 py-2.5 text-center text-sm font-semibold text-white">
                 Create a free account
               </Link>
             </div>

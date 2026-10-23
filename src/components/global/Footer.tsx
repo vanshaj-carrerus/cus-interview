@@ -13,144 +13,141 @@ const InstagramIcon = () => (
   </svg>
 );
 
+type FooterLink = { label: string; href: string };
+
 export default async function Footer() {
   const [tracks, courses] = await Promise.all([
     getTrackCards("track"),
     getTrackCards("course"),
   ]);
 
+  const groups: { title: string; links: FooterLink[] }[] = [
+    {
+      title: "Products",
+      links: [
+        { label: "Practice Problems", href: "/problems" },
+        { label: "Programming Courses", href: "/problems/courses" },
+        { label: "Online Compiler", href: "/compiler" },
+        { label: "Mock Interviews", href: "/mock-interviews" },
+        { label: "Resume Analyzer", href: "/resume-analyzer" },
+      ],
+    },
+    {
+      title: "Features",
+      links: [
+        { label: "AI Mock Interviews", href: "/mock-interviews/ai-mock" },
+        { label: "Interview Prep", href: "/practice" },
+        { label: "DSA Practice", href: "/problems" },
+        { label: "Company Questions", href: "/dashboard/company-interviews" },
+      ],
+    },
+    {
+      title: "Resources",
+      links: [
+        ...tracks.slice(0, 5).map((t) => ({ label: t.title, href: `/problems/${t.slug}` })),
+        { label: "View all →", href: "/problems" },
+      ],
+    },
+    {
+      title: "Company",
+      links: [
+        { label: "About Us", href: "/about" },
+        { label: "Contact", href: "/contact" },
+        { label: "For Companies", href: "/for-companies" },
+        { label: "Enterprise", href: "/enterprise" },
+      ],
+    },
+    {
+      title: "Legal",
+      links: [
+        { label: "Privacy Policy", href: "/privacy" },
+        { label: "Terms", href: "/terms" },
+        { label: "Refund Policy", href: "/refund-policy" },
+      ],
+    },
+    {
+      title: "Get started",
+      links: [
+        { label: "Create account", href: "/signup" },
+        { label: "Pricing", href: "/pricing" },
+        { label: "Login", href: "/login" },
+        ...courses.slice(0, 3).map((c) => ({ label: c.title, href: `/problems/courses/${c.slug}` })),
+      ],
+    },
+  ];
+
   return (
-    <footer className="mt-auto bg-secondary text-slate-400">
-      <div className="mx-auto grid max-w-6xl grid-cols-2 gap-10 px-6 py-16 md:grid-cols-3 lg:grid-cols-5 lg:gap-8">
-        <div className="col-span-2 md:col-span-3 lg:col-span-1">
-          <h3 className="mb-4 text-sm font-semibold text-white">Products</h3>
-          <div className="flex flex-col gap-2.5">
-            <Link href="/problems" className="text-[13px] transition-colors hover:text-white">
-              Practice Problems
-            </Link>
-            <Link href="/problems/courses" className="text-[13px] transition-colors hover:text-white">
-              Programming Courses
-            </Link>
-            <Link href="/compiler" className="text-[13px] transition-colors hover:text-white">
-              Online Compiler
-            </Link>
-            <Link href="/mock-interviews" className="text-[13px] transition-colors hover:text-white">
-              Mock Interviews
-            </Link>
-            <Link href="/resume-analyzer" className="text-[13px] transition-colors hover:text-white">
-              Resume Analyzer
-            </Link>
-          </div>
-        </div>
-
-        <div>
-          <h3 className="mb-4 text-sm font-semibold text-white">Solutions</h3>
-          <div className="flex flex-col gap-2.5">
-            <Link href="/mock-interviews/ai-mock" className="text-[13px] transition-colors hover:text-white">
-              AI Mock Interviews
-            </Link>
-            <Link href="/practice" className="text-[13px] transition-colors hover:text-white">
-              Interview Prep
-            </Link>
-            <Link href="/problems" className="text-[13px] transition-colors hover:text-white">
-              DSA Practice
-            </Link>
-          </div>
-        </div>
-
-        <div>
-          <h3 className="mb-4 text-sm font-semibold text-white">Resources</h3>
-          <div className="flex flex-col gap-2.5">
-            {tracks.slice(0, 5).map((track) => (
-              <Link
-                key={track.id}
-                href={`/problems/${track.slug}`}
-                className="line-clamp-1 text-[13px] transition-colors hover:text-white"
-              >
-                {track.title}
-              </Link>
-            ))}
-            <Link href="/problems" className="text-[13px] font-medium text-primary hover:text-primary/80">
-              View all →
-            </Link>
-          </div>
-        </div>
-
-        <div>
-          <h3 className="mb-4 text-sm font-semibold text-white">About us</h3>
-          <div className="flex flex-col gap-2.5">
-            <Link href="/about" className="text-[13px] transition-colors hover:text-white">
-              About Us
-            </Link>
-            <Link href="/contact" className="text-[13px] transition-colors hover:text-white">
-              Contact
-            </Link>
-            <Link href="/privacy" className="text-[13px] transition-colors hover:text-white">
-              Privacy Policy
-            </Link>
-            <Link href="/terms" className="text-[13px] transition-colors hover:text-white">
-              Terms
-            </Link>
-          </div>
-        </div>
-
-        <div>
-          <h3 className="mb-4 text-sm font-semibold text-white">Get started</h3>
-          <div className="flex flex-col gap-2.5">
-            <Link href="/signup" className="text-[13px] transition-colors hover:text-white">
-              Create account
-            </Link>
-            <Link href="/pricing" className="text-[13px] transition-colors hover:text-white">
-              Pricing
-            </Link>
-            <Link href="/login" className="text-[13px] transition-colors hover:text-white">
-              Login
-            </Link>
-            {courses.slice(0, 3).map((course) => (
-              <Link
-                key={course.id}
-                href={`/problems/courses/${course.slug}`}
-                className="line-clamp-1 text-[13px] transition-colors hover:text-white"
-              >
-                {course.title}
-              </Link>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="border-t border-white/10">
-        <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-6 px-6 py-8 sm:flex-row sm:items-center">
-          <div className="flex flex-col gap-2">
-            {/* Icon + white wordmark — the full logo image has dark text that disappears on this background. */}
+    <footer className="relative mt-auto overflow-hidden bg-slate-950 text-white">
+      {/* Soft pastel glows, echoing the landing page cards */}
+      <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-sky-500/15 blur-[100px]" aria-hidden />
+      <div className="pointer-events-none absolute -right-24 bottom-0 h-72 w-72 rounded-full bg-violet-500/15 blur-[100px]" aria-hidden />
+      <div className="relative mx-auto max-w-6xl px-6 pt-16 md:pt-20">
+        <div className="grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,2.6fr)] lg:gap-16">
+          {/* Brand */}
+          <div>
             <Link href="/" className="inline-flex items-center gap-3" aria-label="CUS Interview home">
               <Logo href={null} variant="icon" width={42} height={42} />
               <span className="flex flex-col gap-1.5">
-                <span className="block text-xl font-bold leading-none tracking-wide text-white">
-                  CUS
-                </span>
-                <span className="block text-[11px] font-semibold uppercase leading-none tracking-[0.24em] text-primary">
+                <span className="block text-xl font-bold leading-none tracking-wide text-white">CUS</span>
+                <span className="block text-[11px] font-semibold uppercase leading-none tracking-[0.24em] text-sky-300">
                   Interview
                 </span>
               </span>
             </Link>
-            <p className="text-[13px] text-slate-500">
-              © {new Date().getFullYear()} CUS Interview. Built for the modern
-              engineer.
+            <p className="mt-5 max-w-[17rem] text-sm leading-relaxed text-slate-400">
+              AI-powered interview prep — practice real problems, take mock interviews, and get hired.
             </p>
+            <Link
+              href="/signup"
+              className="mt-6 inline-flex items-center rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-slate-950 transition-colors hover:bg-sky-100"
+            >
+              Start practicing free
+            </Link>
           </div>
+
+          {/* Link groups — 3 × 2 grid */}
+          <div className="grid grid-cols-2 gap-x-8 gap-y-10 sm:grid-cols-3">
+            {groups.map((group) => (
+              <div key={group.title}>
+                <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                  {group.title}
+                </h3>
+                <ul className="mt-4 space-y-3">
+                  {group.links.map((link) => (
+                    <li key={link.label}>
+                      <Link
+                        href={link.href}
+                        className="line-clamp-1 text-sm text-slate-300 transition-colors hover:text-white"
+                      >
+                        {link.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Bottom bar */}
+        <div className="mt-16 flex flex-col gap-4 border-t border-white/10 py-8 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+          <p>© {new Date().getFullYear()} CUS Interview. All rights reserved.</p>
           <div className="flex items-center gap-3">
             <Link
               target="_blank"
+              rel="noopener noreferrer"
               href="https://www.linkedin.com/company/cus-tech/posts/?feedView=all"
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 text-slate-400 transition-colors hover:border-white/20 hover:text-white"
+              aria-label="CUS Interview on LinkedIn"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-400 transition-colors hover:border-white/25 hover:text-white"
             >
               <LinkedinIcon />
             </Link>
             <Link
               target="_blank"
+              rel="noopener noreferrer"
               href="https://www.instagram.com/cus.tech_/"
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 text-slate-400 transition-colors hover:border-white/20 hover:text-white"
+              aria-label="CUS Interview on Instagram"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-400 transition-colors hover:border-white/25 hover:text-white"
             >
               <InstagramIcon />
             </Link>

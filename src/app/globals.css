@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f8fafc;
+  --background: #f7fafd;
   --foreground: #0f172a;
   --primary: #4b5563;
   --secondary: #0f172a;
@@ -27,6 +27,7 @@
   --color-accent-teal: var(--accent-teal);
   --font-sans: var(--font-plus-jakarta);
   --font-mono: var(--font-geist-mono);
+  --font-serif: var(--font-newsreader), Georgia, serif;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -46,8 +47,8 @@ body {
 }
 
 ::selection {
-  background: color-mix(in srgb, var(--primary) 25%, white);
-  color: var(--secondary);
+  background: #bae6fd;
+  color: #0f172a;
 }
 
 .section-surface {
@@ -406,4 +407,88 @@ body {
 
 .dashboard-notifications-panel {
   animation: dashboard-notifications-slide-in 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes hero-progress {
+  from { width: 0%; }
+  to { width: 100%; }
+}
+
+@keyframes hero-fade-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes hero-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(40px, 30px) scale(1.08); }
+}
+
+/* ─── Site-wide polish ─────────────────────────────────────── */
+
+html {
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+  background-clip: padding-box;
+}
+
+/* Consistent, visible keyboard focus */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid #38bdf8;
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+
+h1, h2, h3 {
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+@keyframes hero-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes hero-wiggle {
+  0%, 60%, 100% { transform: rotate(0deg) scale(1); }
+  10% { transform: rotate(-14deg) scale(1.1); }
+  20% { transform: rotate(12deg) scale(1.1); }
+  30% { transform: rotate(-8deg) scale(1.05); }
+  40% { transform: rotate(6deg); }
+  50% { transform: rotate(0deg); }
+}
+
+@keyframes caret-blink {
+  0%, 50% { opacity: 1; }
+  50.01%, 100% { opacity: 0; }
 }
