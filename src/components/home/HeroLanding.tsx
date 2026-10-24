@@ -29,7 +29,8 @@ const LOGOS = [
   { name: "Humana", src: "/logos/humana.png" },
 ];
 
-const float = "motion-safe:animate-[hero-float_6s_ease-in-out_infinite]";
+/* Pops in on load, then floats (see .hero-card in globals.css); --enter staggers each card */
+const float = "hero-card";
 
 /* Solution typed into the monitor's editor: [text, colour] pairs per line */
 const kw = "text-violet-300";
@@ -72,7 +73,7 @@ export default function HeroLanding() {
 
       <div className="relative mx-auto flex w-full max-w-7xl flex-1 flex-col px-6 pt-10 text-center md:pt-[clamp(2.5rem,7svh,5rem)]">
         <h1
-          className={`font-serif text-[2.5rem] font-normal leading-[1.06] tracking-[-0.025em] text-slate-950 sm:text-[3.25rem] md:text-[clamp(3rem,6.2svh,3.75rem)]`}
+          className={`hero-enter font-serif text-[2.5rem] font-normal leading-[1.06] tracking-[-0.025em] text-slate-950 sm:text-[3.25rem] md:text-[clamp(3rem,6.2svh,3.75rem)]`}
         >
           AI-Powered{" "}
           {/* Playful inline code chip */}
@@ -88,12 +89,12 @@ export default function HeroLanding() {
           <RotatingWord />
         </h1>
 
-        <p className="mx-auto mt-4 max-w-xl text-[15px] leading-relaxed text-slate-600 md:text-base">
+        <p className="hero-enter mx-auto mt-4 [--enter:0.2s] max-w-xl text-[15px] leading-relaxed text-slate-600 md:text-base">
           From practice to offer — sharpen your skills with real coding problems, AI
           mock interviews, and resume insights, all in one place.
         </p>
 
-        <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row md:mb-6">
+        <div className="hero-enter mt-7 [--enter:0.35s] flex flex-col items-center justify-center gap-3 sm:flex-row md:mb-6">
           <Link
             href="/signup"
             className="inline-flex w-full items-center justify-center rounded-full bg-slate-950 px-6 py-3 text-[15px] font-semibold text-white transition-all hover:-translate-y-0.5 hover:bg-slate-800 sm:w-auto"
@@ -114,12 +115,12 @@ export default function HeroLanding() {
           {/* A true half circle: a circle centred on the stage's bottom edge, clipped by the logo strip */}
           {/* Outer thin ring, passing behind the cards */}
           <div
-            className="pointer-events-none absolute bottom-0 left-1/2 h-[540px] w-[540px] -translate-x-1/2 translate-y-1/2 rounded-full border border-slate-200 md:h-[clamp(560px,66svh,760px)] md:w-[clamp(560px,66svh,760px)]"
+            className="hero-glow-in pointer-events-none absolute bottom-0 left-1/2 [--enter:0.45s] h-[540px] w-[540px] -translate-x-1/2 translate-y-1/2 rounded-full border border-slate-200 md:h-[clamp(560px,66svh,760px)] md:w-[clamp(560px,66svh,760px)]"
             aria-hidden
           />
           {/* Inner filled glow disc behind the phone, soft at its edge */}
           <div
-            className="pointer-events-none absolute bottom-0 left-1/2 h-[440px] w-[440px] -translate-x-1/2 translate-y-1/2 rounded-full md:h-[clamp(460px,54svh,620px)] md:w-[clamp(460px,54svh,620px)]"
+            className="hero-glow-in pointer-events-none absolute bottom-0 left-1/2 [--enter:0.55s] h-[440px] w-[440px] -translate-x-1/2 translate-y-1/2 rounded-full md:h-[clamp(460px,54svh,620px)] md:w-[clamp(460px,54svh,620px)]"
             aria-hidden
             style={{
               background:
@@ -128,7 +129,7 @@ export default function HeroLanding() {
           />
 
           {/* Desktop monitor — live AI mock interview */}
-          <div className="absolute bottom-0 left-1/2 z-20 flex w-[300px] -translate-x-1/2 flex-col items-center md:w-[clamp(380px,44svh,480px)]">
+          <div className="hero-rise absolute bottom-0 left-1/2 z-20 [--enter:0.6s] flex w-[300px] -translate-x-1/2 flex-col items-center md:w-[clamp(380px,44svh,480px)]">
             {/* Screen + bezel */}
             <div className="relative w-full rounded-[18px] bg-slate-900 p-[7px] shadow-[0_30px_60px_-20px_rgba(15,23,42,0.55)]">
               {/* Webcam */}
@@ -162,7 +163,7 @@ export default function HeroLanding() {
                       <div
                         key={i}
                         className="flex whitespace-pre opacity-0 motion-safe:animate-[hero-fade-up_0.4s_ease-out_forwards] motion-reduce:opacity-100"
-                        style={{ animationDelay: `${0.4 + i * 0.18}s` }}
+                        style={{ animationDelay: `${1.3 + i * 0.16}s` }}
                       >
                         <span className="w-4 shrink-0 select-none text-slate-600">{i + 1}</span>
                         {line.map(([text, color], j) => (
@@ -231,7 +232,7 @@ export default function HeroLanding() {
 
           {/* Daily streak card — top left */}
           <div
-            className={`absolute left-[6%] top-[4%] z-10 hidden w-[160px] -rotate-2 lg:-top-8 lg:w-[190px] rounded-[20px] bg-slate-900 p-3.5 ring-1 ring-white/10 transition-transform duration-300 hover:-translate-y-1 lg:left-auto lg:right-[calc(50%+clamp(190px,22svh,240px)+36px)] xl:right-[calc(50%+clamp(190px,22svh,240px)+72px)] text-left shadow-[0_20px_40px_-20px_rgba(15,23,42,0.5)] md:block ${float}`}
+            className={`absolute left-[6%] top-[4%] z-10 hidden w-[160px] -rotate-2 lg:-top-8 lg:w-[190px] rounded-[20px] bg-slate-900 p-3.5 ring-1 ring-white/10 transition-transform duration-300 hover:-translate-y-1 lg:left-auto lg:right-[calc(50%+clamp(190px,22svh,240px)+36px)] xl:right-[calc(50%+clamp(190px,22svh,240px)+72px)] text-left shadow-[0_20px_40px_-20px_rgba(15,23,42,0.5)] md:block ${float} [--enter:1.1s]`}
             aria-hidden
           >
             <div className="flex items-center justify-between">
@@ -262,7 +263,7 @@ export default function HeroLanding() {
 
           {/* Star rating pill */}
           <div
-            className={`absolute left-[14%] top-[calc(4%+120px)] z-20 lg:left-auto lg:right-[calc(50%+clamp(190px,22svh,240px)+12px)] xl:right-[calc(50%+clamp(190px,22svh,240px)+48px)] lg:top-[88px] hidden items-center gap-1 rounded-full bg-sky-200 px-3 py-1.5 shadow-[0_8px_20px_-10px_rgba(15,23,42,0.4)] ring-4 ring-white md:flex ${float} [animation-delay:1.2s]`}
+            className={`absolute left-[14%] top-[calc(4%+120px)] z-20 lg:left-auto lg:right-[calc(50%+clamp(190px,22svh,240px)+12px)] xl:right-[calc(50%+clamp(190px,22svh,240px)+48px)] lg:top-[88px] hidden items-center gap-1 rounded-full bg-sky-200 px-3 py-1.5 shadow-[0_8px_20px_-10px_rgba(15,23,42,0.4)] ring-4 ring-white md:flex ${float} [--enter:1.55s]`}
             aria-hidden
           >
             {Array.from({ length: 5 }).map((_, i) => (
@@ -272,7 +273,7 @@ export default function HeroLanding() {
 
           {/* Interview score — bottom left */}
           <div
-            className={`absolute bottom-[16%] left-0 z-10 hidden w-[180px] rotate-1 lg:bottom-[6%] lg:left-auto lg:w-[190px] lg:right-[calc(50%+clamp(190px,22svh,240px)+72px)] xl:right-[calc(50%+clamp(190px,22svh,240px)+112px)] items-center gap-4 rounded-[20px] bg-amber-200 p-4 text-left shadow-[0_20px_40px_-24px_rgba(15,23,42,0.35)] md:flex ${float} [animation-delay:0.6s]`}
+            className={`absolute bottom-[16%] left-0 z-10 hidden w-[180px] rotate-1 lg:bottom-[6%] lg:left-auto lg:w-[190px] lg:right-[calc(50%+clamp(190px,22svh,240px)+72px)] xl:right-[calc(50%+clamp(190px,22svh,240px)+112px)] items-center gap-4 rounded-[20px] bg-amber-200 p-4 text-left shadow-[0_20px_40px_-24px_rgba(15,23,42,0.35)] md:flex ${float} [--enter:1.4s]`}
             aria-hidden
           >
             <div className="flex h-10 items-end gap-1">
@@ -293,7 +294,7 @@ export default function HeroLanding() {
 
           {/* Problems solved — top right */}
           <div
-            className={`absolute right-[4%] top-0 z-10 hidden w-[200px] rotate-2 lg:-top-8 lg:w-[190px] lg:left-[calc(50%+clamp(190px,22svh,240px)+36px)] xl:left-[calc(50%+clamp(190px,22svh,240px)+72px)] lg:right-auto overflow-hidden rounded-[20px] bg-emerald-200 p-4 text-left shadow-[0_20px_40px_-24px_rgba(15,23,42,0.35)] md:block ${float} [animation-delay:0.3s]`}
+            className={`absolute right-[4%] top-0 z-10 hidden w-[200px] rotate-2 lg:-top-8 lg:w-[190px] lg:left-[calc(50%+clamp(190px,22svh,240px)+36px)] xl:left-[calc(50%+clamp(190px,22svh,240px)+72px)] lg:right-auto overflow-hidden rounded-[20px] bg-emerald-200 p-4 text-left shadow-[0_20px_40px_-24px_rgba(15,23,42,0.35)] md:block ${float} [--enter:1.25s]`}
             aria-hidden
           >
             <p className="flex items-baseline gap-1.5 text-slate-900">
@@ -311,7 +312,7 @@ export default function HeroLanding() {
 
           {/* Feedback card — bottom right */}
           <div
-            className={`absolute bottom-[6%] right-0 z-10 hidden w-[200px] -rotate-1 lg:bottom-[6%] lg:w-[190px] lg:left-[calc(50%+clamp(190px,22svh,240px)+72px)] xl:left-[calc(50%+clamp(190px,22svh,240px)+112px)] lg:right-auto rounded-[20px] border border-slate-100 bg-white p-2.5 text-left shadow-[0_24px_48px_-24px_rgba(15,23,42,0.4)] md:block ${float} [animation-delay:1.8s]`}
+            className={`absolute bottom-[6%] right-0 z-10 hidden w-[200px] -rotate-1 lg:bottom-[6%] lg:w-[190px] lg:left-[calc(50%+clamp(190px,22svh,240px)+72px)] xl:left-[calc(50%+clamp(190px,22svh,240px)+112px)] lg:right-auto rounded-[20px] border border-slate-100 bg-white p-2.5 text-left shadow-[0_24px_48px_-24px_rgba(15,23,42,0.4)] md:block ${float} [--enter:1.7s]`}
             aria-hidden
           >
             <div className="relative">
@@ -333,7 +334,7 @@ export default function HeroLanding() {
       </div>
 
       {/* Company logos */}
-      <div className="relative z-30 border-t border-slate-100 bg-white py-4 md:py-5">
+      <div className="hero-fade relative z-30 [--enter:1.2s] border-t border-slate-100 bg-white py-4 md:py-5">
         <div className="mx-auto max-w-6xl overflow-hidden px-6 [mask-image:linear-gradient(to_right,transparent,black_12%,black_88%,transparent)]">
           <div className="animate-company-logo-marquee flex w-max items-center hover:[animation-play-state:paused]">
             {[0, 1].map((copy) => (

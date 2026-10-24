@@ -492,3 +492,61 @@ p {
   0%, 50% { opacity: 1; }
   50.01%, 100% { opacity: 0; }
 }
+
+/* ─── Landing hero entrance (plays once on load) ─────────────── */
+
+@keyframes hero-enter {
+  from { opacity: 0; transform: translateY(28px); filter: blur(10px); }
+  to { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+
+@keyframes hero-rise {
+  from { opacity: 0; transform: translateY(90px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes hero-pop {
+  from { opacity: 0; transform: translateY(24px) scale(0.85); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes hero-glow-in {
+  from { opacity: 0; transform: scale(0.7); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes hero-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-enter {
+    animation: hero-enter 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: var(--enter, 0s);
+  }
+
+  .hero-rise {
+    animation: hero-rise 1.1s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: var(--enter, 0s);
+  }
+
+  /* Arcs/glow centre themselves with the separate `translate` property, so only scale here */
+  .hero-glow-in {
+    animation: hero-glow-in 1.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: var(--enter, 0s);
+  }
+
+  .hero-fade {
+    animation: hero-fade 1s ease-out both;
+    animation-delay: var(--enter, 0s);
+  }
+
+  /* Floating cards: pop in, then start their idle float */
+  .hero-card {
+    animation:
+      hero-pop 0.8s cubic-bezier(0.34, 1.45, 0.64, 1) both,
+      hero-float 6s ease-in-out infinite;
+    animation-delay: var(--enter, 1s), calc(var(--enter, 1s) + 0.8s);
+  }
+}
