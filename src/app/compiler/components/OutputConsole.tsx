@@ -11,10 +11,87 @@ type OutputDetails = {
   memory?: number;
   validationResult?: ValidationResult | null;
   computedExpected?: string | null;
-  /** AI review result for problems without an exact test case. */
+  /** AI logic review of the whole method. */
   aiFeedback?: string | null;
   aiError?: string | null;
+  /** Step 1 — did the program's output match? ("unchecked" = no exact test for this problem) */
+  outputCheck?: ValidationResult | null;
+  /** Step 2 — AI review of the full method's logic. */
+  logicReview?: "pending" | "correct" | "wrong" | "unavailable" | null;
 };
+
+type StepState = "pass" | "fail" | "running" | "skip" | "neutral";
+
+function StepIcon({ state }: { state: StepState }) {
+  if (state === "pass") return <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />;
+  if (state === "fail") return <XCircle className="h-4 w-4 shrink-0 text-rose-500" />;
+  if (state === "running") return <Loader2 className="h-4 w-4 shrink-0 animate-spin text-sky-500" />;
+  if (state === "neutral") return <AlertTriangle className="h-4 w-4 shrink-0 text-amber-500" />;
+  return <span className="h-4 w-4 shrink-0 rounded-full border-2 border-slate-200" />;
+}
+
+/** Step-by-step judge: run → output → full-method logic review */
+function JudgeSteps({ details }: { details: OutputDetails }) {
+  const ran = details.status?.id === 3;
+  const output = details.outputCheck;
+  const review = details.logicReview;
+
+  const steps: { label: string; note: string; state: StepState }[] = [
+    {
+      label: "Code compiles & runs",
+      note: ran ? "No errors" : details.status?.description ?? "Failed",
+      state: ran ? "pass" : "fail",
+    },
+    {
+      label: "Output check",
+      note: !ran
+        ? "Skipped"
+        : output === "correct"
+          ? "Output matches"
+          : output === "wrong"
+            ? "Output doesn't match"
+            : "No exact test — judged by logic review",
+      state: !ran ? "skip" : output === "correct" ? "pass" : output === "wrong" ? "fail" : "neutral",
+    },
+    {
+      label: "Logic review (full method)",
+      note:
+        review === "pending"
+          ? "Checking how your code computes the answer…"
+          : review === "correct"
+            ? "Logic solves the problem"
+            : review === "wrong"
+              ? "Logic doesn't fully solve it"
+              : review === "unavailable"
+                ? "Unavailable right now"
+                : "Skipped",
+      state:
+        review === "pending"
+          ? "running"
+          : review === "correct"
+            ? "pass"
+            : review === "wrong"
+              ? "fail"
+              : review === "unavailable"
+                ? "neutral"
+                : "skip",
+    },
+  ];
+
+  return (
+    <ol className="space-y-2 rounded-xl border border-slate-200 bg-white px-4 py-3">
+      {steps.map((step) => (
+        <li key={step.label} className="flex items-start gap-2.5">
+          <StepIcon state={step.state} />
+          <div className="min-w-0">
+            <p className="text-xs font-semibold text-slate-800">{step.label}</p>
+            <p className="text-[11px] text-slate-500">{step.note}</p>
+          </div>
+        </li>
+      ))}
+    </ol>
+  );
+}
 
 type Props = {
   isError: boolean;
@@ -159,6 +236,8 @@ export default function OutputConsole({
         )}
       </div>
 
+      {isProblemMode && !isLoading && outputDetails?.status && <JudgeSteps details={outputDetails} />}
+
       {isProblemMode && !isLoading && outputDetails?.validationResult === "correct" && (
         <div className="rounded-xl border px-4 py-3 text-sm font-semibold border-emerald-200 bg-emerald-50 text-emerald-700">
           Correct! Your answer is correct for this problem.
@@ -193,7 +272,7 @@ export default function OutputConsole({
       {isProblemMode && !isLoading && outputDetails?.validationResult === "unchecked" && isAiChecking && (
         <div className="flex items-center gap-2 rounded-xl border px-4 py-3 text-sm font-semibold border-sky-200 bg-sky-50 text-sky-700">
           <Loader2 className="h-4 w-4 animate-spin" />
-          Code ran — AI is checking your solution…
+          Checking your full method before giving the verdict…
         </div>
       )}
 

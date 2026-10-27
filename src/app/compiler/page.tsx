@@ -150,9 +150,15 @@ export default function CompilerPage({ embedded = false }: { embedded?: boolean 
     setProgressMessage(result.error ?? "Could not save progress. Try again.");
   };
 
+  /**
+   * Step 2 of judging: AI reviews the whole method's logic. A matching output alone is not
+   * enough (e.g. printing a hard-coded answer), so problems are only marked solved here.
+   * `outputCheck` is the result of step 1 (comparing the program's output).
+   */
   const runAiCheck = async (
     problem: ProblemContext,
-    run: { stdout: string; stderr: string }
+    run: { stdout: string; stderr: string },
+    outputCheck: "correct" | "unchecked"
   ) => {
     setIsAiChecking(true);
     try {
@@ -176,16 +182,18 @@ export default function CompilerPage({ embedded = false }: { embedded?: boolean 
       };
 
       if (!response.ok || !data.verdict) {
-        // Stays "unchecked" — the learner can still mark it solved by hand.
-        setOutputDetails((prev: any) =>
-          prev ? { ...prev, aiError: data.error ?? "AI check is unavailable right now." } : prev
-        );
+        applyReviewUnavailable(problem, outputCheck, data.error);
         return;
       }
 
       setOutputDetails((prev: any) =>
         prev
-          ? { ...prev, validationResult: data.verdict, aiFeedback: data.feedback ?? null }
+          ? {
+              ...prev,
+              validationResult: data.verdict,
+              logicReview: data.verdict,
+              aiFeedback: data.feedback ?? null,
+            }
           : prev
       );
       setIsError(data.verdict === "wrong");
@@ -193,11 +201,34 @@ export default function CompilerPage({ embedded = false }: { embedded?: boolean 
         void saveProblemProgress(problem.questionId);
       }
     } catch {
-      setOutputDetails((prev: any) =>
-        prev ? { ...prev, aiError: "AI check is unavailable right now." } : prev
-      );
+      applyReviewUnavailable(problem, outputCheck);
     } finally {
       setIsAiChecking(false);
+    }
+  };
+
+  /**
+   * The logic review could not run. If the output check already passed, keep that verdict so
+   * learners aren't blocked; otherwise stay "unchecked" and offer the manual "Mark as solved".
+   */
+  const applyReviewUnavailable = (
+    problem: ProblemContext,
+    outputCheck: "correct" | "unchecked",
+    error?: string
+  ) => {
+    const aiError = error ?? "AI check is unavailable right now.";
+    setOutputDetails((prev: any) =>
+      prev
+        ? {
+            ...prev,
+            aiError,
+            logicReview: "unavailable",
+            validationResult: outputCheck === "correct" ? "correct" : prev.validationResult,
+          }
+        : prev
+    );
+    if (outputCheck === "correct" && problem.questionId) {
+      void saveProblemProgress(problem.questionId);
     }
   };
 
@@ -250,9 +281,9 @@ export default function CompilerPage({ embedded = false }: { embedded?: boolean 
         });
       } else {
         const executionSucceeded = data.status?.id === 3;
-        // Function-style answers return values, which the keyword-based stdout checks can't
-        // judge — the AI check reviews them instead.
-        const validationResult = !problemContext
+        // Step 1 — output check. Function-style answers return values, which the keyword-based
+        // stdout checks can't judge, so they go straight to the logic review.
+        const outputCheck = !problemContext
           ? null
           : harness
             ? executionSucceeded
@@ -266,8 +297,14 @@ export default function CompilerPage({ embedded = false }: { embedded?: boolean 
                 code
               );
 
+        // Step 2 — a passing (or unjudgeable) output still needs the logic review before
+        // it counts, so it stays "unchecked" until the review returns.
+        const needsLogicReview =
+          Boolean(problemContext) && (outputCheck === "correct" || outputCheck === "unchecked");
+        const validationResult = needsLogicReview ? "unchecked" : outputCheck;
+
         const simulatedStdout =
-          problemContext && validationResult === "correct" && !(data.stdout ?? "").trim()
+          problemContext && outputCheck === "correct" && !(data.stdout ?? "").trim()
             ? getClassSimulationOutput(
                 problemContext.questionText,
                 code,
@@ -284,19 +321,17 @@ export default function CompilerPage({ embedded = false }: { embedded?: boolean 
           ...data,
           stdout: data.stdout || simulatedStdout,
           validationResult,
+          outputCheck,
+          logicReview: needsLogicReview ? "pending" : null,
           computedExpected,
         });
 
-        if (validationResult === "correct" && problemContext?.questionId) {
-          void saveProblemProgress(problemContext.questionId);
-        }
-
-        // No exact test case for this problem — let AI review the solution instead.
-        if (validationResult === "unchecked" && problemContext) {
-          void runAiCheck(problemContext, {
-            stdout: data.stdout ?? "",
-            stderr: data.stderr ?? "",
-          });
+        if (needsLogicReview && problemContext) {
+          void runAiCheck(
+            problemContext,
+            { stdout: data.stdout ?? "", stderr: data.stderr ?? "" },
+            outputCheck as "correct" | "unchecked"
+          );
         }
 
         if (!executionSucceeded) {
