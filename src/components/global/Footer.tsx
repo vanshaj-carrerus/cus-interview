@@ -25,20 +25,21 @@ export default async function Footer() {
     {
       title: "Products",
       links: [
-        { label: "Practice Problems", href: "/problems" },
-        { label: "Programming Courses", href: "/problems/courses" },
-        { label: "Online Compiler", href: "/compiler" },
-        { label: "Mock Interviews", href: "/mock-interviews" },
-        { label: "Resume Analyzer", href: "/resume-analyzer" },
+        { label: "Practice Problems", href: "/features#practice-problems" },
+        { label: "Programming Courses", href: "/features#programming-languages" },
+        { label: "Online Compiler", href: "/features#compiler" },
+        { label: "Mock Interviews", href: "/features#mock-interviews" },
+        { label: "Resume Analyzer", href: "/features#resume-analyzer" },
       ],
     },
     {
       title: "Features",
       links: [
-        { label: "AI Mock Interviews", href: "/mock-interviews/ai-mock" },
-        { label: "Interview Prep", href: "/practice" },
-        { label: "DSA Practice", href: "/problems" },
-        { label: "Company Questions", href: "/dashboard/company-interviews" },
+        { label: "AI Mock Interviews", href: "/features#ai-mock-interview" },
+        { label: "Interview Prep", href: "/features#interview-prep" },
+        { label: "DSA Practice", href: "/features#dsa-practice" },
+        { label: "Company Questions", href: "/features#company-questions" },
+        { label: "All features →", href: "/features" },
       ],
     },
     {

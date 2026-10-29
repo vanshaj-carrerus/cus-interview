@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
-import { ArrowRight, UserRound, ChevronDown, LayoutDashboard } from "lucide-react";
+import { ArrowRight, UserRound, ChevronDown } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
 import Logo from "@/components/global/Logo";
 
@@ -13,22 +13,8 @@ type NavItem =
   | { label: string; href?: never; mega: { left: { heading: string; items: MegaItem[] } } };
 
 /* ─── nav data ───────────────────────────────────────────── */
-const productMega = {
-  left: {
-    heading: "Products",
-    items: [
-      {
-        label: "Developer Dashboard",
-        href: "/dashboard",
-        icon: <LayoutDashboard className="h-[18px] w-[18px]" />,
-        description: "Track your progress, stats & learning paths",
-      },
-    ],
-  },
-};
-
 const navItems: NavItem[] = [
-  { label: "For Developer", mega: productMega },
+  { label: "For Developer", href: "/dashboard" },
   { label: "Pricing", href: "/pricing" },
   { label: "For Companies", href: "/for-companies" },
 ];

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Check } from "lucide-react";
+import { Check, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
 import ManageBillingButton from "@/components/billing/ManageBillingButton";
 import CheckoutFormModal from "@/components/pricing/CheckoutFormModal";
@@ -39,17 +39,6 @@ type CheckoutTarget =
   | { type: "plan"; id: PublicBillingPlanId }
   | { type: "service"; id: HumanServiceId };
 
-const STAR_LAYERS = [
-  "radial-gradient(1px 1px at 14% 22%, rgba(255,255,255,0.85) 0%, transparent 100%)",
-  "radial-gradient(1px 1px at 32% 58%, rgba(255,255,255,0.5) 0%, transparent 100%)",
-  "radial-gradient(1.5px 1.5px at 48% 18%, rgba(255,255,255,0.8) 0%, transparent 100%)",
-  "radial-gradient(1px 1px at 66% 72%, rgba(255,255,255,0.45) 0%, transparent 100%)",
-  "radial-gradient(1px 1px at 82% 34%, rgba(255,255,255,0.7) 0%, transparent 100%)",
-  "radial-gradient(1px 1px at 90% 80%, rgba(255,255,255,0.4) 0%, transparent 100%)",
-  "radial-gradient(1px 1px at 8% 70%, rgba(255,255,255,0.55) 0%, transparent 100%)",
-  "radial-gradient(1.5px 1.5px at 55% 42%, rgba(255,255,255,0.75) 0%, transparent 100%)",
-].join(",");
-
 const CUSTOM_PLAN_FEATURES = [
   "Everything in Full Access plans",
   "Team seats and admin controls",
@@ -59,29 +48,50 @@ const CUSTOM_PLAN_FEATURES = [
   "Invoice / PO billing options",
 ];
 
+/* Soft colour themes for the wide plan cards */
+type CardTone = "sky" | "mint";
+
+const TONES: Record<CardTone, { card: string; tick: string; pill: string }> = {
+  sky: {
+    card: "bg-[linear-gradient(135deg,#e0f2fe_0%,#f5f3ff_55%,#fdf4ff_100%)]",
+    tick: "text-sky-600",
+    pill: "bg-white/80 text-sky-700 ring-sky-200",
+  },
+  mint: {
+    card: "bg-[linear-gradient(135deg,#ecfdf5_0%,#f0fdfa_50%,#fefce8_100%)]",
+    tick: "text-emerald-600",
+    pill: "bg-white/80 text-emerald-700 ring-emerald-200",
+  },
+};
+
+/* Accent per service card — title colour, chip and tick */
+const SERVICE_TONES = [
+  { title: "text-violet-500", chip: "bg-white text-violet-500", tick: "bg-violet-300 text-white", card: "border-violet-100 bg-gradient-to-b from-violet-50 to-white" },
+  { title: "text-sky-500", chip: "bg-white text-sky-500", tick: "bg-sky-300 text-white", card: "border-sky-100 bg-gradient-to-b from-sky-50 to-white" },
+  { title: "text-emerald-500", chip: "bg-white text-emerald-500", tick: "bg-emerald-300 text-white", card: "border-emerald-100 bg-gradient-to-b from-emerald-50 to-white" },
+  { title: "text-rose-500", chip: "bg-white text-rose-500", tick: "bg-rose-300 text-white", card: "border-rose-100 bg-gradient-to-b from-rose-50 to-white" },
+];
+
 function FeatureItem({
   feature,
-  dark,
+  tone = "sky",
 }: {
   feature: PricingFeature | string;
-  dark?: boolean;
+  tone?: CardTone;
 }) {
   const label = typeof feature === "string" ? feature : feature.label;
   const isNew = typeof feature !== "string" && feature.isNew;
 
   return (
-    <li className="flex items-start gap-2.5">
-      <Check
-        className={`mt-0.5 h-4 w-4 shrink-0 ${dark ? "text-primary" : "text-emerald-500"}`}
-        strokeWidth={2.5}
-      />
-      <span
-        className={`text-[13px] leading-snug ${dark ? "text-white/85" : "text-slate-700"}`}
-      >
+    <li className="flex items-start gap-3">
+      <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-slate-200/80">
+        <Check className={`h-3 w-3 ${TONES[tone].tick}`} strokeWidth={3} />
+      </span>
+      <span className="text-[13px] leading-snug text-slate-700">
         {label}
         {isNew ? (
-          <span className={`ml-1 font-semibold ${dark ? "text-primary" : "text-slate-500"}`}>
-            (NEW)
+          <span className="ml-1.5 rounded-full bg-amber-200 px-1.5 py-0.5 text-[10px] font-bold text-slate-900">
+            NEW
           </span>
         ) : null}
       </span>
@@ -385,16 +395,14 @@ export default function PricingSection() {
               </div>
             ) : null}
 
-            <div className="mx-auto mt-12 grid max-w-4xl items-stretch gap-5 sm:grid-cols-2 sm:gap-6">
+            <div className="mx-auto mt-12 max-w-5xl space-y-5">
               {billingCycle === "monthly" ? (
                 <PlanCard
-                  name="Monthly"
-                  accent="text-primary"
+                  name="Monthly Plan"
                   price={monthly.priceDisplay}
                   priceSuffix="/mo"
                   billedNote={`${getSubscriptionTotalDisplay("monthly")} with GST · billed monthly`}
-                  featuresHeading="Everything you need to prepare:"
-                  featured
+                  perfectFor="Perfect for job seekers who want full access, month to month."
                   planActive={Boolean(hasPlatformAccess) && !canUpgrade}
                   upgrade={canUpgrade}
                   submitting={submittingKey === "plan:monthly"}
@@ -403,8 +411,7 @@ export default function PricingSection() {
                 />
               ) : (
                 <PlanCard
-                  name="Quarterly"
-                  accent="text-primary"
+                  name="Quarterly Plan"
                   price={`₹${quarterlyPerMonth}`}
                   priceSuffix="/mo"
                   billedNote={`${quarterly.priceDisplay} billed quarterly · ${getSubscriptionTotalDisplay("quarterly")} with GST`}
@@ -413,8 +420,7 @@ export default function PricingSection() {
                       ? quarterly.originalPriceDisplay
                       : undefined
                   }
-                  featuresHeading="Best value — full access for 3 months:"
-                  featured
+                  perfectFor="Best value — full access for 3 months of focused preparation."
                   planActive={Boolean(hasPlatformAccess) && !canUpgrade}
                   upgrade={canUpgrade}
                   submitting={submittingKey === "plan:quarterly"}
@@ -424,74 +430,97 @@ export default function PricingSection() {
                 />
               )}
 
-              <article className="flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-7 shadow-sm sm:p-8">
-                <p className="text-lg font-bold text-teal-700">Custom</p>
-                <p className="mt-4 text-3xl font-bold tracking-tight text-secondary">
-                  Custom Pricing
-                </p>
-                <p className="mt-2 text-sm text-slate-500">
-                  For teams and hiring partners who need scale.
-                </p>
-                <p className="mt-7 text-sm font-semibold text-secondary">
-                  Built for companies:
-                </p>
-                <ul className="mt-4 flex-1 space-y-3">
-                  {CUSTOM_PLAN_FEATURES.map((feature) => (
-                    <FeatureItem key={feature} feature={feature} />
-                  ))}
-                </ul>
-                <Link
-                  href="/for-companies"
-                  className="mt-8 inline-flex w-full items-center justify-center rounded-lg border border-secondary px-6 py-3 text-sm font-semibold text-secondary transition hover:bg-secondary hover:text-white"
-                >
-                  Request Company Demo
-                </Link>
+              <article
+                className={`grid gap-8 overflow-hidden rounded-[24px] border border-white p-6 shadow-[0_20px_50px_-30px_rgba(15,23,42,0.25)] sm:p-8 md:grid-cols-[minmax(0,0.8fr)_minmax(0,1.6fr)] md:gap-10 ${TONES.mint.card}`}
+              >
+                <div className="flex flex-col">
+                  <span
+                    className={`w-fit rounded-full px-3.5 py-1 text-xs font-semibold ring-1 ${TONES.mint.pill}`}
+                  >
+                    For companies
+                  </span>
+                  <p className="mt-5 font-serif text-4xl tracking-[-0.02em] text-slate-700">
+                    Custom pricing
+                  </p>
+                  <p className="mt-3 text-sm text-slate-500">
+                    For teams and hiring partners who need scale.
+                  </p>
+                  <p className="mt-3 text-sm leading-relaxed text-slate-700">
+                    Perfect for hiring teams, bootcamps and colleges running assessments at scale.
+                  </p>
+                  <Link
+                    href="/for-companies"
+                    className="mt-6 inline-flex w-full items-center justify-center rounded-full border border-slate-900 bg-white px-6 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-950 hover:text-white sm:w-auto sm:self-start"
+                  >
+                    Request company demo
+                  </Link>
+                </div>
+
+                <div className="rounded-2xl bg-white/60 p-5 ring-1 ring-white sm:p-6">
+                  <p className="text-sm font-semibold text-slate-900">What&apos;s included:</p>
+                  <ul className="mt-4 grid gap-x-6 gap-y-2.5 sm:grid-cols-2">
+                    {CUSTOM_PLAN_FEATURES.map((feature) => (
+                      <FeatureItem key={feature} feature={feature} tone="mint" />
+                    ))}
+                  </ul>
+                </div>
               </article>
             </div>
 
-            <div className="mt-20">
-              <h2 className="text-center text-2xl font-bold tracking-tight text-secondary sm:text-[1.75rem]">
-                Expert human services
-              </h2>
+            {/* Expert human services */}
+            <div className="relative mt-20">
+              <div className="relative text-center">
+                <span className="inline-flex rounded-full bg-white/80 px-3.5 py-1 text-xs font-semibold text-violet-700 ring-1 ring-violet-200">
+                  One-time services
+                </span>
+                <h2 className="mt-4 font-serif text-3xl tracking-[-0.02em] text-slate-950 sm:text-[2.5rem]">
+                  Expert human services
+                </h2>
+                <p className="mx-auto mt-2 max-w-lg text-sm text-slate-600">
+                  Work 1-on-1 with real experts — no subscription needed.
+                </p>
+              </div>
 
-
-              <div className="mx-auto mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
-                {HUMAN_SERVICE_IDS.map((serviceId) => {
+              <div className="relative mx-auto mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {HUMAN_SERVICE_IDS.map((serviceId, i) => {
                   const service = HUMAN_SERVICES[serviceId];
+                  const tone = SERVICE_TONES[i % SERVICE_TONES.length];
                   return (
                     <article
                       key={serviceId}
-                      className="flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+                      className={`flex h-full flex-col rounded-[22px] border p-6 shadow-[0_20px_40px_-28px_rgba(15,23,42,0.25)] transition-transform duration-300 hover:-translate-y-1 ${tone.card}`}
                     >
-                      <p className="text-[15px] font-semibold text-primary">
-                        {service.name}
-                      </p>
-                      <p className="mt-1 text-xs leading-relaxed text-slate-500">
-                        {service.tagline}
-                      </p>
-                      <div className="mt-4 flex items-baseline gap-1.5">
-                        <span className="text-2xl font-bold text-secondary">
-                          {service.priceDisplay}
+                      <div className="flex items-start justify-between gap-2">
+                        <p className={`text-lg font-bold leading-tight ${tone.title}`}>{service.name}</p>
+                        <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold ${tone.chip}`}>
+                          One-time
                         </span>
-                        <span className="text-sm text-slate-400">/one-time</span>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          handleCheckout({ type: "service", id: serviceId })
-                        }
-                        disabled={isBusy}
-                        className="mt-5 w-full rounded-lg border border-slate-200 py-2.5 text-sm font-semibold text-secondary transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        {submittingKey === `service:${serviceId}`
-                          ? "Opening PayU…"
-                          : "Buy Now"}
-                      </button>
-                      <ul className="mt-5 flex-1 space-y-2.5 border-t border-slate-100 pt-5">
+                      <p className="mt-1.5 text-xs leading-relaxed text-slate-400">{service.tagline}</p>
+
+                      <p className="mt-5 font-serif text-4xl tracking-[-0.02em] text-slate-700">
+                        {service.priceDisplay}
+                      </p>
+
+                      <ul className="mt-5 flex-1 space-y-2.5 border-t border-slate-900/5 pt-5">
                         {service.features.map((feature) => (
-                          <FeatureItem key={feature} feature={feature} />
+                          <li key={feature} className="flex items-start gap-2.5 text-[13px] leading-snug text-slate-500">
+                            <span className={`mt-px inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full ${tone.tick}`}>
+                              <Check className="h-2.5 w-2.5" strokeWidth={3.5} />
+                            </span>
+                            {feature}
+                          </li>
                         ))}
                       </ul>
+
+                      <button
+                        type="button"
+                        onClick={() => handleCheckout({ type: "service", id: serviceId })}
+                        disabled={isBusy}
+                        className="mt-6 w-fit rounded-full bg-slate-950 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {submittingKey === `service:${serviceId}` ? "Opening PayU…" : "Get started"}
+                      </button>
                     </article>
                   );
                 })}
@@ -512,13 +541,11 @@ export default function PricingSection() {
 
 function PlanCard({
   name,
-  accent,
   price,
   priceSuffix,
   billedNote,
   originalPrice,
-  featuresHeading,
-  featured,
+  perfectFor,
   planActive,
   upgrade = false,
   submitting,
@@ -527,13 +554,11 @@ function PlanCard({
   badge,
 }: {
   name: string;
-  accent: string;
   price: string;
   priceSuffix: string;
   billedNote: string;
   originalPrice?: string;
-  featuresHeading: string;
-  featured: boolean;
+  perfectFor: string;
   planActive: boolean;
   /** On a limited free plan — the button offers the upgrade to unlimited. */
   upgrade?: boolean;
@@ -542,106 +567,61 @@ function PlanCard({
   onBuy: () => void;
   badge?: string;
 }) {
+  const tone = TONES.sky;
+
   return (
     <article
-      className={`relative flex h-full flex-col overflow-hidden rounded-2xl p-7 sm:p-8 ${
-        featured
-          ? "bg-[linear-gradient(180deg,#0c4a6e_0%,#0a2744_45%,#071e36_100%)] text-white shadow-xl shadow-sky-900/30"
-          : "border border-slate-200 bg-white shadow-sm"
-      }`}
+      className={`grid gap-8 overflow-hidden rounded-[24px] border border-white p-6 shadow-[0_20px_50px_-30px_rgba(15,23,42,0.25)] sm:p-8 md:grid-cols-[minmax(0,0.8fr)_minmax(0,1.6fr)] md:gap-10 ${tone.card}`}
     >
-      {featured ? (
-        <>
-          <div
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(56,189,248,0.28),transparent_55%)]"
-            aria-hidden
-          />
-          <div
-            className="pointer-events-none absolute inset-0 opacity-70"
-            style={{ backgroundImage: STAR_LAYERS }}
-            aria-hidden
-          />
-        </>
-      ) : null}
-
-      <div className="relative z-10 flex h-full flex-col">
-        <div className="flex items-center gap-2">
-          <p className={`text-lg font-bold ${featured ? accent : accent}`}>
-            {name}
-          </p>
-          {badge && featured ? (
-            <span className="rounded-full bg-primary/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary">
+      <div className="flex flex-col">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className={`rounded-full px-3.5 py-1 text-xs font-semibold ring-1 ${tone.pill}`}>{name}</span>
+          {badge ? (
+            <span className="rounded-full bg-amber-200 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-900">
               {badge}
             </span>
           ) : null}
         </div>
 
-        <div className="mt-4 flex flex-wrap items-baseline gap-x-2">
-          {originalPrice && featured ? (
-            <span className="text-sm text-white/40 line-through">
-              {originalPrice}
-            </span>
-          ) : originalPrice ? (
-            <span className="text-sm text-slate-400 line-through">
-              {originalPrice}
-            </span>
-          ) : null}
-          <span
-            className={`text-4xl font-bold tracking-tight ${featured ? "text-white" : "text-secondary"}`}
-          >
-            {price}
-          </span>
-          <span
-            className={`text-sm ${featured ? "text-white/60" : "text-slate-400"}`}
-          >
-            {priceSuffix}
-          </span>
+        <div className="mt-5 flex flex-wrap items-baseline gap-x-2">
+          {originalPrice ? <span className="text-base text-slate-400 line-through">{originalPrice}</span> : null}
+          <span className="font-serif text-5xl tracking-[-0.02em] text-slate-950">{price}</span>
+          <span className="text-base text-slate-500">{priceSuffix}</span>
         </div>
 
-        <p
-          className={`mt-2 text-sm ${featured ? "text-white/55" : "text-slate-500"}`}
-        >
-          {billedNote}
-        </p>
-
-        <p
-          className={`mt-7 text-sm font-semibold ${featured ? "text-white" : "text-secondary"}`}
-        >
-          {featuresHeading}
-        </p>
-
-        <ul className="mt-4 flex-1 space-y-3">
-          {PRICING_FEATURES.map((feature) => (
-            <FeatureItem key={feature.label} feature={feature} dark={featured} />
-          ))}
-        </ul>
+        <p className="mt-3 text-sm text-slate-500">{billedNote}</p>
+        <p className="mt-3 text-sm leading-relaxed text-slate-700">{perfectFor}</p>
 
         {planActive ? (
           <button
             type="button"
             disabled
-            className={`mt-8 w-full cursor-default rounded-lg py-3 text-sm font-semibold ${
-              featured
-                ? "bg-white/10 text-white/60"
-                : "bg-slate-100 text-slate-500"
-            }`}
+            className="mt-6 w-full cursor-default rounded-full bg-white/70 px-6 py-3 text-sm font-semibold text-slate-500 sm:w-auto sm:self-start"
           >
-            Plan Active
+            Plan active
           </button>
         ) : (
           <button
             type="button"
             onClick={onBuy}
             disabled={disabled || submitting}
-            className={`mt-8 w-full rounded-lg py-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${
-              featured
-                ? "bg-primary text-white hover:bg-primary/90"
-                : "border border-secondary text-secondary hover:bg-secondary hover:text-white"
-            }`}
+            className="mt-6 w-full rounded-full bg-slate-950 px-7 py-3 text-sm font-semibold text-white shadow-[0_10px_24px_-12px_rgba(15,23,42,0.6)] transition hover:-translate-y-0.5 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:self-start"
           >
-            {submitting ? "Opening PayU…" : upgrade ? "Upgrade to Unlimited" : "Buy Now"}
+            {submitting ? "Opening PayU…" : upgrade ? "Upgrade to Unlimited" : "Buy now"}
           </button>
         )}
+        <p className="mt-3 inline-flex items-center gap-1.5 text-xs text-slate-500">
+          <ShieldCheck className="h-3.5 w-3.5" /> Secure checkout via PayU
+        </p>
+      </div>
+
+      <div className="rounded-2xl bg-white/60 p-5 ring-1 ring-white sm:p-6">
+        <p className="text-sm font-semibold text-slate-900">What&apos;s included:</p>
+        <ul className="mt-4 grid gap-x-6 gap-y-2.5 sm:grid-cols-2">
+          {PRICING_FEATURES.map((feature) => (
+            <FeatureItem key={feature.label} feature={feature} tone="sky" />
+          ))}
+        </ul>
       </div>
     </article>
   );
