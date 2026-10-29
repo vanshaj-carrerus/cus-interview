@@ -14,7 +14,7 @@ type NavItem =
 
 /* ─── nav data ───────────────────────────────────────────── */
 const navItems: NavItem[] = [
-  { label: "For Developer", href: "/dashboard" },
+  { label: "For Developer", href: "/for-developers" },
   { label: "Pricing", href: "/pricing" },
   { label: "For Companies", href: "/for-companies" },
 ];
