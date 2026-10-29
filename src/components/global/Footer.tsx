@@ -16,10 +16,7 @@ const InstagramIcon = () => (
 type FooterLink = { label: string; href: string };
 
 export default async function Footer() {
-  const [tracks, courses] = await Promise.all([
-    getTrackCards("track"),
-    getTrackCards("course"),
-  ]);
+  const courses = await getTrackCards("course");
 
   const groups: { title: string; links: FooterLink[] }[] = [
     {
@@ -40,13 +37,6 @@ export default async function Footer() {
         { label: "DSA Practice", href: "/features#dsa-practice" },
         { label: "Company Questions", href: "/features#company-questions" },
         { label: "All features →", href: "/features" },
-      ],
-    },
-    {
-      title: "Resources",
-      links: [
-        ...tracks.slice(0, 5).map((t) => ({ label: t.title, href: `/problems/${t.slug}` })),
-        { label: "View all →", href: "/problems" },
       ],
     },
     {
@@ -78,10 +68,10 @@ export default async function Footer() {
   ];
 
   return (
-    <footer className="relative mt-auto overflow-hidden bg-slate-950 text-white">
+    <footer className="relative mt-auto overflow-hidden bg-[#fafcff] text-slate-900">
       {/* Soft pastel glows, echoing the landing page cards */}
-      <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-sky-500/15 blur-[100px]" aria-hidden />
-      <div className="pointer-events-none absolute -right-24 bottom-0 h-72 w-72 rounded-full bg-violet-500/15 blur-[100px]" aria-hidden />
+      <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-sky-100/40 blur-[100px]" aria-hidden />
+      <div className="pointer-events-none absolute -right-24 bottom-0 h-72 w-72 rounded-full bg-violet-100/30 blur-[100px]" aria-hidden />
       <div className="relative mx-auto max-w-6xl px-6 pt-16 md:pt-20">
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,2.6fr)] lg:gap-16">
           {/* Brand */}
@@ -89,18 +79,18 @@ export default async function Footer() {
             <Link href="/" className="inline-flex items-center gap-3" aria-label="CUS Interview home">
               <Logo href={null} variant="icon" width={42} height={42} />
               <span className="flex flex-col gap-1.5">
-                <span className="block text-xl font-bold leading-none tracking-wide text-white">CUS</span>
-                <span className="block text-[11px] font-semibold uppercase leading-none tracking-[0.24em] text-sky-300">
+                <span className="block text-xl font-bold leading-none tracking-wide text-slate-950">CUS</span>
+                <span className="block text-[11px] font-semibold uppercase leading-none tracking-[0.24em] text-sky-500">
                   Interview
                 </span>
               </span>
             </Link>
-            <p className="mt-5 max-w-[17rem] text-sm leading-relaxed text-slate-400">
+            <p className="mt-5 max-w-[17rem] text-sm leading-relaxed text-slate-950">
               AI-powered interview prep — practice real problems, take mock interviews, and get hired.
             </p>
             <Link
               href="/signup"
-              className="mt-6 inline-flex items-center rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-slate-950 transition-colors hover:bg-sky-100"
+              className="mt-6 inline-flex items-center rounded-full bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
             >
               Start practicing free
             </Link>
@@ -110,7 +100,7 @@ export default async function Footer() {
           <div className="grid grid-cols-2 gap-x-8 gap-y-10 sm:grid-cols-3">
             {groups.map((group) => (
               <div key={group.title}>
-                <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-950">
                   {group.title}
                 </h3>
                 <ul className="mt-4 space-y-3">
@@ -118,7 +108,7 @@ export default async function Footer() {
                     <li key={link.label}>
                       <Link
                         href={link.href}
-                        className="line-clamp-1 text-sm text-slate-300 transition-colors hover:text-white"
+                        className="line-clamp-1 text-sm text-slate-950 transition-colors hover:text-sky-600"
                       >
                         {link.label}
                       </Link>
@@ -131,7 +121,7 @@ export default async function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-16 flex flex-col gap-4 border-t border-white/10 py-8 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-16 flex flex-col gap-4 border-t border-slate-200/70 py-8 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
           <p>© {new Date().getFullYear()} CUS Interview. All rights reserved.</p>
           <div className="flex items-center gap-3">
             <Link
@@ -139,7 +129,7 @@ export default async function Footer() {
               rel="noopener noreferrer"
               href="https://www.linkedin.com/company/cus-tech/posts/?feedView=all"
               aria-label="CUS Interview on LinkedIn"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-400 transition-colors hover:border-white/25 hover:text-white"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition-colors hover:border-slate-300 hover:text-slate-900"
             >
               <LinkedinIcon />
             </Link>
@@ -148,7 +138,7 @@ export default async function Footer() {
               rel="noopener noreferrer"
               href="https://www.instagram.com/cus.tech_/"
               aria-label="CUS Interview on Instagram"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-400 transition-colors hover:border-white/25 hover:text-white"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition-colors hover:border-slate-300 hover:text-slate-900"
             >
               <InstagramIcon />
             </Link>

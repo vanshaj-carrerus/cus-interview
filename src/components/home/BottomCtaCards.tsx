@@ -170,7 +170,7 @@ const CARDS: CardData[] = [
     description:
       "Join thousands of developers practicing problems, taking mock interviews, and landing their dream roles.",
     href: "/signup",
-    cta: "Join the community",
+    cta: "Let's start",
     bg: "bg-sky-200",
     icon: Code,
     Preview: DeveloperPreview,
@@ -182,7 +182,7 @@ const CARDS: CardData[] = [
     description:
       "Assess candidates fairly with structured take-home challenges and integrity-focused evaluation tools.",
     href: "/for-companies",
-    cta: "Start a free trial",
+    cta: "Let's connect with us",
     bg: "bg-violet-200",
     icon: Users,
     Preview: CompanyPreview,
