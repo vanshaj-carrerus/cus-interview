@@ -1,6 +1,9 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import RotatingWord from "@/components/home/RotatingWord";
+import { useAuth } from "@/components/providers/auth-provider";
 import {
   ArrowUpRight,
   Check,
@@ -49,6 +52,7 @@ const CODE: [string, string][][] = [
 ];
 
 export default function HeroLanding() {
+  const { user } = useAuth();
   return (
     <section className="relative flex min-h-[calc(100svh-4rem)] flex-col overflow-hidden bg-white">
       {/* Soft top glow + fine dots, faded towards the edges */}
@@ -96,10 +100,10 @@ export default function HeroLanding() {
 
         <div className="hero-enter mt-7 [--enter:0.35s] flex flex-col items-center justify-center gap-3 sm:flex-row md:mb-6">
           <Link
-            href="/signup"
+            href={user ? "/features" : "/signup"}
             className="inline-flex w-full items-center justify-center rounded-full bg-slate-950 px-6 py-3 text-[15px] font-semibold text-white transition-all hover:-translate-y-0.5 hover:bg-slate-800 sm:w-auto"
           >
-            Start Practicing Free
+            Start Practicing
           </Link>
           <Link
             href="/for-companies"

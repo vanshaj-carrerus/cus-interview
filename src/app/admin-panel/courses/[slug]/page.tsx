@@ -5,16 +5,28 @@ import { LearningLevel, LearningQuestion, LearningTask, LearningTrack } from "@/
 import QuestionTableManager from "../../components/question-table-manager";
 import ImageUploadField from "../../components/image-upload-field";
 
+const STATUSES = ["draft", "published", "archived"] as const;
+
+function parseStatus(value: FormDataEntryValue | null) {
+  return STATUSES.find((item) => item === value) ?? "published";
+}
+
 async function updateCourseAction(formData: FormData) {
   "use server";
   const id = String(formData.get("id") ?? "");
   const title = String(formData.get("title") ?? "").trim();
   const intro = String(formData.get("intro") ?? "").trim();
   const iconImage = String(formData.get("iconImage") ?? "").trim();
-  if (!id || !title) return;
+  const slug = String(formData.get("slug") ?? "").trim().toLowerCase();
+  const status = parseStatus(formData.get("status"));
+  const order = Number(formData.get("order") ?? 0);
+  if (!id || !title || !slug) return;
   await connectDB();
-  await LearningTrack.findByIdAndUpdate(id, { $set: { title, intro, iconImage } });
+  await LearningTrack.findByIdAndUpdate(id, {
+    $set: { title, intro, iconImage, slug, status, order: Number.isFinite(order) ? order : 0 },
+  });
   revalidatePath("/admin-panel");
+  redirect(`/admin-panel/courses/${slug}`);
 }
 
 async function deleteCourseAction(formData: FormData) {
@@ -55,9 +67,14 @@ async function updateLevelAction(formData: FormData) {
   const title = String(formData.get("title") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
   const passScore = Number(formData.get("passScore") ?? 1);
-  if (!id || !title) return;
+  const levelNumber = Number(formData.get("levelNumber"));
+  const order = Number(formData.get("order") ?? 0);
+  const status = parseStatus(formData.get("status"));
+  if (!id || !title || !Number.isFinite(levelNumber)) return;
   await connectDB();
-  await LearningLevel.findByIdAndUpdate(id, { $set: { title, description, passScore } });
+  await LearningLevel.findByIdAndUpdate(id, {
+    $set: { title, description, passScore, levelNumber, status, order: Number.isFinite(order) ? order : 0 },
+  });
   revalidatePath("/admin-panel");
 }
 
@@ -101,6 +118,9 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ s
         })),
         correctOptionId: String(question.correctOptionId ?? "0"),
         explanation: String(question.explanation ?? ""),
+        status: question.status ?? "published",
+        order: Number(question.order ?? 0),
+        tags: (question.tags ?? []).map(String),
         difficulty: question.difficulty ?? "medium",
         questionType: question.questionType ?? "coding",
         sampleInput: String(question.sampleInput ?? ""),
@@ -120,7 +140,16 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ s
           <p className="mb-3 text-sm font-semibold text-secondary">Edit Course</p>
           <input type="hidden" name="id" value={String(course._id)} />
           <div className="space-y-2">
-            <input name="title" defaultValue={String(course.title)} className="w-full rounded-lg border border-primary/20 bg-white px-3 py-2 text-sm text-secondary" />
+            <input name="title" required defaultValue={String(course.title)} placeholder="Title" className="w-full rounded-lg border border-primary/20 bg-white px-3 py-2 text-sm text-secondary" />
+            <input name="slug" required defaultValue={String(course.slug)} placeholder="course-slug" className="w-full rounded-lg border border-primary/20 bg-white px-3 py-2 text-sm text-secondary" />
+            <div className="grid grid-cols-2 gap-2">
+              <select name="status" defaultValue={String(course.status ?? "published")} className="rounded-lg border border-primary/20 bg-white px-3 py-2 text-sm text-secondary">
+                <option value="draft">Draft</option>
+                <option value="published">Published</option>
+                <option value="archived">Archived</option>
+              </select>
+              <input name="order" type="number" defaultValue={Number(course.order ?? 0)} placeholder="Order" className="rounded-lg border border-primary/20 bg-white px-3 py-2 text-sm text-secondary" />
+            </div>
             <textarea name="intro" defaultValue={String(course.intro ?? "")} className="h-24 w-full rounded-lg border border-primary/20 bg-white px-3 py-2 text-sm text-secondary" />
             <ImageUploadField name="iconImage" label="Icon Image" defaultValue={String(course.iconImage ?? "")} />
             <button className="rounded-lg bg-primary px-3 py-2 text-sm font-medium text-white">Save Course</button>
@@ -154,9 +183,16 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ s
           <section key={String(level._id)} className="rounded-xl border border-primary/20 bg-white p-4">
             <form action={updateLevelAction} className="grid gap-2 md:grid-cols-2">
               <input type="hidden" name="id" value={String(level._id)} />
-              <input name="title" defaultValue={String(level.title)} className="rounded-lg border border-primary/20 bg-white px-3 py-2 text-sm text-secondary md:col-span-2" />
+              <input name="title" required defaultValue={String(level.title)} placeholder="Level title" className="rounded-lg border border-primary/20 bg-white px-3 py-2 text-sm text-secondary md:col-span-2" />
               <textarea name="description" defaultValue={String(level.description ?? "")} className="h-20 rounded-lg border border-primary/20 bg-white px-3 py-2 text-sm text-secondary md:col-span-2" />
-              <input name="passScore" type="number" min="1" defaultValue={Number(level.passScore)} className="rounded-lg border border-primary/20 bg-white px-3 py-2 text-sm text-secondary" />
+              <input name="levelNumber" type="number" min="1" required defaultValue={Number(level.levelNumber)} title="Level number" className="rounded-lg border border-primary/20 bg-white px-3 py-2 text-sm text-secondary" />
+              <input name="passScore" type="number" min="1" defaultValue={Number(level.passScore)} title="Pass score" className="rounded-lg border border-primary/20 bg-white px-3 py-2 text-sm text-secondary" />
+              <input name="order" type="number" defaultValue={Number(level.order ?? 0)} title="Order" className="rounded-lg border border-primary/20 bg-white px-3 py-2 text-sm text-secondary" />
+              <select name="status" defaultValue={String(level.status ?? "published")} className="rounded-lg border border-primary/20 bg-white px-3 py-2 text-sm text-secondary">
+                <option value="draft">Draft</option>
+                <option value="published">Published</option>
+                <option value="archived">Archived</option>
+              </select>
               <div className="flex items-center gap-2">
                 <button className="rounded-lg bg-primary px-3 py-2 text-sm font-medium text-white">Save Level</button>
               </div>

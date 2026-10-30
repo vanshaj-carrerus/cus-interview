@@ -323,7 +323,7 @@ export default function FeaturesPage() {
                 href="/signup"
                 className="inline-flex items-center gap-2 rounded-full bg-slate-950 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
               >
-                Start practicing free <ArrowRight className="h-4 w-4" />
+                Start Practicing <ArrowRight className="h-4 w-4" />
               </Link>
               <a
                 href="#feature-list"

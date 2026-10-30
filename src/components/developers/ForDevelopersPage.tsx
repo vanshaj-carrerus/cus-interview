@@ -1,6 +1,7 @@
 import { Fragment, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import GetStartedButton from "@/components/developers/GetStartedButton";
 import HeroDashboard from "@/components/developers/HeroDashboard";
 import StackedDeepDives from "@/components/developers/StackedDeepDives";
 import {
@@ -279,12 +280,7 @@ export default function ForDevelopersPage() {
             preparing to getting hired.
           </p>
           <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Link
-              href="/signup"
-              className="inline-flex items-center justify-center rounded-full bg-slate-950 px-7 py-3.5 text-[15px] font-semibold text-white shadow-sm transition hover:bg-slate-800"
-            >
-              Get started — for free
-            </Link>
+            <GetStartedButton />
             <a
               href="#features"
               className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-7 py-3.5 text-[15px] font-semibold text-slate-900 transition hover:bg-slate-50"

@@ -92,7 +92,7 @@ export default async function Footer() {
               href="/signup"
               className="mt-6 inline-flex items-center rounded-full bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
             >
-              Start practicing free
+              Start Practicing
             </Link>
           </div>
 

@@ -16,6 +16,9 @@ type QuestionItem = {
   questionType?: "mcq" | "coding";
   sampleInput?: string;
   expectedOutput?: string;
+  status?: "draft" | "published" | "archived";
+  order?: number;
+  tags?: string[];
 };
 
 type LevelItem = {
@@ -65,6 +68,13 @@ export default function QuestionTableManager({ levels }: Props) {
     const questionType = String(formData.get("questionType") ?? "coding");
     const sampleInput = String(formData.get("sampleInput") ?? "");
     const expectedOutput = String(formData.get("expectedOutput") ?? "");
+    const status = String(formData.get("status") ?? "published");
+    const orderRaw = Number(formData.get("order") ?? 0);
+    const order = Number.isFinite(orderRaw) ? orderRaw : 0;
+    const tags = String(formData.get("tags") ?? "")
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
 
     const options = optionsCsv
       .split(",")
@@ -98,7 +108,9 @@ export default function QuestionTableManager({ levels }: Props) {
               questionType,
               sampleInput,
               expectedOutput,
-              status: "published",
+              status,
+              order,
+              tags,
             },
           }),
         });
@@ -121,6 +133,9 @@ export default function QuestionTableManager({ levels }: Props) {
               questionType,
               sampleInput,
               expectedOutput,
+              status,
+              order,
+              tags,
             },
           }),
         });
@@ -362,6 +377,38 @@ export default function QuestionTableManager({ levels }: Props) {
                   defaultValue={modalState.mode === "edit" ? Number(modalState.question.correctOptionId) : 0}
                   className="w-full rounded-lg border border-primary/20 px-3 py-2 text-sm text-secondary"
                 />
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-secondary/70 mb-1">Status</label>
+                  <select
+                    name="status"
+                    defaultValue={modalState.mode === "edit" ? modalState.question.status ?? "published" : "published"}
+                    className="w-full rounded-lg border border-primary/20 px-3 py-2 text-sm text-secondary bg-white"
+                  >
+                    <option value="draft">Draft</option>
+                    <option value="published">Published</option>
+                    <option value="archived">Archived</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-secondary/70 mb-1">Order</label>
+                  <input
+                    name="order"
+                    type="number"
+                    defaultValue={modalState.mode === "edit" ? modalState.question.order ?? 0 : 0}
+                    className="w-full rounded-lg border border-primary/20 px-3 py-2 text-sm text-secondary"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-secondary/70 mb-1">Tags (comma separated)</label>
+                  <input
+                    name="tags"
+                    defaultValue={modalState.mode === "edit" ? (modalState.question.tags ?? []).join(", ") : ""}
+                    className="w-full rounded-lg border border-primary/20 px-3 py-2 text-sm text-secondary"
+                  />
+                </div>
               </div>
 
               <div>
